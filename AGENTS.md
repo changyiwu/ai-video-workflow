@@ -11,6 +11,7 @@
 ## 目標與路線圖
 - [x] 階段一：複製上游 repo、移除原作者個人資訊、加上來源標示、專案初始化
 - [ ] 階段二：照 `AGENT_SETUP.md` 檢查硬體（`python setup/detect_hardware.py`）、安裝環境與下載模型
+  - [ ] 設定 `OPENAI_API_KEY`，生一張圖驗證 Image 2.5 模型 ID
 - [ ] 階段三：跑 `setup/smoke_test.py` 與 `pipeline/demo_local/run_demo.py` 驗證
 - [ ] 階段三之二：RTX Spark 筆電上機驗證（照 `docs/hardware_rtxspark.md`「第一次上機」，結果回填該文件）
 - [ ] 階段四：建立自己的角色設定，用 `pipeline/template_local/` 做第一支片
@@ -23,7 +24,7 @@ LICENSE / LICENSE-docs.md      MIT（程式）／CC BY-NC 4.0（文件素材）
 THIRD_PARTY_NOTICES.md         第三方模型與工具授權
 docs/                          總覽、端到端流程、規則與踩坑、自審清單、安裝、硬體說明
 tools/                         全域工具（安裝時複製到 C:\AI\tools）
-pipeline/                      template_local（新片範本）、demo_local（安裝驗證）、example_D-7（上游範例）
+pipeline/                      template_local（新片範本）、demo_local（安裝驗證）、example_D-7（上游範例，缺角色資產，不能直接照跑）
 setup/                         模型下載清單、套件清單、smoke_test、硬體偵測、16GB 模擬測試
 cloud/                         H3 送 Google Colab 跑
 sfx/                           Freesound CC0 音效
