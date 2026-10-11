@@ -9,6 +9,8 @@
 python setup\detect_hardware.py
 ```
 
+> **RTX Spark 筆電（Windows on Arm＋統一記憶體）**：`detect_hardware.py` 會自動辨識。不要照下面第 1–2 節裝（套件全是 x64 版），改照 [docs/hardware_rtxspark.md](docs/hardware_rtxspark.md) 的「第一次上機」，設定檔用 `configs\profile_rtxspark.cmd`。
+>
 > 本專案是 16GB VRAM＋64GB RAM 版。其他硬體版本是上游原作者（mathruffian-dot）維護的 repo，見 [NOTICE.md](NOTICE.md)。
 
 | 顯卡 | 記憶體 | 該用的版本（上游 repo 名稱） |

@@ -19,6 +19,10 @@
 
 詳細：[docs/hardware.md](docs/hardware.md)
 
+## RTX Spark 筆電
+
+Windows on Arm＋64GB 統一記憶體的 RTX Spark 筆電另有設定（`configs/profile_rtxspark.cmd`），**尚未實機驗證**；安裝步驟、套件相容性與建議分工見 [docs/hardware_rtxspark.md](docs/hardware_rtxspark.md)。
+
 ## 其他硬體版本
 
 32GB 顯卡、16GB＋32GB RAM、Google Colab 的版本由上游原作者維護，連結見 [NOTICE.md](NOTICE.md)。每一版都有 `cloud/`，本機跑不動時可以把 H3 送到 Colab。

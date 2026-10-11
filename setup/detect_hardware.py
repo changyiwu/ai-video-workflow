@@ -1,4 +1,4 @@
-"""偵測這台電腦的顯卡、記憶體、硬碟，告訴你該用上游四個硬體版本 repo 的哪一個（本專案＝16GB VRAM + 64GB RAM 版），以及每個元件建議在本機還是雲端（Colab）跑。
+"""偵測這台電腦的顯卡、記憶體、硬碟，告訴你該用上游四個硬體版本 repo 的哪一個（本專案＝16GB VRAM + 64GB RAM 版；RTX Spark 等 Windows on Arm 筆電另有設定），以及每個元件建議在本機還是雲端（Colab）跑。
 只用 Python 標準函式庫，任何 Python 3.10+ 都能跑（Windows／Linux／macOS）。
 python setup/detect_hardware.py"""
 import ctypes
@@ -26,6 +26,8 @@ def gpu():
         out = subprocess.run(["nvidia-smi", "--query-gpu=name,memory.total,driver_version", "--format=csv,noheader,nounits"],
                              capture_output=True, text=True, timeout=20).stdout.strip().splitlines()
         name, mib, drv = [x.strip() for x in out[0].split(",")]
+        if not mib.isdigit():                       # 統一記憶體（RTX Spark）nvidia-smi 可能回 [N/A]
+            return dict(name=name, vram_gb=0, driver=drv, unified=True)
         return dict(name=name, vram_gb=round(int(mib) / 1024, 1), driver=drv)
     except Exception as e:
         return dict(error=f"nvidia-smi not available: {e}")
@@ -54,10 +56,44 @@ def ram_gb():
                 commit_limit_gb=round(m.ullTotalPageFile / 2**30, 1))
 
 
+def is_arm64():
+    """原生 ARM64，或 x64 Python 在 Windows on Arm 上模擬執行（此時 platform.machine() 會回 AMD64）。"""
+    import os
+    m = platform.machine().upper()
+    ident = (os.environ.get("PROCESSOR_IDENTIFIER", "") + os.environ.get("PROCESSOR_ARCHITEW6432", "")).upper()
+    return m in ("ARM64", "AARCH64") or "ARM" in ident
+
+
+def spark_plan(g, r):
+    """RTX Spark（Windows on Arm＋統一記憶體）：見 docs/hardware_rtxspark.md。"""
+    emulated = platform.machine().upper() not in ("ARM64", "AARCH64")
+    info = {
+        "recommendation": "本專案的 RTX Spark 設定：call configs/profile_rtxspark.cmd（未實測，先讀 docs/hardware_rtxspark.md）",
+        "plan": {
+            "劇本／剪接／字幕（CPU）": "本機",
+            "首幀（Qwen-Image）": "本機（要先裝好 NVIDIA 預覽版 PyTorch；不行就雲端）",
+            "H3 影片": "本機先試；失敗或太慢 → H3_BACKEND=colab",
+            "台詞配音（BreezyVoice）": "大概率要雲端（Python 3.10 套件沒有 ARM64 wheel）：cloud/colab_h3.py full-setup",
+            "聽寫校對（faster-whisper）": "雲端（ctranslate2 沒有 Windows ARM64 版）",
+            "放大": "UPSCALE=lanczos 或 FlashVSR（RTX VSR 的 nvidia-vfx 沒有 ARM64 版）",
+        },
+        "notes": ["下一步：python setup/spark_check.py（檢查 Python 架構、驅動、PyTorch CUDA、各套件 ARM64 wheel）"],
+    }
+    if emulated:
+        info["notes"].insert(0, "目前的 Python 是 x64 模擬版：請改裝原生 ARM64 Python 3.12（python.org 的 ARM64 installer 或 uv python install cpython-3.12-windows-aarch64）")
+    if r["total_gb"] < 60:
+        info["notes"].append(f"統一記憶體只有 {r['total_gb']}GB（CPU 與 GPU 共用）：H3 需要約 45–50GB，建議 64GB 以上")
+    return info
+
+
 def main():
     g, r = gpu(), ram_gb()
     disk = shutil.disk_usage("C:\\" if platform.system() == "Windows" else "/")
     info = dict(os=platform.platform(), gpu=g, ram=r, disk_C_free_gb=round(disk.free / 2**30))
+    if is_arm64() or g.get("unified") or any(k in g.get("name", "") for k in ("Spark", "N1X", "GB10")):
+        info.update(spark_plan(g, r))
+        print(json.dumps(info, ensure_ascii=False, indent=1))
+        return
     vram = g.get("vram_gb", 0); ram = r["total_gb"]
     pick = next((x for x in REPOS if vram >= x[1] and ram >= x[2]), None)
     info["recommendation"] = f"{pick[0]}（{pick[3]}）" if pick else COLAB

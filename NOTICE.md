@@ -29,4 +29,5 @@
 - 片尾範本預設標題改為「我的頻道」（請在 config 的 `title` 改成自己的頻道名）。
 - `pipeline/example_D-7/youtube/影片資訊_metadata.md` 去除頻道名稱與標籤，改為 `<你的頻道名>` 佔位。
 - README 改寫為本分支版本；新增本檔；`LICENSE` 追加本分支修改者版權行；`LICENSE-docs.md` 追加修改聲明。
-- 程式邏輯、模型下載清單、音效（Freesound CC0）與圖片素材未修改。
+- 新增 RTX Spark 筆電（Windows on Arm）支援：`configs/profile_rtxspark.cmd`、`docs/hardware_rtxspark.md`、`setup/spark_check.py`、`setup/env/arm64/`；`setup/detect_hardware.py` 加入 ARM64／統一記憶體偵測。
+- 其餘程式邏輯、模型下載清單、音效（Freesound CC0）與圖片素材未修改。

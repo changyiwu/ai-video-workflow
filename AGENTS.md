@@ -12,6 +12,7 @@
 - [x] 階段一：複製上游 repo、移除原作者個人資訊、加上來源標示、專案初始化
 - [ ] 階段二：照 `AGENT_SETUP.md` 檢查硬體（`python setup/detect_hardware.py`）、安裝環境與下載模型
 - [ ] 階段三：跑 `setup/smoke_test.py` 與 `pipeline/demo_local/run_demo.py` 驗證
+- [ ] 階段三之二：RTX Spark 筆電上機驗證（照 `docs/hardware_rtxspark.md`「第一次上機」，結果回填該文件）
 - [ ] 階段四：建立自己的角色設定，用 `pipeline/template_local/` 做第一支片
 
 ## 資料夾結構
@@ -28,7 +29,9 @@ cloud/                         H3 送 Google Colab 跑
 sfx/                           Freesound CC0 音效
 templates/                     片尾範本、法陣素材
 agent/                         CLAUDE.md 範本、ai-drama 編劇技能、blender-previs 技能
-configs/profile.cmd            本硬體版本的環境變數
+configs/profile.cmd            桌機（16GB VRAM＋64GB RAM）環境變數
+configs/profile_rtxspark.cmd   RTX Spark 筆電（Windows on Arm＋64GB 統一記憶體）環境變數
+setup/spark_check.py、setup/env/arm64/   RTX Spark 相容性檢查與 ARM64 套件清單
 ```
 
 ## 專案專屬規則
@@ -36,6 +39,10 @@ configs/profile.cmd            本硬體版本的環境變數
 ### 授權與來源
 - **僅限非商業用途**：文件素材為 CC BY-NC 4.0；Qwen-Image 2.1、Breeze TTS 2 只能非商用。要營利前先照 `THIRD_PARTY_NOTICES.md` 替換模型。
 - **必須保留來源標示**：`LICENSE`、`LICENSE-docs.md`、`THIRD_PARTY_NOTICES.md`、`NOTICE.md`、`agent/skills/ai-drama/NOTICE.md`、`agent/skills/ai-drama/LICENSE-AI-drama-pound.txt` 不可刪除或移除原作者署名；修改上游文件時在 `NOTICE.md` 的修改清單補一筆。
+
+### 兩台硬體
+- 桌機：RTX 5060 Ti 16GB＋64GB RAM，用 `configs\profile.cmd`。筆電：RTX Spark（Windows on Arm、64GB 統一記憶體），用 `configs\profile_rtxspark.cmd`。
+- 改 `setup/env/requirements_*.txt` 後要跑 `python setup/spark_check.py --wheels --emit` 重產 ARM64 清單。
 
 ### 安全與隱私
 - **不放個資與金鑰**：不 commit 真人照片、克隆聲音／參考音、API 金鑰（`.env`）、模型權重、成片影片。本 repo 為**公開** repo。
