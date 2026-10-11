@@ -85,7 +85,7 @@ configs/profile.cmd         這個硬體版本的環境變數
 
 | # | 步驟 | 工具 | 看哪份文件 | 產出 | 要人工看嗎 |
 |---|---|---|---|---|---|
-| 1 | 劇本＋鏡表（每鏡 ≤12 秒） | `agent/skills/shanshiba-drama` | SKILL.md 開頭的版本說明、`docs/03` | `劇本.md` | ✅ 確認劇本 |
+| 1 | 劇本＋鏡表（每鏡 ≤12 秒） | `agent/skills/ai-drama` | SKILL.md 開頭的版本說明、`docs/03` | `劇本.md` | ✅ 確認劇本 |
 | 2 | 角色定妝照（單張、灰底、半身） | `gen_image.py`（預設 Image 2.5；備選 Qwen-Image 2.1） | `docs/07` §1 | `chars/<角色>.png` | ✅ 挑一張定案 |
 | 3 | 場景母版（空景，之後裁成各鏡景別） | `gen_image.py` | `docs/07` §4 | `masters/*.png` | |
 | 4 | 首幀（附定妝照＋母版裁切，**每鏡照抄角色完整外觀描述**） | `gen_image.py --model qwen-edit --ref`（預設 Image 2.5 附參考圖；備選 Qwen-Image-Edit） | `docs/07` §2–3 | `first/<鏡>.png` | ✅ 逐張看：臉、服裝、多手多腳、背景有沒有字 |
@@ -121,7 +121,7 @@ configs/profile.cmd         這個硬體版本的環境變數
 | 配音參考音 | 屬於個人聲音，不散布 | 自己錄或用 Breeze 設計，台詞一律 BreezyVoice |
 | 模型權重 | 檔案大、各有授權 | 照 [AGENT_SETUP.md](AGENT_SETUP.md) 第 3 節下載（約 150GB） |
 | 成片影片 | 檔案大 | — |
-| OpenAI 金鑰 | **生圖預設用 Image 2.5**；沒設時自動改用本機 Qwen | 自己設環境變數 `OPENAI_API_KEY`（或 `OPENAI_KEY_FILE`），見 `docs/06_安裝.md` §6 |
+| OpenAI 金鑰 | **生圖預設用 Image 2.5**；沒設時自動改用本機 Qwen | 自己設環境變數 `OPENAI_API_KEY`（或 `OPENAI_KEY_FILE`），見 `docs/06_安裝.md` §6。沒有金鑰但有 ChatGPT 訂閱時，也可請 agent 用 `agent-draw` 技能交給 Codex CLI 生圖 |
 | Google AI 方案／Colab 運算單元（選用） | 本機跑不動 H3 時才需要 | 見 [cloud/README.md](cloud/README.md) |
 
 （音效有附：`sfx/` 裡 58 個 Freesound CC0 音效。）

@@ -31,4 +31,5 @@
 - README 改寫為本分支版本；新增本檔；`LICENSE` 追加本分支修改者版權行；`LICENSE-docs.md` 追加修改聲明。
 - 新增 RTX Spark 筆電（Windows on Arm）支援：`configs/profile_rtxspark.cmd`、`docs/hardware_rtxspark.md`、`setup/spark_check.py`、`setup/env/arm64/`；`setup/detect_hardware.py` 加入 ARM64／統一記憶體偵測。
 - 生圖預設改為 OpenAI Image 2.5、本機 Qwen 為備選：`tools/gen_image.py` 新增 `--backend`／`IMAGE_BACKEND`／`IMAGE_FALLBACK`；`make_film.py` 片尾名單依實際後端；`run_demo.py`、`smoke_test.py` 固定本機（它們是安裝驗證）。
+- 文件補上無 API 金鑰時的替代生圖路線：改呼叫全域技能 `agent-draw`（交給 Codex CLI 以 ChatGPT 訂閱生圖），見 `README.md`、`docs/06_安裝.md` §6。
 - 其餘程式邏輯、模型下載清單、音效（Freesound CC0）與圖片素材未修改。

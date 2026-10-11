@@ -43,6 +43,7 @@ setup/spark_check.py、setup/env/arm64/   RTX Spark 相容性檢查與 ARM64 套
 ### 生圖
 - 預設 OpenAI Image 2.5（`gen_image.py` 預設後端），本機 Qwen-Image 為備選；金鑰由使用者自己設定（`OPENAI_API_KEY`／`OPENAI_KEY_FILE`），agent 不經手、不寫進 repo。
 - `run_demo.py`、`smoke_test.py` 固定 `--backend local`（驗證本機安裝用）。
+- 要用 OpenAI 生圖但沒有 API 金鑰時，可改呼叫全域技能 `agent-draw`：它的路線 C 會交給本機已用 ChatGPT 登入的 Codex CLI 代為生圖（扣訂閱額度、不需金鑰）。呼叫時直接把輸出資料夾與檔名指定成 `make_film.py` 要的位置（`out/chars/<角色>.png`、`out/masters/<名稱>.png`、`out/first/<鏡號>.png`），`make_film.py` 看到檔案已存在就會沿用；走路線 B（`draw.py`）時檔名會被加時間戳，要再改名。這條路不經過 `gen_image.py`，`out/image_backends.json` 不會記到——全部用 `agent-draw` 時片尾會預設寫「OpenAI Image 2.5」，混用本機 Qwen 時會只寫 Qwen，出片前要核對片尾的生圖工具名稱，不對就改 `film.json` 片尾的 `tools`。附定妝照當參考圖的做法尚未實測。
 
 ### 兩台硬體
 - 桌機：RTX 5060 Ti 16GB＋64GB RAM，用 `configs\profile.cmd`。筆電：RTX Spark（Windows on Arm、64GB 統一記憶體），用 `configs\profile_rtxspark.cmd`。
