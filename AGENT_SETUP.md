@@ -82,7 +82,7 @@ uv pip install --python C:\AI\BreezeTTS\venv\Scripts\python.exe --no-deps -r <re
 
 ### 2d. BreezyVoice 環境 C:\AI\BreezyVoice（⭐ 所有台詞配音）
 
-BreezyVoice（聯發科＋台大，Apache-2.0）是本工作流的台詞配音引擎：用角色參考音念任何台詞，台灣國語腔，念不準的字可直接標注音。官方只支援 Linux，下面是原專案在 Windows 上實際跑通的裝法：
+BreezyVoice（聯發科＋台大，Apache-2.0）是本工作流的台詞配音引擎：用角色參考音念任何台詞，台灣國語腔，念不準的字可直接標注音。官方安裝說明只有 Linux 版（文字正規化需要的 pynini 在 PyPI 只有 Linux wheel，細節見 `docs/06_安裝.md` §5b），下面是原專案在 Windows 上實際跑通的非官方裝法：
 
 ```
 git clone --recurse-submodules https://github.com/mtkresearch/BreezyVoice C:\AI\BreezyVoice\code
