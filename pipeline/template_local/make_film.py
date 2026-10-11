@@ -128,6 +128,26 @@ def newest(d, ext=".png"):
     return fs[-1] if fs else None
 
 
+IMG_LOG = OUT / "image_backends.json"
+
+
+def gen_img(cmd):
+    """跑一次 gen_image.py（預設 OpenAI Image 2.5，失敗自動退回本機 Qwen），記下實際用的後端，片尾名單照實際寫。"""
+    r = run(cmd)
+    used = "img25" if "[backend] img25" in r.stdout else "local"
+    log = json.loads(IMG_LOG.read_text(encoding="utf-8")) if IMG_LOG.exists() else {}
+    log[used] = log.get(used, 0) + 1
+    IMG_LOG.write_text(json.dumps(log), encoding="utf-8")
+    return r
+
+
+def image_credit():
+    """片尾的生圖工具名：依 out/image_backends.json 實際用到的後端。"""
+    log = json.loads(IMG_LOG.read_text(encoding="utf-8")) if IMG_LOG.exists() else {"img25": 1}
+    names = (["OpenAI Image 2.5"] if log.get("img25") else []) + (["Qwen-Image 2.1／Edit 2511"] if log.get("local") else [])
+    return "／".join(names)
+
+
 def dur(p):
     r = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(p)], capture_output=True, text=True)
     return float(r.stdout)
@@ -166,7 +186,7 @@ def chars():
         p = ("Studio character reference photo, single person only, one image (not a collage), medium close-up bust portrait facing the camera, "
              "plain light grey seamless background, soft even studio light, sharp focus, realistic photograph. " + c["look"] + ", gentle natural expression. "
              "No text, no watermark.")
-        run([PYH3, T / "gen_image.py", "--prompt", p, "--width", "1024", "--height", "1024", "--seed", seed("char_" + k, 11),
+        gen_img([PYH3, T / "gen_image.py", "--prompt", p, "--width", "1024", "--height", "1024", "--seed", seed("char_" + k, 11),
              "--prefix", f"film/char_{k}", "--out", "chars"])
         newest(OUT / "chars").rename(dst)
 
@@ -178,7 +198,7 @@ def masters():
     for k, p in CFG.get("masters", {}).items():
         dst = OUT / "masters" / f"{k}.png"
         if not dst.exists():
-            run([PYH3, T / "gen_image.py", "--prompt", p, "--seed", seed("master_" + k, 21), "--prefix", f"film/master_{k}", "--out", "masters"])
+            gen_img([PYH3, T / "gen_image.py", "--prompt", p, "--seed", seed("master_" + k, 21), "--prefix", f"film/master_{k}", "--out", "masters"])
             newest(OUT / "masters").rename(dst)
     for s in SHOTS:
         if not s.get("scene"):
@@ -190,7 +210,7 @@ def masters():
 
 @stage("frames")
 def frames():
-    """首幀：Qwen-Image-Edit 附「角色定妝照（<image1>…）＋場景裁切（最後一張）」。每鏡都照抄角色完整外觀描述，否則會掉眼鏡、換髮型。"""
+    """首幀：OpenAI Image 2.5（預設；本機備選 Qwen-Image-Edit）附「角色定妝照（<image1>…）＋場景裁切（最後一張）」。每鏡都照抄角色完整外觀描述，否則會掉眼鏡、換髮型。"""
     for s in SHOTS:
         dst = OUT / "first" / f"{s['id']}.png"
         if dst.exists():
@@ -205,7 +225,7 @@ def frames():
             cmd += ["--ref", OUT / "chars" / f"{k}.png"]
         if s.get("scene"):
             cmd += ["--ref", OUT / "masters" / f"crop_{s['id']}.png"]
-        run(cmd)
+        gen_img(cmd)
         newest(OUT / "first").rename(dst)
     sheet([OUT / "first" / f"{s['id']}.png" for s in SHOTS], OUT / "first" / "_sheet.jpg")
     print("→ 人工檢查 out/first/_sheet.jpg：臉、服裝、多手多腳、背景有沒有字、窗戶方向", flush=True)
@@ -439,6 +459,7 @@ def ending():
         Image.open(OUT / "first" / f"{sid}.png").convert("RGB").save(ed / "frames" / f"close{i + 1}.png")
         if up_name:
             tools = [[t[0].replace("RTX VSR", up_name), t[1]] for t in tools]
+        tools = [[image_credit() if ("Image 2.5" in t[0] or t[0].startswith("Qwen-Image")) else t[0], t[1]] for t in tools]
         cards.append(dict(image=f"frames/close{i + 1}.png", tools=tools))
     header = e.get("header", "本片使用的 AI 工具")
     if "本機" in header and (os.name != "nt" or H3_BACKEND in ("colab", "both")):

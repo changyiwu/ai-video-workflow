@@ -1,4 +1,13 @@
-"""Local image generation via the ComfyUI API.
+"""Image generation. Default backend = OpenAI Image 2.5 (tools/img25.py); local ComfyUI is the fallback.
+
+Backend (--backend or env IMAGE_BACKEND):
+  img25 (default)  OpenAI Image 2.5. Needs OPENAI_API_KEY / OPENAI_KEY_FILE. <imageN> in the prompt becomes "Image N".
+                   --seed/--steps/--cfg are ignored (cloud). Missing key or API error -> falls back to local
+                   (disable with IMAGE_FALLBACK=0). --lora, --uncensored and krea*/*-unc presets always run locally.
+  local            ComfyUI on this machine (below).
+Every run prints "[backend] img25" or "[backend] local" so callers can credit the right tool.
+
+Local image generation via the ComfyUI API.
 
 Main model = Qwen-Image 2.1. Other installed options: Krea 2, Qwen-Image-Edit 2511.
 
@@ -163,6 +172,46 @@ def build(a, preset, prompt):
     return g
 
 
+def img25_size(w, h):
+    """Image 2.5 size string: keep aspect ratio, long edge <= 2048, both sides multiples of 16."""
+    s = min(1.0, 2048 / max(w, h))
+    return f"{max(16, round(w * s / 16) * 16)}x{max(16, round(h * s / 16) * 16)}"
+
+
+def gen_img25(a, prompt):
+    """Generate with OpenAI Image 2.5. Returns True on success, False when the caller should fall back to local."""
+    import re
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    try:
+        import img25
+    except SystemExit as e:                       # img25 exits at import when no API key is set
+        print(f"[img25] unavailable: {e}", flush=True)
+        return False
+    prompt = re.sub(r"<image(\d+)>", r"Image \1", prompt)   # Qwen-Edit tag -> Image 2.5 wording
+    size = img25_size(a.width, a.height)
+    stem = Path(a.out or "img25_out") / "_img25" / f"{Path(a.prefix).name}_{int(time.time())}"
+    t0 = time.time()
+    print(f"[queued] backend=img25 {size} quality={img25.QUALITY} refs={len(a.ref or [])}", flush=True)
+    try:
+        files = img25.edit(prompt, a.ref, stem, size=size) if a.ref else img25.generate(prompt, stem, size=size)
+    except Exception as e:
+        print(f"[img25] error: {str(e)[:500]}", flush=True)
+        return False
+    if not files:
+        print("[img25] no image returned", flush=True)
+        return False
+    print("[backend] img25", flush=True)
+    for f in files:
+        print(f"[out] {f}")
+        if a.out:                                 # same layout as the local path: finished PNG copied into --out
+            dest = Path(a.out) / f.name
+            shutil.copy2(f, dest)
+            print(f"[copy] {dest}")
+    print(f"[done] total {time.time() - t0:.1f}s")
+    return True
+
+
 def main():
     ap = argparse.ArgumentParser(description="Generate an image locally via ComfyUI.")
     ap.add_argument("--prompt", default=None)
@@ -187,6 +236,8 @@ def main():
     ap.add_argument("--host", default=DEFAULT_HOST)
     ap.add_argument("--out", default=None, help="optional folder to copy the finished image into")
     ap.add_argument("--lora", action="append", default=None, help="LoRA file[:strength], repeatable (e.g. afu_qwen21.safetensors:1.0)")
+    ap.add_argument("--backend", choices=("img25", "local"), default=os.environ.get("IMAGE_BACKEND", "img25"),
+                    help="img25 = OpenAI Image 2.5 (default), local = ComfyUI")
     a = ap.parse_args()
 
     name = "qwen21-unc" if a.uncensored else a.model
@@ -208,6 +259,14 @@ def main():
     else:
         raise SystemExit("need --prompt or --prompt-file")
 
+    local_only = bool(a.lora) or a.uncensored or name.startswith("krea") or name.endswith("-unc")
+    if a.backend == "img25" and not local_only:
+        if gen_img25(a, prompt):
+            return
+        if os.environ.get("IMAGE_FALLBACK", "1") == "0":
+            raise SystemExit("[img25] failed and IMAGE_FALLBACK=0")
+        print("[img25] falling back to local ComfyUI", flush=True)
+    print("[backend] local", flush=True)
     ensure_server(a.host)
     graph = build(a, p, prompt)
     res = _req(a.host, "/prompt", {"prompt": graph})

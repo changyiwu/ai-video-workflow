@@ -12,7 +12,7 @@
 > - 「Seedance 2.5、每段 30 秒」→ 本機 H3、單鏡 ≤12 秒、對話靠切鏡
 > - 「主角」「角色資產/<主角>/角色設定.md」→ 佔位例子，請換成你自己的角色設定檔
 > - 「voice-clone 技能」→ BreezyVoice（`make_breezyvoice.cmd`）
-> - 首幀 → 本 repo 預設 Qwen-Image-Edit 2511 附定妝照（原頻道用雲端 Image 2.5）；定稿用 DMAD 4 步
+> - 首幀 → 本 repo 預設 OpenAI Image 2.5 附定妝照，本機 Qwen-Image-Edit 2511 為備選；定稿用 DMAD 4 步
 > - 「14 步＋EasyCache」→ 定稿不開 EasyCache
 
 協作方法（知識庫分層、記憶、工作習慣）見 [docs/05_agent協作與知識庫.md](../docs/05_agent協作與知識庫.md)。

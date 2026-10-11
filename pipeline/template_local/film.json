@@ -105,7 +105,7 @@
   "header": "本片使用的 AI 工具（全部本機執行）",
   "card_dur": 3.0, "title_dur": 3.5,
   "cards": [
-   [["MiniMax H3", "影片生成"], ["Qwen-Image 2.1／Edit 2511", "角色與首幀"], ["MiniMax-Music3", "配樂生成"]],
+   [["MiniMax H3", "影片生成"], ["OpenAI Image 2.5", "角色與首幀"], ["MiniMax-Music3", "配樂生成"]],
    [["BreezyVoice＋Breeze TTS 2", "配音"], ["faster-whisper・BS-RoFormer・RTX VSR", "校對／分離／放大"], ["本片畫面、配音與配樂皆由 AI 生成", ""]]
   ]
  }

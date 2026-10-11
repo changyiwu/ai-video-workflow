@@ -105,7 +105,7 @@ def main():
         step("pron_compare", [PYV, str(T / "pron_compare.py"), str(line_wav), "breeze/line.wav", LINE])
     # --- 圖、音樂、影片（ComfyUI）
     (OUT / "prompt.txt").write_text(PROMPT, encoding="utf-8")
-    img = step("qwen_image", [PYH3, str(T / "gen_image.py"), "--prompt-file", "prompt.txt", "--seed", "5101", "--prefix", "smoke/first", "--out", "qwen"],
+    img = step("qwen_image", [PYH3, str(T / "gen_image.py"), "--backend", "local", "--prompt-file", "prompt.txt", "--seed", "5101", "--prefix", "smoke/first", "--out", "qwen"],
                lambda: newest(OUT / "qwen", {".png"}))
     if img:
         from PIL import Image
@@ -114,7 +114,7 @@ def main():
         im.resize((1344, 768), Image.LANCZOS).save(OUT / "first.png")
         (OUT / "prompt_ref.txt").write_text("The boy in <image1> is the same boy: keep exactly his face and hair. " + PROMPT.replace("sits at his wooden desk facing the camera",
                                             "stands by the classroom window looking out"), encoding="utf-8")
-        step("qwen_ref", [PYH3, str(T / "gen_image.py"), "--prompt-file", "prompt_ref.txt", "--ref", "ref_bust.png", "--seed", "5102", "--prefix", "smoke/ref",
+        step("qwen_ref", [PYH3, str(T / "gen_image.py"), "--backend", "local", "--prompt-file", "prompt_ref.txt", "--ref", "ref_bust.png", "--seed", "5102", "--prefix", "smoke/ref",
                           "--out", "qwen_ref"], lambda: newest(OUT / "qwen_ref", {".png"}))
     (OUT / "cap.txt").write_text("Genre: light playful school comedy underscore, purely instrumental. BPM 108.\nVocal: NONE.\nArrangement: pizzicato strings, marimba.",
                                  encoding="utf-8")

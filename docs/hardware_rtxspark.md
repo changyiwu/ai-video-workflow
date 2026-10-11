@@ -44,7 +44,8 @@ H3 還是記憶體不足時，依序試：`--reserve-vram` 調到 8–10 → 加
 | 工作 | 在哪跑 |
 |---|---|
 | 劇本、剪接、字幕、自審（CPU） | 筆電 |
-| 首幀（Qwen-Image／Edit）、配樂（Music 3） | 筆電（ComfyUI 跑得起來的話） |
+| 角色與首幀 | OpenAI Image 2.5（本專案預設，雲端，不受 ARM64 影響）；備選本機 Qwen-Image |
+| 配樂（Music 3） | 筆電（ComfyUI 跑得起來的話） |
 | H3 影片 | 筆電先試；不行改 `set H3_BACKEND=colab` |
 | 台詞配音（BreezyVoice）、聽寫校對（faster-whisper） | Colab（`cloud/README.md`），或在桌機跑好再同步過來 |
 | 放大 | 筆電，ffmpeg lanczos |

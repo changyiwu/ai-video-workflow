@@ -120,7 +120,7 @@ def chars():
         p = ("Studio character reference photo, single person only, one image (not a collage), medium close-up bust portrait facing the camera, "
              "plain light grey seamless background, soft even studio light, sharp focus, realistic photograph. " + c["look"] + ", gentle natural expression. "
              "No text, no watermark.")
-        run([PYH3, str(T / "gen_image.py"), "--prompt", p, "--width", "1024", "--height", "1024", "--seed", "11", "--prefix", f"demo/char_{k}", "--out", "chars"])
+        run([PYH3, str(T / "gen_image.py"), "--backend", "local", "--prompt", p, "--width", "1024", "--height", "1024", "--seed", "11", "--prefix", f"demo/char_{k}", "--out", "chars"])
         newest(OUT / "chars").rename(dst)
 
 
@@ -134,7 +134,7 @@ def frames():
         keep = " ".join(f"Keep exactly the same person as <image{i}>: same face, hairstyle and clothes — {CHARS[k]['look']}."
                         for i, k in enumerate(s["refs"], 1))
         p = keep + " New photo: " + CINE + s["frame"] + " No text, no watermark, no captions."
-        cmd = [PYH3, str(T / "gen_image.py"), "--model", "qwen-edit", "--width", "1344", "--height", "768", "--prompt", p, "--seed", "5101",
+        cmd = [PYH3, str(T / "gen_image.py"), "--backend", "local", "--model", "qwen-edit", "--width", "1344", "--height", "768", "--prompt", p, "--seed", "5101",
                "--prefix", f"demo/{s['id']}", "--out", "first"]
         for k in s["refs"]:
             cmd += ["--ref", str(OUT / "chars" / f"{k}.png")]

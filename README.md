@@ -2,7 +2,7 @@
 
 > **來源**：本專案改作自 [mathruffian-dot/shanshiba-workflow-16gvram-64gram](https://github.com/mathruffian-dot/shanshiba-workflow-16gvram-64gram)，原作者「山獅霸的多重宇宙」（<https://github.com/mathruffian-dot>）。文件以 CC BY-NC 4.0、程式碼以 MIT 授權，修改內容與完整來源標示見 [NOTICE.md](NOTICE.md)。
 
-用本機模型製作 1–3 分鐘、16:9、24fps 原創短片的完整工作流：劇本由 AI agent（Claude Code）協作，角色、首幀、影片、配音、配樂全部用本機模型生成，挑音、後製、自審全部腳本化；人只在劇本、首幀、成片三個關卡驗收。
+製作 1–3 分鐘、16:9、24fps 原創短片的完整工作流：劇本由 AI agent（Claude Code）協作；**角色與首幀預設用雲端 OpenAI Image 2.5，本機 Qwen-Image 為備選**（沒有金鑰或 API 失敗時自動切換）；影片、配音、配樂用本機模型生成，挑音、後製、自審全部腳本化；人只在劇本、首幀、成片三個關卡驗收。
 
 > 本 repo 不含任何人物照片、克隆聲音、API 金鑰、角色定妝照與模型權重。
 
@@ -27,7 +27,7 @@ Windows on Arm＋64GB 統一記憶體的 RTX Spark 筆電另有設定（`configs
 
 32GB 顯卡、16GB＋32GB RAM、Google Colab 的版本由上游原作者維護，連結見 [NOTICE.md](NOTICE.md)。每一版都有 `cloud/`，本機跑不動時可以把 H3 送到 Colab。
 
-> ⚠️ **本 repo 預設給非商業用途**（教學、研究、個人創作）。用到的 **Qwen-Image 2.1、Breeze TTS 2 只能非商業使用**；要營利請照 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) 換掉這兩個（例如生圖改用雲端 Image 2.5、角色參考音改用 VoxCPM2 聲音設計或真人錄音）。台詞配音用的 BreezyVoice 是 Apache-2.0，可商用。另外**MiniMax H3 的授權排除美國、歐盟、英國、南韓**；MiniMax H3／Music 3 要求公開內容標示 AI 生成。本 repo 不含任何模型權重。
+> ⚠️ **本 repo 預設給非商業用途**（教學、研究、個人創作）。用到的 **Qwen-Image 2.1、Breeze TTS 2 只能非商業使用**；要營利請照 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) 換掉這兩個（生圖預設已是雲端 Image 2.5，商用時關掉本機備選 `IMAGE_FALLBACK=0`；角色參考音改用 VoxCPM2 聲音設計或真人錄音）。台詞配音用的 BreezyVoice 是 Apache-2.0，可商用。另外**MiniMax H3 的授權排除美國、歐盟、英國、南韓**；MiniMax H3／Music 3 要求公開內容標示 AI 生成。本 repo 不含任何模型權重。
 
 ## 2. 流程一覽
 
@@ -59,9 +59,9 @@ docs/
 tools/                      全域工具（放到 C:\AI\tools）
   h3_shot.py ⭐             分鏡 JSON → 官方格式提示詞 → 格式檢查 → H3 生成
   make_breezyvoice.cmd ⭐   台詞配音：BreezyVoice 每句 8 候選 → 聽寫＋腔調自動挑
-  gen_image.py              本機 Qwen-Image 2.1／Qwen-Image-Edit 生圖
+  gen_image.py              生圖入口：預設 OpenAI Image 2.5，備選本機 Qwen-Image 2.1／Edit（--backend local）
   start_comfy.cmd           啟動 ComfyUI
-  img25.py                  OpenAI Image 2.5 生圖／編輯（選用，雲端）
+  img25.py                  OpenAI Image 2.5 生圖／編輯（gen_image.py 預設呼叫它）
   pron_check.py／pron_compare.py  中文配音聲調審核
   ...（完整清單見 docs/06_安裝.md）
 pipeline/template_local/    ⭐ 做新片的範本：改 film.json → make_film.py 從角色做到成片＋自審
@@ -86,9 +86,9 @@ configs/profile.cmd         這個硬體版本的環境變數
 | # | 步驟 | 工具 | 看哪份文件 | 產出 | 要人工看嗎 |
 |---|---|---|---|---|---|
 | 1 | 劇本＋鏡表（每鏡 ≤12 秒） | `agent/skills/shanshiba-drama` | SKILL.md 開頭的版本說明、`docs/03` | `劇本.md` | ✅ 確認劇本 |
-| 2 | 角色定妝照（單張、灰底、半身） | `gen_image.py`（Qwen-Image 2.1） | `docs/07` §1 | `chars/<角色>.png` | ✅ 挑一張定案 |
+| 2 | 角色定妝照（單張、灰底、半身） | `gen_image.py`（預設 Image 2.5；備選 Qwen-Image 2.1） | `docs/07` §1 | `chars/<角色>.png` | ✅ 挑一張定案 |
 | 3 | 場景母版（空景，之後裁成各鏡景別） | `gen_image.py` | `docs/07` §4 | `masters/*.png` | |
-| 4 | 首幀（附定妝照＋母版裁切，**每鏡照抄角色完整外觀描述**） | `gen_image.py --model qwen-edit --ref` | `docs/07` §2–3 | `first/<鏡>.png` | ✅ 逐張看：臉、服裝、多手多腳、背景有沒有字 |
+| 4 | 首幀（附定妝照＋母版裁切，**每鏡照抄角色完整外觀描述**） | `gen_image.py --model qwen-edit --ref`（預設 Image 2.5 附參考圖；備選 Qwen-Image-Edit） | `docs/07` §2–3 | `first/<鏡>.png` | ✅ 逐張看：臉、服裝、多手多腳、背景有沒有字 |
 | 5 | 角色聲音（一次）→ 台詞配音 | `breeze_batch.py`（設計參考音）→ `make_breezyvoice.cmd` | `docs/03` §5 | `bv/<句>.wav`（已去頭尾靜音） | `needs_review` 的句子聽一次 |
 | 6 | H3 每鏡（DMAD 4 步、只給首幀、台詞當固定音軌；看得到臉又沒台詞的鏡給靜音） | `h3_shot.py`（spec 加 `"draft": true`） | `docs/03` §4、`tools/examples/` | `h3/<鏡>/clip.mp4` | ✅ 抽格看：換臉、多人、鏡頭漂移 |
 | 7 | 配樂（純器樂、多抽幾個 seed，挑人聲殘留最少的） | `gen_music3.py` → `audio-separator` | `docs/02` §9 | `music/*.flac` | |
@@ -109,7 +109,7 @@ configs/profile.cmd         這個硬體版本的環境變數
 5. **不說話的鏡頭給靜音引導音軌**，否則角色會自己嘟囔。
 6. **畫面上的中文一律後製疊字**，H3 會把字寫成亂碼。
 7. **台灣腔配音**：Breeze 設計角色聲音（一次）→ **BreezyVoice** 用它念每句台詞（每句 8 候選，約 2.5 秒一個）→ 聽寫全對＋跟台灣國語參考音比聲調自動挑；念不準的字直接標注音（`連假[:ㄐㄧㄚ4]`）。
-8. **低頭、轉身後臉會換人** → 再生一張「動作結束時」的畫面當尾幀鎖住（原頻道用 Image 2.5；本地可用 Qwen-Image-Edit 附定妝照）。
+8. **低頭、轉身後臉會換人** → 再生一張「動作結束時」的畫面當尾幀鎖住（預設 Image 2.5；本地可用 Qwen-Image-Edit 附定妝照）。
 9. **先做最難的一鏡再批次**，不要整片生完才發現共通問題。
 10. **不合格就重拍到合格**，不靠剪掉躲；給人看並排影片，數字只當備註。
 
@@ -121,7 +121,7 @@ configs/profile.cmd         這個硬體版本的環境變數
 | 配音參考音 | 屬於個人聲音，不散布 | 自己錄或用 Breeze 設計，台詞一律 BreezyVoice |
 | 模型權重 | 檔案大、各有授權 | 照 [AGENT_SETUP.md](AGENT_SETUP.md) 第 3 節下載（約 150GB） |
 | 成片影片 | 檔案大 | — |
-| OpenAI 金鑰（選用） | 預設不用；想改用雲端 Image 2.5 生首幀才需要 | 設環境變數 `OPENAI_API_KEY`，用 `tools/img25.py` |
+| OpenAI 金鑰 | **生圖預設用 Image 2.5**；沒設時自動改用本機 Qwen | 自己設環境變數 `OPENAI_API_KEY`（或 `OPENAI_KEY_FILE`），見 `docs/06_安裝.md` §6 |
 | Google AI 方案／Colab 運算單元（選用） | 本機跑不動 H3 時才需要 | 見 [cloud/README.md](cloud/README.md) |
 
 （音效有附：`sfx/` 裡 58 個 Freesound CC0 音效。）
