@@ -1,0 +1,3 @@
+* text=auto eol=lf
+# 2026-10-11：.sh 要在 Colab（Linux）上執行，Windows clone 時不能轉成 CRLF
+*.sh text eol=lf

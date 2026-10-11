@@ -1,0 +1,33 @@
+# 媒體與大檔
+*.mp4
+*.mov
+*.wav
+*.mp3
+!sfx/**/*.mp3
+*.flac
+*.safetensors
+*.gguf
+*.ckpt
+# 金鑰
+.env
+*.key
+*key*.txt
+# 快取
+__pycache__/
+*.pyc
+
+# 執行產物
+setup/smoke_out/
+pipeline/demo_local/out/
+pipeline/*/out/
+*.png.bak
+setup/smoke_out_colab/
+
+# GDrive
+desktop.ini
+*.tmp
+~$*
+credentials.*
+
+# 交接檔含真實電腦名與本機路徑，只走雲端硬碟同步，不進公開 repo
+handoff.md
