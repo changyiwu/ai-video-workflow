@@ -21,7 +21,7 @@
    | 環境 | 可直接裝 | 主要問題 | 對策 |
    |---|---|---|---|
    | `C:\AI\H3`（ComfyUI、H3、Qwen、Music 3） | 98／109 | torch 家族要換來源；`triton-windows`、`nvidia-vfx`（RTX VSR）只有 x64 | 用 `setup/env/arm64/requirements_h3_venv_arm64.txt`；放大改 `UPSCALE=lanczos` 或 FlashVSR |
-   | `C:\AI\Voice`（VoxCPM2、faster-whisper、分軌） | 127／146 | **`ctranslate2`（faster-whisper 核心）沒有 Windows ARM64 版**；CUDA 12 函式庫只有 x64 | 聽寫校對改在 Colab 跑，或之後改用 openai-whisper |
+   | `C:\AI\Voice`（VoxCPM2、faster-whisper、分軌） | 127／146 | **`ctranslate2`（faster-whisper 核心）沒有 Windows ARM64 版**；CUDA 12 函式庫只有 x64；VoxCPM2 需要的 `soxr`、`torchcodec` 沒有 ARM64 wheel（見下方〈語音〉） | 聽寫校對改在 Colab 跑，或之後改用 openai-whisper；VoxCPM2 先試本機 |
    | `C:\AI\BreezeTTS` | 83／88 | 少數套件要現場編譯 | 用 arm64 清單試裝 |
    | `C:\AI\BreezyVoice`（Python 3.10） | 116／136 | **numpy 1.26、scipy、pandas、scikit-learn 等在 Python 3.10 沒有 ARM64 wheel**，要自己編譯，很可能失敗 | 台詞配音預設送 Colab（`cloud/colab_h3.py full-setup`） |
 
@@ -39,6 +39,27 @@
 
 H3 還是記憶體不足時，依序試：`--reserve-vram` 調到 8–10 → 加 `--lowvram` → 換 NVFP4 文字編碼器（N1X 是 Blackwell，原生支援 FP4；上游實測畫面會跟 int8 不同但品質相當）→ `H3_BACKEND=colab`。
 
+## 語音：筆電上先試 VoxCPM2
+
+Breeze TTS 2（官方只支援 Linux）與 BreezyVoice（安裝與相依套件以 Linux 為準，Python 3.10 套件沒有 ARM64 wheel）在筆電上都很難裝。**VoxCPM2 是語音元件裡最有機會在筆電本機跑的**（2026-10-11 查資料與掃 PyPI，尚未實機驗證）：
+
+- **官方需求沒有限定平台**：Python 3.10–3.12、PyTorch ≥ 2.5、CUDA ≥ 12；裝置可選 `cpu`／`cuda`／`mps`。社群在 Windows 上有在用，上游作者在 Windows 實測顯存峰值 3.6–6.4GB，佔共用記憶體很少。
+- **它一個就能接手兩件事**：
+  - 取代 Breeze TTS 2 設計角色參考音（`gen_voice.py --control "聲音描述" --design`）。
+  - 暫代 BreezyVoice 念台詞（`gen_voice.py --ref <參考音>`）。代價：上游後來改用 BreezyVoice 是因為台灣腔較準，VoxCPM2 念台詞的口音可能較差，定稿台詞仍建議在桌機或 Colab 用 BreezyVoice。
+
+ARM64 套件狀況：
+
+| 套件 | Windows ARM64 | 影響與對策 |
+|---|---|---|
+| `voxcpm` 本體 | ✅ 純 Python | — |
+| numpy、scipy、numba、llvmlite、sentencepiece | ✅ 有 win_arm64 wheel | — |
+| torch／torchaudio | ⚠️ 只能用 NVIDIA 預覽版 | 同 H3 環境 |
+| `soxr` 1.1.0（重新取樣，librosa 會 import） | ❌ 只有原始碼，要在 ARM64 上編 C 程式（需 Visual Studio ARM64 建置工具、CMake） | 編不起來 librosa 就無法 import → 送 Colab 或桌機 |
+| `torchcodec` | ❌ 沒有 ARM64 wheel（上游語音環境本來也沒裝） | 新版 torchaudio 讀音檔要靠它；官方 issue #119 有人附參考音克隆時報 `Could not load libtorchcodec`。**附參考音克隆這條路要實測**；純聲音設計（`--design`，不讀參考音）較不受影響 |
+
+**Python 版本裝不起來的備案**：VoxCPM 官方推薦 [llama.cpp-omni](https://github.com/tc-mb/llama.cpp-omni)（C++、不需要 Python），載入 VoxCPM2 的 GGUF 權重，支援 CPU／CUDA／Vulkan。NVIDIA 的 Windows on Arm 頁面有列 llama.cpp 支援，但 omni 是分支，Windows ARM64 上能不能編譯沒人驗證過；最差可以純 CPU 跑（慢，但不需要 GPU 驅動）。注意它不經過 `gen_voice.py`，要另外接進流程。
+
 ## 建議分工（第一次上機前的預設）
 
 | 工作 | 在哪跑 |
@@ -47,7 +68,9 @@ H3 還是記憶體不足時，依序試：`--reserve-vram` 調到 8–10 → 加
 | 角色與首幀 | OpenAI Image 2.5（本專案預設，雲端，不受 ARM64 影響）；備選本機 Qwen-Image |
 | 配樂（Music 3） | 筆電（ComfyUI 跑得起來的話） |
 | H3 影片 | 筆電先試；不行改 `set H3_BACKEND=colab` |
-| 台詞配音（BreezyVoice）、聽寫校對（faster-whisper） | Colab（`cloud/README.md`），或在桌機跑好再同步過來 |
+| 角色參考音（聲音設計） | 筆電先試 VoxCPM2（`--control … --design`）；不行改 Colab 或桌機 |
+| 台詞配音 | 定稿：BreezyVoice 在 Colab 或桌機；筆電上試做可用 VoxCPM2（口音可能較差） |
+| 聽寫校對（faster-whisper） | Colab（`cloud/README.md`），或在桌機跑好再同步過來 |
 | 放大 | 筆電，ffmpeg lanczos |
 
 > 專案放在 Google 雲端硬碟，桌機（RTX 5060 Ti 16GB＋64GB）和筆電看得到同一份檔案：配音這類筆電跑不了的步驟，也可以直接在桌機做。
@@ -66,8 +89,20 @@ H3 還是記憶體不足時，依序試：`--reserve-vram` 調到 8–10 → 加
    ComfyUI 與自訂節點照 `AGENT_SETUP.md` 2a（`Nvidia_RTX_Nodes_ComfyUI` 先不要裝）。
 5. **相容性總檢查**：`python setup\spark_check.py --torch-python C:\AI\H3\venv\Scripts\python.exe --out spark_report.json` → 看 `torch.cuda` 是否為 `true`、`gpu_total_gb` 報多少。
 6. **ComfyUI 啟動**：`call configs\profile_rtxspark.cmd` 後 `C:\AI\tools\start_comfy.cmd`。
-7. **smoke test**：`setup\smoke_test.py`；過了再跑 `pipeline\demo_local\run_demo.py`（配音那段預期要改走 Colab）。
-8. 把每一步的結果（成功／失敗、速度、記憶體峰值）寫回本文件，並更新上面的分工表。
+7. **語音環境（VoxCPM2）**：
+   ```
+   py -V:3.12-arm64 -m venv C:\AI\Voice\venv
+   C:\AI\Voice\venv\Scripts\python.exe -m pip install --pre --upgrade --only-binary=:all: --extra-index-url https://pypi.nvidia.com/nvtorch_oot_nightly torch torchvision torchaudio
+   uv pip install --python C:\AI\Voice\venv\Scripts\python.exe --no-deps -r <repo>\setup\env\arm64\requirements_voice_venv_arm64.txt --index-strategy unsafe-best-match
+   ```
+   逐項確認並回填（下面的 `gen_voice.py` 指 `C:\AI\Voice\venv\Scripts\python.exe C:\AI\tools\gen_voice.py`）：
+   - `soxr` 有沒有編譯成功：`C:\AI\Voice\venv\Scripts\python.exe -c "import soxr, librosa; print('ok')"`
+   - VoxCPM2 載入：`C:\AI\Voice\venv\Scripts\python.exe -c "import voxcpm; print('ok')"`
+   - 純聲音設計：`gen_voice.py --control "a calm Taiwanese male teacher in his thirties" --design --text "大家好" --out design.wav`
+   - 附參考音克隆（torchcodec 風險）：`gen_voice.py --ref design.wav --text "明天要考試" --out clone.wav`；報 `libtorchcodec` 錯誤就記下來，改送 Colab／桌機
+   - 失敗時記下卡在哪個套件，再評估 llama.cpp-omni 備案
+8. **smoke test**：`setup\smoke_test.py`；過了再跑 `pipeline\demo_local\run_demo.py`（BreezyVoice、Breeze TTS 2、faster-whisper 那幾段預期要改走 Colab）。
+9. 把每一步的結果（成功／失敗、速度、記憶體峰值）寫回本文件，並更新上面的分工表。
 
 ## 重新產生 ARM64 套件清單
 
@@ -82,3 +117,6 @@ python setup\spark_check.py --wheels --emit
 - NVIDIA RTX Spark 產品頁：<https://www.nvidia.com/en-us/products/rtx-spark/>
 - NVIDIA Windows on Arm 移植指引（驅動、CUDA 13.4、PyTorch 安裝指令）：<https://developer.nvidia.com/topics/ai/local-ai/port-apps>
 - CUDA Toolkit for Windows on Arm 預覽版說明：<https://videocardz.com/newz/nvidia-releases-first-cuda-toolkit-preview-for-windows-on-arm-and-rtx-spark>
+- VoxCPM 官方 README（需求、裝置選項、llama.cpp-omni）：<https://github.com/OpenBMB/VoxCPM>
+- VoxCPM issue #119（附參考音時 `Could not load libtorchcodec`）：<https://github.com/OpenBMB/VoxCPM/issues/119>
+- llama.cpp-omni（VoxCPM2 GGUF，C++ 推論）：<https://github.com/tc-mb/llama.cpp-omni>
