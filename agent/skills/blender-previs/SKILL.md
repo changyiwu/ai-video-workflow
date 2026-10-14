@@ -19,7 +19,7 @@ AI 影片最常見的失敗是**空間隨機性**：座位跑掉、人物增生�
 1. 專案進度與做片規則：repo 根目錄 `handoff.md`、`films/AGENTS.md`，以及該片的 `films/<片名>/製作紀錄.md`
 2. 固定流程與踩坑對策：`docs/02_端到端流程.md`（§2 Blender 預演）、`docs/03_規則與踩坑.md`
 3. 該片角色設定；生任何圖／影片前讀 `films/角色/<角色>/README.md`（鎖定的外觀與聲音描述）
-4. 要用 Blender 時：安裝見 `docs/06_安裝.md`（`C:\AI\Blender\` portable 版）；布置圖用無介面 Blender 跑 `make_plan.py`、`render_layouts.py`（範例在 `pipeline/example_D-7/blender/`），不需要 Blender MCP。要讓 agent 即時操作 Blender 介面時改用全域技能 `agent-blender`
+4. 要用 Blender 時：安裝見 `docs/06_安裝.md` §6b（安裝版、5.1 以上）；操作方式一律照全域技能 `agent-blender`，本技能的專用規則見 `references/blender-rules.md`〈前置〉
 
 ## 固定規格（本專案，不重複問）
 
