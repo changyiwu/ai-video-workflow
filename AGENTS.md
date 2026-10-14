@@ -25,6 +25,7 @@ LICENSE / LICENSE-docs.md      MIT（程式）／CC BY-NC 4.0（文件素材）
 THIRD_PARTY_NOTICES.md         第三方模型與工具授權
 docs/                          總覽、端到端流程、規則與踩坑、自審清單、安裝、硬體說明
 tools/                         全域工具（安裝時複製到 C:\AI\tools）
+films/                         自己的片與角色資產（.gitignore，不進 repo；規則見 films/AGENTS.md）
 pipeline/                      template_local（新片範本）、demo_local（安裝驗證）、example_D-7（上游範例，缺角色資產，不能直接照跑）
 setup/                         模型下載清單、套件清單、smoke_test、硬體偵測、16GB 模擬測試
 cloud/                         H3 送 Google Colab 跑
@@ -57,6 +58,10 @@ setup/spark_check.py、setup/env/arm64/   RTX Spark 相容性檢查與 ARM64 套
 - 桌機：RTX 5060 Ti 16GB＋64GB RAM，用 `configs\profile.cmd`。筆電：RTX Spark（Windows on Arm、64GB 統一記憶體），用 `configs\profile_rtxspark.cmd`。
 - 改 `setup/env/requirements_*.txt` 後要跑 `python setup/spark_check.py --wheels --emit` 重產 ARM64 清單，並看 diff 有沒有不合理的版本跳動。
 - 判斷套件有沒有 ARM64 版不要只看 PyPI：NVIDIA 的套件（如 `nvidia-vfx`）在 PyPI 只放 wheel-stub 空殼，真正的 wheel 在 pypi.nvidia.com；也要核對 wheel 的 Python 版本（cpXY／abi3）。
+
+### 做片
+- 自己的片一律放 `films/<片名>/`（從 `pipeline/template_local/` 複製，`repo_dir` 維持 `../..`）；`films/` 已列入 `.gitignore`，只走雲端硬碟、沒有 GitHub 備份。
+- 頻道與角色的做片規則在 `films/AGENTS.md`（`films/CLAUDE.md` 橋接），角色資產在 `films/角色/`；不要把這些寫進本檔或 `pipeline/`。
 
 ### 安全與隱私
 - **不放個資與金鑰**：不 commit 真人照片、克隆聲音／參考音、API 金鑰（`.env`）、模型權重、成片影片。本 repo 為**公開** repo。

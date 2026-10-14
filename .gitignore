@@ -29,5 +29,8 @@ desktop.ini
 ~$*
 credentials.*
 
+# 自己的片（角色、劇本、參考音、成品）：只走雲端硬碟，不進公開 repo
+films/
+
 # 交接檔含真實電腦名與本機路徑，只走雲端硬碟同步，不進公開 repo
 handoff.md
