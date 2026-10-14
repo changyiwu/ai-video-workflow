@@ -12,7 +12,7 @@ attrs==26.1.0
 audioread==3.1.0
 beautifulsoup4==4.15.0
 certifi==2026.7.22
-cffi==2.1.1
+# TODO cffi==2.1.1：有 win_arm64 wheel 但沒有 Python 3.10 版：cp311, cp312, cp313, cp314, cp315
 charset-normalizer==3.5.2
 click==8.5.0
 cloudpickle==3.1.2
@@ -20,7 +20,7 @@ colorama==0.4.6
 coloredlogs==15.0.1
 conformer==0.3.2
 contourpy==1.3.2
-cryptography==46.0.3  # ARM64：原本 50.0.2
+cryptography==50.0.2
 cycler==0.12.1
 datasets==5.1.0
 decorator==5.3.1
@@ -57,7 +57,7 @@ lazy-loader==0.6
 librosa==0.10.2
 lightning==2.2.4
 lightning-utilities==0.15.3
-llvmlite==0.50.0
+# TODO llvmlite==0.50.0：有 win_arm64 wheel 但沒有 Python 3.10 版：cp312, cp313, cp314
 markdown==3.10.3
 markdown-it-py==4.2.0
 markupsafe==3.0.3
@@ -65,11 +65,11 @@ matplotlib==3.7.5
 mdurl==0.1.2
 more-itertools==11.1.0
 mpmath==1.3.0
-msgpack==1.2.3
+# TODO msgpack==1.2.3：有 win_arm64 wheel 但沒有 Python 3.10 版：cp311, cp312, cp313, cp314, cp315
 multidict==6.9.1
 multiprocess==0.70.19
 networkx==3.1
-numba==0.68.0
+# TODO numba==0.68.0：有 win_arm64 wheel 但沒有 Python 3.10 版：cp312, cp313, cp314
 numpy==1.26.4
 oauthlib==4.0.0
 omegaconf==2.3.0
@@ -88,7 +88,7 @@ pyasn1==0.6.4
 pyasn1-modules==0.4.2
 pycparser==3.0
 pydantic==2.7.0
-pydantic-core==2.18.1
+# TODO pydantic-core==2.18.1：有 win_arm64 wheel 但沒有 Python 3.10 版：cp311, cp312
 pydantic-settings==2.7.0
 pygments==2.21.0
 pyparsing==3.3.3
@@ -98,7 +98,7 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.2.4
 pytorch-lightning==2.6.6
 pytz==2026.5
-pyyaml==6.0.3
+# TODO pyyaml==6.0.3：有 win_arm64 wheel 但沒有 Python 3.10 版：cp312, cp313, cp314
 regex==2026.9.29
 requests==2.34.2
 requests-oauthlib==2.0.0

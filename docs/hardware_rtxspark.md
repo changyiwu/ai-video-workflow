@@ -16,14 +16,14 @@
 ## 三個主要風險
 
 1. **軟體生態還在預覽階段**：NVIDIA 的 Windows on Arm CUDA 工具包是 Developer Preview，官方說不適合正式使用，已知問題包括某些 PyTorch 工作流程會造成 GPU 逾時或系統重開。PyTorch 要從 NVIDIA 的 nightly 索引裝，不是 PyTorch 官方索引。
-2. **部分套件沒有 Windows ARM64 版**（2026-10-11 用 `setup/spark_check.py --wheels` 掃描 PyPI 的結果）：
+2. **部分套件沒有 Windows ARM64 版**（2026-10-14 用 `setup/spark_check.py --wheels` 重掃：PyPI＋pypi.nvidia.com，並檢查 wheel 的 Python 版本是否相符）：
 
    | 環境 | 可直接裝 | 主要問題 | 對策 |
    |---|---|---|---|
-   | `C:\AI\H3`（ComfyUI、H3、Qwen、Music 3） | 98／109 | torch 家族要換來源；`triton-windows` 只有 x64；`nvidia-vfx`（RTX VSR）0.2.0.0 起在 pypi.nvidia.com 有 win_arm64 版（PyPI 上只有 sdist 空殼，2026-10-14 更正） | 用 `setup/env/arm64/requirements_h3_venv_arm64.txt`；RTX VSR 驗證前放大先用 `UPSCALE=lanczos` |
-   | `C:\AI\Voice`（VoxCPM2、faster-whisper、分軌） | 127／146 | **`ctranslate2`（faster-whisper 核心）沒有 Windows ARM64 版**；CUDA 12 函式庫只有 x64；VoxCPM2 需要的 `soxr`、`torchcodec` 沒有 ARM64 wheel（見下方〈語音〉） | 聽寫校對改在 Colab 跑，或之後改用 openai-whisper；VoxCPM2 先試本機 |
-   | `C:\AI\BreezeTTS`（選用引擎） | 83／88 | 少數套件要現場編譯 | 用 arm64 清單試裝 |
-   | `C:\AI\BreezyVoice`（選用引擎，Python 3.10） | 116／136 | **numpy 1.26、scipy、pandas、scikit-learn 等在 Python 3.10 沒有 ARM64 wheel**，要自己編譯，很可能失敗 | 要用選用引擎就送 Colab（`cloud/colab_h3.py full-setup`）或在桌機跑 |
+   | `C:\AI\H3`（ComfyUI、H3、Qwen、Music 3） | 97／109 | torch 家族要換來源（NVIDIA nightly 有 torch 2.16 dev、torchaudio、torchvision 的 win_arm64）；`triton-windows` 3.8.0.post28 起有 win_arm64，但預覽版 CUDA 上未驗證，先不裝；`numba`／`llvmlite` 原鎖版本的 ARM64 版只有 Python 3.14，ARM64 清單改用 0.68／0.50；`nvidia-vfx`（RTX VSR）0.2.0.0 起在 pypi.nvidia.com 有 win_arm64 版（PyPI 上只有 sdist 空殼，2026-10-14 更正） | 用 `setup/env/arm64/requirements_h3_venv_arm64.txt`；RTX VSR 驗證前放大先用 `UPSCALE=lanczos` |
+   | `C:\AI\Voice`（VoxCPM2、faster-whisper、分軌） | 126／146 | **`ctranslate2`（faster-whisper 核心）任何版本都沒有 Windows ARM64 版**（CUDA 12 函式庫也只有 x64；CUDA 13 版有 ARM64，但 ctranslate2 用不到）；`soxr`、`torchcodec` 沒有 ARM64 wheel（見下方〈語音〉）；`tiktoken`（openai-whisper 需要）與 `praat-parselmouth`（挑音的聲調比對）只有原始碼 | 聽寫：`stt.py` 自動改用 openai-whisper，但要先編得出 tiktoken（要 Rust 工具鏈）；parselmouth 編不起來時挑音照跑，只是沒有腔調分數；VoxCPM2 先試本機 |
+   | `C:\AI\BreezeTTS`（選用引擎） | 81／88 | 少數套件要現場編譯 | 用 arm64 清單試裝 |
+   | `C:\AI\BreezyVoice`（選用引擎，Python 3.10） | 110／136 | **numpy 1.26、scipy、pandas、scikit-learn、pydantic-core、pyyaml 等在 Python 3.10 沒有 ARM64 wheel**（新版的 ARM64 wheel 從 3.11／3.12 起），要自己編譯，很可能失敗 | 要用選用引擎就送 Colab（`cloud/colab_h3.py full-setup`）或在桌機跑 |
 
 3. **記憶體是共用的**：桌機的做法是「顯存放不下的模型先放系統記憶體」，在統一記憶體上這等於同一池子放兩份。上游 16GB 顯存＋32GB 記憶體版實測 H3 一共約用掉 45–50GB 仍可跑，所以 64GB 統一記憶體**理論上夠**，但 Windows 與桌面程式也從同一池子拿，生成時一定要關掉其他大程式。
 

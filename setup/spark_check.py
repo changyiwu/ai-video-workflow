@@ -35,7 +35,7 @@ SPECIAL = {
     "torch": "從 NVIDIA 預覽索引裝（" + NV_TORCH_INDEX + "）",
     "torchvision": "同 torch",
     "torchaudio": "同 torch",
-    "triton-windows": "x64 專用；ARM64 不裝，ComfyUI 不用 torch.compile 即可",
+    "triton-windows": "3.8.0.post28 起 PyPI 有 win_arm64 wheel（2026-10-14 查），但 NVIDIA 預覽版 CUDA 上未驗證；先不裝（ComfyUI 不用 torch.compile 即可），上機穩定後再試",
     "onnxruntime-gpu": "沒有 ARM64 CUDA 版時改裝 onnxruntime（CPU）",
 }
 # NVIDIA 有些套件在 PyPI 只放 wheel-stub 空殼（sdist），真正的 wheel 在這個索引（例：nvidia-vfx 0.2.0.0 起有 win_arm64）
@@ -66,7 +66,12 @@ def parse_req(path):
     return out
 
 
-def classify(name, ver):
+def arm64_fits(fn, py):
+    """win_arm64 wheel 檔名是否符合這個 Python 版本（cpXY、abi3 或 py3）。"""
+    return fn.endswith("win_arm64.whl") and (f"-cp{py.replace('.', '')}-" in fn or "-abi3-" in fn or "-py3-" in fn)
+
+
+def classify(name, ver, py="3.12"):
     key = name.lower().replace("_", "-")
     if key in SPECIAL:
         return "special", SPECIAL[key]
@@ -79,21 +84,24 @@ def classify(name, ver):
     except Exception as e:
         return "missing", f"PyPI 查不到 {base}（{type(e).__name__}）"
     wheels = [f["filename"] for f in files if f["filename"].endswith(".whl")]
-    if any("win_arm64" in w for w in wheels):
+    if any(arm64_fits(w, py) for w in wheels):
         return "ok", "win_arm64 wheel"
     if any(w.endswith("-none-any.whl") for w in wheels):
         return "ok", "純 Python wheel"
     stem = name.lower().replace("-", "_") + "-" + base + "-"
-    if any(w.lower().startswith(stem) and w.endswith("win_arm64.whl") for w in nv_index_wheels(name)):
+    if any(w.lower().startswith(stem) and arm64_fits(w, py) for w in nv_index_wheels(name)):
         return "ok", f"win_arm64 wheel（{NV_INDEX}；PyPI 上的 sdist 會自動去那裡抓）"
+    if any("win_arm64" in w for w in wheels):
+        return "missing", f"有 win_arm64 wheel 但沒有 Python {py} 版：" + ", ".join(sorted({w.split("-")[2] for w in wheels if "win_arm64" in w}))
     if any(f["packagetype"] == "sdist" for f in files):
         return "build", "只有原始碼，要在 ARM64 上編譯"
     tags = sorted({w.rsplit("-", 1)[-1][:-4] for w in wheels})
     return "missing", "只有 " + ", ".join(tags[:4])
 
 
-def arm64_version(name, py):
-    """PyPI 上有 win_arm64（且符合 Python 版本）或純 Python wheel 的最新正式版。"""
+def arm64_version(name, py, orig=None):
+    """PyPI 上有 win_arm64（且符合 Python 版本）或純 Python wheel 的最新正式版。
+    給 orig 時只接受同一個大版號（避免跳到 pydantic-core 0.0.1 這種古早空殼版；2026-10-14 實際發生過）。"""
     try:
         with urllib.request.urlopen(f"https://pypi.org/pypi/{name}/json", timeout=30) as r:
             rel = json.load(r)["releases"]
@@ -102,7 +110,8 @@ def arm64_version(name, py):
     def key(v):
         return [int(x) if x.isdigit() else 0 for x in re.split(r"[.\-]", v)]
     tag = "cp" + py.replace(".", "")
-    for v in sorted((v for v in rel if re.fullmatch(r"[\d.]+", v)), key=key, reverse=True):
+    major = orig.split(".", 1)[0] if orig and orig != "url" else None
+    for v in sorted((v for v in rel if re.fullmatch(r"[\d.]+", v) and (major is None or v.split(".", 1)[0] == major)), key=key, reverse=True):
         for f in rel[v]:
             fn = f["filename"]
             if fn.endswith("-none-any.whl") or (fn.endswith("win_arm64.whl") and (f"-{tag}-" in fn or "-abi3-" in fn)):
@@ -119,7 +128,7 @@ def emit(report):
             if p["status"] == "special":
                 fix[p["pkg"].lower()] = f"# {p['pkg']}：{p['note']}"
             else:
-                v = None if p["ver"] == "url" else arm64_version(p["pkg"], py)   # 指向原始碼網址的照原樣建置
+                v = None if p["ver"] == "url" else arm64_version(p["pkg"], py, p["ver"].split("+", 1)[0])   # 指向原始碼網址的照原樣建置
                 if v:
                     fix[p["pkg"].lower()] = f"{p['pkg']}=={v}  # ARM64：原本 {p['ver']}"
                 elif p["status"] == "build":   # 沒有 ARM64 wheel：保留原釘選，安裝時現場建置（純 Python 套件通常沒問題）
@@ -139,8 +148,9 @@ def wheel_scan():
     report = {}
     for req in sorted(ENV.glob("requirements_*.txt")):
         pkgs = parse_req(req)
+        py = "3.10" if "breezyvoice" in req.name else "3.12"     # 與 emit() 相同
         with ThreadPoolExecutor(16) as ex:
-            res = list(ex.map(lambda p: (p[0], p[1], *classify(*p)), pkgs))
+            res = list(ex.map(lambda p: (p[0], p[1], *classify(p[0], p[1], py)), pkgs))
         bad = [r for r in res if r[2] != "ok"]
         report[req.name] = dict(total=len(res), ok=len(res) - len(bad),
                                 problems=[dict(pkg=n, ver=v, status=s, note=t) for n, v, s, t in bad])
