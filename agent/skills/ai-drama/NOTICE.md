@@ -11,7 +11,7 @@
 | 平台 | OpenAI Codex（`~/.agents/skills/`） | Claude Code（專案內 `.claude/skills/`） |
 | 畫面比例 | 豎屏 9:16 | **16:9 橫式** |
 | 篇幅結構 | 8–12 集連續短劇 | **單支 1–2 分鐘，獨立成篇** |
-| 角色 | 每次從零設計 | **固定主角山獅霸**，引用專案 Character Bible |
+| 角色 | 每次從零設計 | **上游頻道的固定主角**（本分支已改為佔位），引用專案 Character Bible |
 | 技術限制 | 無 | **Seedance 2.5 可行性檢查**（避開快動作、單一說話者） |
 | 階段數 | 8 | **9**（新增〈片段切分與素材備料〉） |
 | 新增檔案 | — | `references/segmentation.md` |
@@ -24,4 +24,4 @@
 
 ## 本分支（fork）的再修改（2026-10-11，changyiwu）
 
-上表為上游 mathruffian-dot 版本對 AI-drama-pound 的改動。本分支另外：技能資料夾由 `shanshiba-drama` 改名為 `ai-drama`；references 中原頻道固定主角的名稱改為佔位的「主角」／「阿凱」，主角人設改為引用使用者自己的角色設定檔。
+上表為上游 mathruffian-dot 版本對 AI-drama-pound 的改動。本分支另外：技能資料夾由 `shanshiba-drama` 改名為 `ai-drama`；references 中原頻道固定主角的名稱改為佔位的「主角」／「阿凱」，主角人設改為引用使用者自己的角色設定檔。2026-10-14：影片模型改為本機 MiniMax H3，`references/workflow.md` 全文改寫為白話，`references/segmentation.md` 由「≤30 秒片段＋LoRA caption」改寫為「每鏡 ≤12 秒的鏡表」，`checklists.md`、`format.md` 的 Seedance 相關段落同步改寫（上表「技術限制」一列為上游當時的版本）。

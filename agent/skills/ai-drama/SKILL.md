@@ -5,8 +5,8 @@ description: AI 短劇編劇（改寫自 mathruffian-dot 的開源工作流）�
 
 # AI 短劇編劇
 
-> **本 repo 版本說明（2026-10-07 更新，優先於 references 裡的舊說法）**
-> - 影片模型是**本機 MiniMax H3**：每鏡 4–12 秒、對話與換場靠切鏡；references 裡「Seedance 2.5、每段 30 秒」的說法一律改讀成「H3、每鏡 ≤12 秒」，`segmentation.md` 的 30 秒片段表改成**鏡表**（每鏡：景別、誰在畫面、動作、台詞、秒數）。
+> **本 repo 版本說明（2026-10-14 更新）**
+> - 影片模型是**本機 MiniMax H3**：每鏡 4–12 秒、對話與換場靠切鏡。references 已改成 H3 版本（2026-10-14），拆鏡產出**鏡表**，可直接填進 `film.json`。
 > - 角色是**你自己的角色**：references 裡的「主角」「阿凱」與 `角色資產/<主角>/角色設定.md` 都是佔位例子，本 repo 沒附。請先照 `docs/07_本地角色與首幀.md` 做好角色定妝照，把每個角色的外觀描述（年齡、臉、髮型、眼鏡、上衣與下半身）寫進你專案的角色設定檔，劇本與提示詞都引用它。
 > - 配音用 **VoxCPM2**（`C:\AI\tools\make_voxcpm.cmd`；選用 BreezyVoice `make_breezyvoice.cmd`），不是 voice-clone 技能；台詞避免單一個字（「考。」「接！」改成兩三個字）。
 > - 寫完劇本後的製作流程看 `docs/02_端到端流程.md`；技術限制看 `docs/03_規則與踩坑.md`。
@@ -33,7 +33,7 @@ description: AI 短劇編劇（改寫自 mathruffian-dot 的開源工作流）�
 - **完整一支短片**：讀 `references/workflow.md`，從創作簡報一路走到鏡表。
 - **單點創作**（只要題材／結構／某一場／台詞／反轉）：讀 `references/workflow.md` 的對應階段，**只交付使用者指定的成果**，不重做整支。
 - **寫劇本或要格式**：讀 `references/format.md`。
-- **拆鏡頭**（劇本已存在）：讀 `references/segmentation.md`，但用上面的「鏡表」取代 30 秒片段表。
+- **拆鏡頭**（劇本已存在）：讀 `references/segmentation.md`，產出鏡表。
 - **審閱或修改**（不含單點創作）：讀 `references/checklists.md`；需要格式判斷時再讀 `references/format.md`。
 
 ## 共同規則
