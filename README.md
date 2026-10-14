@@ -89,7 +89,7 @@ configs/profile.cmd         這個硬體版本的環境變數
 | 1 | 劇本＋鏡表（每鏡 ≤12 秒） | `agent/skills/ai-drama` | SKILL.md 開頭的版本說明、`docs/03` | `劇本.md` | ✅ 確認劇本 |
 | 2 | 角色定妝照（單張、灰底、半身） | `gen_image.py`（預設 Image 2.5；備選 Qwen-Image 2.1） | `docs/07` §1 | `chars/<角色>.png` | ✅ 挑一張定案 |
 | 3 | 場景母版（空景，之後裁成各鏡景別） | `gen_image.py` | `docs/07` §4 | `masters/*.png` | |
-| 4 | 首幀（附定妝照＋母版裁切，**每鏡照抄角色完整外觀描述**） | `gen_image.py --model qwen-edit --ref`（預設 Image 2.5 附參考圖；備選 Qwen-Image-Edit） | `docs/07` §2–3 | `first/<鏡>.png` | ✅ 逐張看：臉、服裝、多手多腳、背景有沒有字 |
+| 4 | 首幀（附定妝照＋母版裁切，**每鏡照抄角色完整外觀描述**） | `gen_image.py --model qwen-edit --ref`（預設 Image 2.5 附參考圖，`--model` 這時不作用；退回本機時才用 Qwen-Image-Edit，不加會退到不適合附參考圖的 Qwen-Image 2.1） | `docs/07` §2–3 | `first/<鏡>.png` | ✅ 逐張看：臉、服裝、多手多腳、背景有沒有字 |
 | 5 | 角色聲音（一次）→ 台詞配音 | `voxcpm_batch.py`（設計參考音）→ `make_voxcpm.cmd`（選用：`breeze_batch.py` → `make_breezyvoice.cmd`） | `docs/03` §5 | `bv/<句>.wav`（已去頭尾靜音） | `needs_review` 的句子聽一次 |
 | 6 | H3 每鏡（DMAD 4 步、只給首幀、台詞當固定音軌；看得到臉又沒台詞的鏡給靜音） | `h3_shot.py`（spec 加 `"draft": true`） | `docs/03` §4、`tools/examples/` | `h3/<鏡>/clip.mp4` | ✅ 抽格看：換臉、多人、鏡頭漂移 |
 | 7 | 配樂（純器樂、多抽幾個 seed，挑人聲殘留最少的） | `gen_music3.py` → `audio-separator` | `docs/02` §9 | `music/*.flac` | |

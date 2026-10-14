@@ -36,4 +36,5 @@
 - 2026-10-14 聽寫（ASR）加 openai-whisper 備援（給 Windows on Arm 用）：`tools/stt.py` 新增 `load_asr()`，`tools/breezyvoice_pick.py`、`pipeline/template_local/review.py` 改用它。
 - 2026-10-14 `nvidia-vfx` 升到 0.2.0.0（API 向下相容，`tools/upscale_vsr.py` 不用改；0.2.0.0 起在 pypi.nvidia.com 有 win_arm64 版）：更新 `setup/env/requirements_h3_venv.txt`、`requirements_voice_venv.txt` 與重產的 ARM64 清單；`setup/spark_check.py` 改為也查 pypi.nvidia.com；更正 `configs/profile_rtxspark.cmd`、`docs/hardware_rtxspark.md`、`setup/detect_hardware.py` 中「RTX VSR 沒有 ARM64 版」的說法。
 - 2026-10-14 `setup/spark_check.py` 修正：win_arm64 wheel 要符合 Python 版本才算可裝；自動找 ARM64 替代版只接受同一個大版號；`triton-windows` 改註明有 ARM64 版但先不裝。重產 ARM64 清單（numba 0.68、llvmlite 0.50；cryptography 回到原版本），`docs/hardware_rtxspark.md` 更新掃描結果。
+- 2026-10-14 `agent/CLAUDE.md範本.md`、`README.md` 釐清首幀指令 `--model qwen-edit` 只在退回本機時作用（預設 Image 2.5 時不作用）。
 - 其餘程式邏輯、模型下載清單、音效（Freesound CC0）與圖片素材未修改。
