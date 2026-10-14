@@ -8,7 +8,8 @@ from pathlib import Path
 
 HOST = os.environ.get("COMFY_HOST", "http://127.0.0.1:8188")
 COMFY_DIR = Path(os.environ.get("COMFY_DIR", r"C:\AI\H3\ComfyUI-0.36.0"))
-DIT = "minimax_music3_dit_int8_convrot.safetensors"
+import comfy_paths  # noqa: E402  input/output dirs (Comfy Desktop keeps them outside COMFY_DIR)
+DIT = os.environ.get("MUSIC3_DIT", "minimax_music3_dit_int8_convrot.safetensors")  # Comfy Desktop template ships minimax_music3_dit_fp16.safetensors
 TE = "minimax_music3_text_encoder_pruned_int8_convrot.safetensors"
 VAE = "minimax_music3_dav.safetensors"
 
@@ -57,7 +58,7 @@ def main():
             if st.get("status_str") == "error": print(json.dumps(st, ensure_ascii=False, indent=1)[:4000]); return
             for o in h[pid].get("outputs", {}).values():
                 for f in (o.get("audio") or []):
-                    p = COMFY_DIR / "output" / f.get("subfolder", "") / f["filename"]; print("[out]", p)
+                    p = comfy_paths.output_dir(HOST) / f.get("subfolder", "") / f["filename"]; print("[out]", p)
                     if a.out: Path(a.out).mkdir(parents=True, exist_ok=True); shutil.copy2(p, Path(a.out) / p.name); print("[copy]", Path(a.out) / p.name)
             print("[done] total", round(time.time() - t0, 1), "s"); return
 

@@ -41,18 +41,40 @@ python setup\detect_hardware.py
 
 ## 2. 資料夾與 Python 環境（必裝兩個，選用兩個）
 
-所有程式假設安裝在 `C:\AI`。**ComfyUI 資料夾名稱請照抄 `ComfyUI-0.36.0`**（裡面放的是 0.37.0，名稱是歷史原因，很多腳本寫死這個路徑）。
+ComfyUI 有兩種裝法：**已經有 Comfy Desktop 就直接用它**（2a，模型共用、不用另外裝 ComfyUI）；沒有才自己裝在 `C:\AI\H3`（2a′）。語音環境裝在 `C:\AI`（不要放進雲端硬碟同步的資料夾）；工具不用裝，直接用 repo 的 `tools/`（2e）。
 
 **順序很重要：先做完第 2 節（尤其是 clone ComfyUI），再做第 3 節下載模型。** 部分模型清單會寫進 `ComfyUI-0.36.0\models\`，先下載的話資料夾已經存在，`git clone` 會因為目錄不是空的而失敗。
 
 **套件一律用 uv 裝**（比 pip 快很多；2026-10-07 全新安裝實測，pip 下載部分大檔只有 100–200 kB/s，H3 環境卡了 20 分鐘以上，改 uv 1.5 分鐘裝完）。四份清單都是原專案 `pip freeze` 的完整結果，所以都加 `--no-deps` 照清單裝，不要讓 pip／uv 自己重新解依賴（語音環境的 voxcpm 依賴會跟鎖定的 fsspec 衝突，照清單裝則沒問題）。uv 也卡住時，見文末常見問題。
 
 ```
-mkdir C:\AI\H3  C:\AI\Voice
+mkdir C:\AI\Voice
 ```
-（要裝選用配音引擎時再建 `C:\AI\BreezeTTS`、`C:\AI\BreezyVoice`。）
+（自己裝 ComfyUI 時再建 `C:\AI\H3`；要裝選用配音引擎時再建 `C:\AI\BreezeTTS`、`C:\AI\BreezyVoice`。）
 
-### 2a. 主環境 C:\AI\H3（ComfyUI、H3、Qwen-Image、Music 3、放大）
+### 2a. 主環境：Comfy Desktop（已安裝時用這個）
+
+連接、背景啟動、模型位置的通用做法以全域技能 `agent-comfyui` 為準；本專案只多做下面三件事。`configs\profile.cmd` 偵測到 Desktop（預設安裝名稱 `ComfyUI`）就自動改用它：`COMFY_DIR`、`PY_H3` 指向 Desktop 安裝裡的 `ComfyUI` 與 `.venv`，模型用 `ComfyUI-Shared\models`，`tools\start_comfy.cmd` 會在背景啟動它（不開 Desktop 視窗，帶上本硬體的 `--reserve-vram 1.5`）。工具的 input／output 資料夾會自動問執行中的 ComfyUI，不用設。
+
+> Desktop 安裝改過名稱：先 `set DESKTOP_COMFY=<安裝路徑>\ComfyUI` 再 `call configs\profile.cmd`。不想用 Desktop：`set DESKTOP_COMFY=none`。
+> **Desktop 視窗開著時會佔用 8188 埠**，這時 `start_comfy` 不會再啟動，也就沒有 `--reserve-vram 1.5`。跑本專案前先關掉 Desktop 視窗。
+
+1. **補套件**（Desktop 的 `.venv` 只缺這幾個；`--no-deps` 只裝缺的，不動 Desktop 的 torch）：
+   ```
+   call <repo>\configs\profile.cmd
+   uv pip install --python "%PY_H3%" --no-deps nvidia-vfx==0.2.0.0 gguf==0.19.0 accelerate==1.15.0 triton-windows==3.8.0.post28 numba==0.67.0 llvmlite==0.49.0 "diffusers @ https://github.com/huggingface/diffusers/archive/e0abab83b5df05de9e7abd788643c1a7c1e42e28.zip" --extra-index-url https://pypi.nvidia.com --index-strategy unsafe-best-match
+   ```
+   版本照 `setup\env\requirements_h3_venv.txt`。安裝前先告訴使用者會改動 Desktop 的環境。
+2. **自訂節點**：只需要 FlashVSR（照 `setup\custom_nodes.txt` 的 commit clone 到 `%COMFY_DIR%\custom_nodes\ComfyUI-FlashVSR_Ultra_Fast`）。RTX VSR 直接用 `nvidia-vfx` 套件，不用裝節點。
+3. **模型**：Desktop 範本下載過的大多能直接用（H3 主模型、NVFP4 文字編碼器、Qwen-Image 2.1、Qwen-Image-Edit int8、Music 3），第 3 節只要補 DMAD 與 FlashVSR。`profile.cmd` 會把檔名對到 Desktop 的版本（`H3_CLIP`、`QWEN_EDIT_UNET`、`MUSIC3_DIT`）。
+
+確認：`"%PY_H3%" -c "import torch, nvvfx, gguf;print(torch.__version__, torch.cuda.is_available())"` → `True`。
+
+⚠️ **Desktop 會自動更新 ComfyUI**（有時連 `.venv` 一起換）。更新後先重跑一次 `smoke_test.py`；套件或節點不見了就重做上面 1、2。
+
+### 2a′.（沒有 Comfy Desktop 時）自己安裝 C:\AI\H3
+
+**ComfyUI 資料夾名稱請照抄 `ComfyUI-0.36.0`**（裡面放的是 0.37.0，名稱是歷史原因，很多腳本寫死這個路徑）。`profile.cmd` 偵測不到 Desktop 時就用這裡。
 
 ```
 git clone https://github.com/comfyanonymous/ComfyUI C:\AI\H3\ComfyUI-0.36.0
@@ -117,6 +139,8 @@ for %f in (downloads.json downloads_uncensored.json downloads_dmad.json download
 cd <repo>\setup
 foreach ($f in 'downloads.json','downloads_uncensored.json','downloads_dmad.json','downloads_qwen_image.json','downloads_qwen_image_edit.json','downloads_music3.json','downloads_voxcpm2.json','downloads_breeze_tts2.json','downloads_breezyvoice.json','downloads_flashvsr.json') { C:\AI\H3\venv\Scripts\python.exe download.py $f }
 ```
+**用 Comfy Desktop 時**：先 `call <repo>\configs\profile.cmd`（它設的 `COMFY_MODELS_DIR`、`COMFY_DIR` 讓 `download.py` 把模型放進 Desktop 的資料夾），用 `"%PY_H3%"` 代替上面的 `C:\AI\H3\venv\Scripts\python.exe`，**只跑 `downloads_dmad.json`、`downloads_flashvsr.json`、`downloads_voxcpm2.json`**（其他 Desktop 已經有，或改用 Desktop 的版本；要用選用配音引擎再加 Breeze 兩份）。
+
 每份清單跑完會印 `downloaded N, already present M, failed K`，全部成功才印 `ALL DOWNLOADS VERIFIED`（有失敗時結束碼非 0，重跑會從斷點續傳、已驗證的檔案自動跳過）。大檔用 SHA-256 驗證，小設定檔用 Hugging Face 公布的 git 雜湊驗證。
 
 | 清單 | 內容 | 大小 |
@@ -143,6 +167,10 @@ DMAD 轉檔：
 ```
 C:\AI\H3\venv\Scripts\python.exe <repo>\tools\dmad_lora_convert.py C:\AI\H3\ComfyUI-0.36.0\models\loras\dmad_raw\dmad_minimax_h3_4step_lora_critic.safetensors C:\AI\H3\ComfyUI-0.36.0\models\loras\dmad_h3_4step_lora_critic_comfy.safetensors
 ```
+用 Comfy Desktop 時（先 `call configs\profile.cmd`）：
+```
+"%PY_H3%" <repo>\tools\dmad_lora_convert.py "%COMFY_MODELS_DIR%\loras\dmad_raw\dmad_minimax_h3_4step_lora_critic.safetensors" "%COMFY_MODELS_DIR%\loras\dmad_h3_4step_lora_critic_comfy.safetensors"
+```
 （只需要 `lora_critic` 這一顆；`full_critic` 實測構圖會漂，不用。）
 
 ## 4. 啟動與自我驗證
@@ -152,8 +180,9 @@ C:\AI\H3\venv\Scripts\python.exe <repo>\tools\dmad_lora_convert.py C:\AI\H3\Comf
 set PYTHONUTF8=1
 call <repo>\configs\profile.cmd
 <repo>\tools\start_comfy.cmd
-C:\AI\H3\venv\Scripts\python.exe <repo>\setup\smoke_test.py
+"%PY_H3%" <repo>\setup\smoke_test.py
 ```
+（`PY_H3` 由 `profile.cmd` 設定：Comfy Desktop 的 `.venv`，或自己裝的 `C:\AI\H3\venv\Scripts\python.exe`。）
 `smoke_test.py` 會自己設計一個聲音、生一張首幀，跑完 VoxCPM2（設計聲音）→ VoxCPM2（念台詞）→ 自動挑選 →（有裝才跑：Breeze 設計 → BreezyVoice 念＋挑選）→ faster-whisper → 聲調比對 → Qwen-Image 2.1 → Music 3 → BS-RoFormer → H3 → RTX VSR → FlashVSR，最後印出每一步 OK／FAIL 和秒數。
 - 全部 OK，且每步時間在 `docs/hardware.md` 列的範圍內（真實顯卡比 5090 慢是正常的），就算安裝完成。完整版 12 步；`--quick` 跳過 FlashVSR，11 步；有裝選用的 Breeze＋BreezyVoice 會多 3 步。
 - 2026-10-07 全新安裝實測（上游，當時預設 BreezyVoice、smoke test 為 14 步；另一個 agent 只看本 repo、在清空的 `C:\AI` 從零安裝，RTX 5090）：完整版 14 步全部 OK，共 500 秒；第一次跑 BreezyVoice 會先下載 g2pW 注音模型，那一步多約 45 秒。
@@ -162,7 +191,7 @@ C:\AI\H3\venv\Scripts\python.exe <repo>\setup\smoke_test.py
 ## 5. 跑全本地示範片
 
 ```
-C:\AI\H3\venv\Scripts\python.exe <repo>\pipeline\demo_local\run_demo.py
+"%PY_H3%" <repo>\pipeline\demo_local\run_demo.py
 ```
 從零做兩個角色、4 鏡首幀、配音、H3、配樂，輸出 `pipeline\demo_local\out\cut\demo_1080p.mp4`（約 17 秒）。2026-10-07 全新安裝實測 12.8 分鐘（RTX 5090）；「16GB 顯卡＋32GB 記憶體」模擬條件下約 15 分鐘（5090 運算速度；真實 16GB 卡推估 30–40 分鐘）。看成片確認：兩個角色每鏡長得一樣、嘴型跟著台詞、字幕念的跟聲音一致。
 

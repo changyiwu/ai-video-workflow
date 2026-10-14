@@ -8,7 +8,7 @@
 
 ## 用法
 ```
-C:\AI\H3\venv\Scripts\python.exe render_ending.py config.json
+"%PY_H3%" render_ending.py config.json
 ```
 `config_example.json` 是 4 張特寫＋工具名單的範例（約 21 秒）；30 秒左右的短片用 `config_short_example.json`（2 張、約 9 秒）。`title` 改成你的片名或頻道名（原頻道用「我的頻道」）。**每張卡最多 3 行工具**，超過程式會停下來提醒。MiniMax Music3 的授權要求商業使用時顯著標示「MiniMax-Music3」，公開內容要標示 AI 生成，所以最後一張建議保留「本片畫面、配音與配樂皆由 AI 生成」。把特寫靜幀放進 `frames/`、依本片實際工具修改 tools。輸出 1920×1080、24fps、無音訊。
 

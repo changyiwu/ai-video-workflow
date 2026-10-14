@@ -37,8 +37,18 @@ if os.environ.get('HF_TOKEN'):
 AI_ROOT = os.environ.get('AI_ROOT')                    # manifests are written for C:/AI; set AI_ROOT (e.g. /content/AI) to install elsewhere
 
 
+COMFY_MODELS_DIR = os.environ.get('COMFY_MODELS_DIR')  # Comfy Desktop: shared models folder (ComfyUI-Shared\models)
+COMFY_DIR = os.environ.get('COMFY_DIR')                # Comfy Desktop: the ComfyUI folder inside the install (custom-node models such as FlashVSR go here)
+SHARED = ('diffusion_models', 'text_encoders', 'vae', 'loras', 'checkpoints', 'upscale_models')
+
+
 def destination(item):
     d = item['destination'].replace('\\', '/')
+    for pre in ('C:/AI/H3/models/', 'C:/AI/H3/ComfyUI-0.36.0/models/'):
+        if COMFY_MODELS_DIR and d.startswith(pre) and d[len(pre):].split('/')[0] in SHARED:
+            return Path(COMFY_MODELS_DIR) / d[len(pre):]
+    if COMFY_DIR and d.startswith('C:/AI/H3/ComfyUI-0.36.0/'):
+        return Path(COMFY_DIR) / d[len('C:/AI/H3/ComfyUI-0.36.0/'):]
     if AI_ROOT and d.startswith('C:/AI/'):
         return Path(AI_ROOT) / d[len('C:/AI/'):]
     return Path(d)

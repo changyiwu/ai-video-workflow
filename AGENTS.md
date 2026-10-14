@@ -11,6 +11,8 @@
 ## 目標與路線圖
 - [x] 階段一：複製上游 repo、移除原作者個人資訊、加上來源標示、專案初始化
 - [ ] 階段二：照 `AGENT_SETUP.md` 檢查硬體（`python setup/detect_hardware.py`）、安裝環境與下載模型
+  - [ ] 桌機 Comfy Desktop 補齊（`AGENT_SETUP.md` §2a）：補裝 7 個套件、FlashVSR 節點、下載 DMAD／FlashVSR
+  - [ ] 建 `C:\AI\Voice` 語音環境並下載 VoxCPM2
   - [ ] 設定 `OPENAI_API_KEY`，生一張圖驗證 Image 2.5 模型 ID
 - [ ] 階段三：跑 `setup/smoke_test.py` 與 `pipeline/demo_local/run_demo.py` 驗證
   - [ ] VoxCPM2 預設配音流程（`voxcpm_batch.py`＋挑音）實機驗證：台灣腔、聽寫通過率、速度
@@ -54,6 +56,11 @@ setup/spark_check.py、setup/env/arm64/   RTX Spark 相容性檢查與 ARM64 套
 - 聽寫（ASR）一律經 `tools/stt.py` 的 `load_asr()`，不要直接 import `faster_whisper`：Windows on Arm 沒有 ctranslate2，靠它自動改用 openai-whisper。
 - 工具一律直接跑 repo 的 `tools/`（入口腳本預設就找它，`make_*.cmd` 用自己所在的資料夾），不要再複製到 `C:\AI\tools`；要改位置才設 `AI_TOOLS`。新寫的腳本找工具也要用相對 repo 的路徑，不要寫死 `C:\AI\tools`。
 
+### ComfyUI
+- 桌機用 Comfy Desktop 的 ComfyUI（`configs\profile.cmd` 自動偵測），連接、背景啟動、模型位置照全域技能 `agent-comfyui`；不要另外在 `C:\AI\H3` 裝一份。
+- 工具讀寫 ComfyUI 的 input／output 一律經 `tools/comfy_paths.py`，不要寫死 `COMFY_DIR\input`／`output`（Desktop 放在 `ComfyUI-Shared`）。
+- 跑本專案前先關掉 Desktop 視窗，由 `tools\start_comfy.cmd` 在背景啟動，才會帶上 `--reserve-vram 1.5`。Desktop 自動更新後先跑 `smoke_test.py`，補裝的套件或 FlashVSR 節點不見了就照 `AGENT_SETUP.md` §2a 重裝。
+
 ### 兩台硬體
 - 桌機：RTX 5060 Ti 16GB＋64GB RAM，用 `configs\profile.cmd`。筆電：RTX Spark（Windows on Arm、64GB 統一記憶體），用 `configs\profile_rtxspark.cmd`。
 - 改 `setup/env/requirements_*.txt` 後要跑 `python setup/spark_check.py --wheels --emit` 重產 ARM64 清單，並看 diff 有沒有不合理的版本跳動。
@@ -62,6 +69,7 @@ setup/spark_check.py、setup/env/arm64/   RTX Spark 相容性檢查與 ARM64 套
 ### 做片
 - 自己的片一律放 `films/<片名>/`（從 `pipeline/template_local/` 複製，`repo_dir` 維持 `../..`）；`films/` 已列入 `.gitignore`，只走雲端硬碟、沒有 GitHub 備份。
 - 頻道與角色的做片規則在 `films/AGENTS.md`（`films/CLAUDE.md` 橋接），角色資產在 `films/角色/`；不要把這些寫進本檔或 `pipeline/`。
+- `films/AGENTS.md` 是從 `agent/CLAUDE.md範本.md` 改寫的獨立檔：改了範本裡的通用規則，要手動同步過去。
 
 ### 安全與隱私
 - **不放個資與金鑰**：不 commit 真人照片、克隆聲音／參考音、API 金鑰（`.env`）、模型權重、成片影片。本 repo 為**公開** repo。

@@ -44,6 +44,7 @@ from pathlib import Path
 
 DEFAULT_HOST = os.environ.get("COMFY_HOST", "http://127.0.0.1:8188")
 COMFY_DIR = Path(os.environ.get("COMFY_DIR", r"C:\AI\H3\ComfyUI-0.36.0"))
+import comfy_paths  # noqa: E402  input／output 資料夾（Comfy Desktop 不在 COMFY_DIR 底下）
 
 PRESETS = {
     "qwen21": dict(
@@ -63,7 +64,7 @@ PRESETS = {
         clip_type="krea2", vae="qwen_image_vae.safetensors",
         encoder="clip", steps=8, cfg=1.0, sampler="euler", scheduler="simple"),
     "qwen-edit": dict(
-        unet="qwen_image_edit_2511_fp8mixed.safetensors", clip="qwen_2.5_vl_7b_fp8_scaled.safetensors",
+        unet=os.environ.get("QWEN_EDIT_UNET", "qwen_image_edit_2511_fp8mixed.safetensors"), clip="qwen_2.5_vl_7b_fp8_scaled.safetensors",
         clip_type="qwen_image", vae="qwen_image_vae.safetensors",
         encoder="editplus", steps=20, cfg=4.0, sampler="euler", scheduler="simple", auraflow=3.1),
     "qwen-edit-unc": dict(
@@ -93,7 +94,7 @@ def ensure_server(host):
 def stage_image(image):
     p = Path(image)
     if p.is_file():
-        dest = COMFY_DIR / "input" / p.name
+        dest = comfy_paths.input_dir(DEFAULT_HOST) / p.name
         dest.parent.mkdir(parents=True, exist_ok=True)
         if p.resolve() != dest.resolve():
             shutil.copy2(p, dest)
@@ -287,7 +288,7 @@ def main():
                 return
             for node_id, o in entry.get("outputs", {}).items():
                 for f in o.get("images", []) or []:
-                    path = COMFY_DIR / "output" / f.get("subfolder", "") / f.get("filename", "")
+                    path = comfy_paths.output_dir(a.host) / f.get("subfolder", "") / f.get("filename", "")
                     print(f"[out] {path}")
                     if a.out:
                         dest = Path(a.out)

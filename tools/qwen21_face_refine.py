@@ -48,7 +48,7 @@ def refine_crop(crop_path, lora, prompt, denoise, seed, steps, w, h):
     if st.get("status_str") != "success":
         sys.exit(str(st)[:1500])
     f = hist[pid]["outputs"]["8"]["images"][0]
-    return Image.open(gi.COMFY_DIR / "output" / f.get("subfolder", "") / f["filename"]).convert("RGB").resize((w, h), Image.LANCZOS)
+    return Image.open(gi.comfy_paths.output_dir(gi.DEFAULT_HOST) / f.get("subfolder", "") / f["filename"]).convert("RGB").resize((w, h), Image.LANCZOS)
 
 
 def main():

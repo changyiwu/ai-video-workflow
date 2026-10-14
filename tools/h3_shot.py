@@ -56,6 +56,7 @@ from pathlib import Path
 
 HOST = os.environ.get("COMFY_HOST", "http://127.0.0.1:8188")
 COMFY = Path(os.environ.get("COMFY_DIR", r"C:\AI\H3\ComfyUI-0.36.0"))
+import comfy_paths  # noqa: E402  input／output 資料夾（Comfy Desktop 不在 COMFY_DIR 底下）
 FPS = 24
 SECTIONS = ["subject_definitions", "summary", "retention_analysis", "detailed_description", "overall_soundscape", "non_diegetic_music"]
 MODELS = dict(unet=os.environ.get("H3_UNET", "minimax_h3_ref2va_pruned_int8_convrot.safetensors"),  # H3_UNET: A/B other weights (e.g. unpruned minimax_h3_ref2va_int8_convrot.safetensors)
@@ -279,7 +280,7 @@ def req(path, data=None, timeout=60):
 
 
 def stage(src, name):
-    d = COMFY / "input" / "h3_shot"
+    d = comfy_paths.input_dir(HOST) / "h3_shot"
     d.mkdir(parents=True, exist_ok=True)
     shutil.copy2(src, d / name)
     return f"h3_shot/{name}"
@@ -419,8 +420,8 @@ def generate(spec, prompt, base, out):
     if ok:
         v = (e["outputs"]["15"].get("images") or e["outputs"]["15"].get("videos"))[0]
         raw = out / "clip_savevideo.mp4"
-        shutil.copy2(COMFY / "output" / v.get("subfolder", "") / v["filename"], raw)
-        frames = [COMFY / "output" / "h3_shot_png" / tag / im["filename"] for im in e["outputs"]["16"]["images"]]
+        shutil.copy2(comfy_paths.output_dir(HOST) / v.get("subfolder", "") / v["filename"], raw)
+        frames = [comfy_paths.output_dir(HOST) / "h3_shot_png" / tag / im["filename"] for im in e["outputs"]["16"]["images"]]
         lst = out / "frames.txt"
         lst.write_text("".join(f"file '{f.as_posix()}'\nduration {1 / FPS:.6f}\n" for f in frames), encoding="utf-8")
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", str(lst), "-i", str(raw), "-r", str(FPS),

@@ -12,7 +12,7 @@ param(
   [double]$Duration = 0
 )
 $ErrorActionPreference = 'Stop'
-$py = 'C:\AI\H3\venv\Scripts\python.exe'
+$py = if ($env:PY_H3) { $env:PY_H3 } else { 'C:\AI\H3\venv\Scripts\python.exe' }   # Comfy Desktop: configs\profile.cmd 設成 Desktop 的 .venv
 $tool = Join-Path $PSScriptRoot 'h3_shot.py'
 $env:PYTHONIOENCODING = 'utf-8'
 if ($Lint) {

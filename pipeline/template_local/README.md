@@ -14,7 +14,7 @@
    call <repo>\configs\profile.cmd
    <repo>\tools\start_comfy.cmd
    cd <repo>\pipeline\my_film
-   C:\AI\H3\venv\Scripts\python.exe make_film.py chars masters frames
+   "%PY_H3%" make_film.py chars masters frames
    ```
 4. **人工關卡 1**：看 `out/first/_sheet.jpg`。臉、服裝要一致，不能多手多腳，背景不能有字，窗戶方向要對。不滿意的鏡：刪 `out/first/<鏡>.png`，在 `film.json` 的 `seeds` 加 `"frame_<鏡>": 新數字`，或改該鏡的 `frame` 描述，再跑 `frames`。
 5. `make_film.py voices h3`

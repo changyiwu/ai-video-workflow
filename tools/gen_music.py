@@ -17,8 +17,9 @@ import time
 import urllib.request
 from pathlib import Path
 
-DEFAULT_HOST = "http://127.0.0.1:8188"
-COMFY_DIR = Path(r"C:\AI\H3\ComfyUI-0.36.0")
+import os
+import comfy_paths  # noqa: E402  input／output 資料夾（Comfy Desktop 不在 COMFY_DIR 底下）
+DEFAULT_HOST = os.environ.get("COMFY_HOST", "http://127.0.0.1:8188")
 CKPT = "yue2_3b_int8_convrot.safetensors"
 
 DEFAULT_STYLE = "Mandarin pop, warm acoustic guitar, soft piano, 90 BPM, warm and sincere"
@@ -117,7 +118,7 @@ def main():
             for node_id, o in entry.get("outputs", {}).items():
                 for key in ("audio", "audios"):
                     for f in o.get(key, []) or []:
-                        p = COMFY_DIR / "output" / f.get("subfolder", "") / f.get("filename", "")
+                        p = comfy_paths.output_dir(DEFAULT_HOST) / f.get("subfolder", "") / f.get("filename", "")
                         print(f"[out] {p}")
                         if a.out:
                             dest = Path(a.out)
