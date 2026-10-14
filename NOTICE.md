@@ -32,4 +32,6 @@
 - 新增 RTX Spark 筆電（Windows on Arm）支援：`configs/profile_rtxspark.cmd`、`docs/hardware_rtxspark.md`、`setup/spark_check.py`、`setup/env/arm64/`；`setup/detect_hardware.py` 加入 ARM64／統一記憶體偵測。
 - 生圖預設改為 OpenAI Image 2.5、本機 Qwen 為備選：`tools/gen_image.py` 新增 `--backend`／`IMAGE_BACKEND`／`IMAGE_FALLBACK`；`make_film.py` 片尾名單依實際後端；`run_demo.py`、`smoke_test.py` 固定本機（它們是安裝驗證）。
 - 文件補上無 API 金鑰時的替代生圖路線：改呼叫全域技能 `agent-draw`（交給 Codex CLI 以 ChatGPT 訂閱生圖），見 `README.md`、`docs/06_安裝.md` §6。
+- 2026-10-14 配音預設引擎改為 VoxCPM2（聲音設計＋台詞），Breeze TTS 2＋BreezyVoice 改為選用（`VOICE_ENGINE=breezyvoice`）：新增 `tools/voxcpm_batch.py`、`tools/make_voxcpm.cmd`；修改 `pipeline/template_local/make_film.py`、`film.json`、`pipeline/demo_local/run_demo.py`、`setup/smoke_test.py`、`setup/detect_hardware.py`，以及 `README.md`、`AGENT_SETUP.md`、`docs/01`、`docs/02`、`docs/03`、`docs/06`、`docs/hardware_rtxspark.md`、`THIRD_PARTY_NOTICES.md`、`agent/` 下的說明與 `agent/skills/ai-drama/SKILL.md`。
+- 2026-10-14 聽寫（ASR）加 openai-whisper 備援（給 Windows on Arm 用）：`tools/stt.py` 新增 `load_asr()`，`tools/breezyvoice_pick.py`、`pipeline/template_local/review.py` 改用它。
 - 其餘程式邏輯、模型下載清單、音效（Freesound CC0）與圖片素材未修改。

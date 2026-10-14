@@ -37,11 +37,9 @@ def grab(t, w=448, h=252):
 
 if "--asr" in sys.argv:                              # 第 2 遍：每句台詞從成片裡切出來聽寫，跟劇本比對
     sys.path.insert(0, TOOLS)
-    from stt import _add_cuda_dll_dirs, MODEL_CACHE
-    _add_cuda_dll_dirs()
-    from faster_whisper import WhisperModel
+    from stt import load_asr                          # faster-whisper；裝不了時（Windows on Arm）自動改 openai-whisper
     from opencc import OpenCC
-    t2s = OpenCC("t2s"); asr = WhisperModel("large-v3", device="cuda", compute_type="float16", download_root=str(MODEL_CACHE))
+    t2s = OpenCC("t2s"); asr = load_asr("large-v3")
     norm = lambda s: re.sub(r"[\s，。？！、,.?!…—「」]", "", t2s.convert(s))
     res = []
     for r in SH:

@@ -4,7 +4,7 @@
 > Claude Code 預設只在沒有 `CLAUDE.md` 時才讀 `AGENTS.md`，故由 `CLAUDE.md` 的 `@AGENTS.md` import 本檔（`CLAUDE.md` 只有這一行）；Claude 專屬規範寫在本檔〈Claude Code 專屬〉一節。
 
 ## 專案簡介
-在 16GB VRAM＋64GB RAM 的本機，用開源模型（MiniMax H3、Qwen-Image 2.1／Edit、BreezyVoice、Breeze TTS 2、MiniMax Music 3）製作 1–3 分鐘、16:9、24fps 的原創 AI 短片。改作自 [mathruffian-dot/shanshiba-workflow-16gvram-64gram](https://github.com/mathruffian-dot/shanshiba-workflow-16gvram-64gram)，來源與修改內容見 `NOTICE.md`。
+在 16GB VRAM＋64GB RAM 的本機，用開源模型（MiniMax H3、Qwen-Image 2.1／Edit、VoxCPM2、MiniMax Music 3；選用 BreezyVoice＋Breeze TTS 2）製作 1–3 分鐘、16:9、24fps 的原創 AI 短片。改作自 [mathruffian-dot/shanshiba-workflow-16gvram-64gram](https://github.com/mathruffian-dot/shanshiba-workflow-16gvram-64gram)，來源與修改內容見 `NOTICE.md`。
 
 ## 關鍵時程
 
@@ -13,6 +13,7 @@
 - [ ] 階段二：照 `AGENT_SETUP.md` 檢查硬體（`python setup/detect_hardware.py`）、安裝環境與下載模型
   - [ ] 設定 `OPENAI_API_KEY`，生一張圖驗證 Image 2.5 模型 ID
 - [ ] 階段三：跑 `setup/smoke_test.py` 與 `pipeline/demo_local/run_demo.py` 驗證
+  - [ ] VoxCPM2 預設配音流程（`voxcpm_batch.py`＋挑音）實機驗證：台灣腔、聽寫通過率、速度
 - [ ] 階段三之二：RTX Spark 筆電上機驗證（照 `docs/hardware_rtxspark.md`「第一次上機」，結果回填該文件）
 - [ ] 階段四：建立自己的角色設定，用 `pipeline/template_local/` 做第一支片
 
@@ -38,13 +39,19 @@ setup/spark_check.py、setup/env/arm64/   RTX Spark 相容性檢查與 ARM64 套
 ## 專案專屬規則
 
 ### 授權與來源
-- **僅限非商業用途**：文件素材為 CC BY-NC 4.0；Qwen-Image 2.1、Breeze TTS 2 只能非商用。要營利前先照 `THIRD_PARTY_NOTICES.md` 替換模型。
+- **僅限非商業用途**：文件素材為 CC BY-NC 4.0；Qwen-Image 2.1、Breeze TTS 2（選用配音引擎才會用到）只能非商用。要營利前先照 `THIRD_PARTY_NOTICES.md` 替換模型。
 - **必須保留來源標示**：`LICENSE`、`LICENSE-docs.md`、`THIRD_PARTY_NOTICES.md`、`NOTICE.md`、`agent/skills/ai-drama/NOTICE.md`、`agent/skills/ai-drama/LICENSE-AI-drama-pound.txt` 不可刪除或移除原作者署名；修改上游文件時在 `NOTICE.md` 的修改清單補一筆。
 
 ### 生圖
 - 預設 OpenAI Image 2.5（`gen_image.py` 預設後端），本機 Qwen-Image 為備選；金鑰由使用者自己設定（`OPENAI_API_KEY`／`OPENAI_KEY_FILE`），agent 不經手、不寫進 repo。
 - `run_demo.py`、`smoke_test.py` 固定 `--backend local`（驗證本機安裝用）。
 - 要用 OpenAI 生圖但沒有 API 金鑰時，可改呼叫全域技能 `agent-draw`：它的路線 C 會交給本機已用 ChatGPT 登入的 Codex CLI 代為生圖（扣訂閱額度、不需金鑰）。呼叫時直接把輸出資料夾與檔名指定成 `make_film.py` 要的位置（`out/chars/<角色>.png`、`out/masters/<名稱>.png`、`out/first/<鏡號>.png`），`make_film.py` 看到檔案已存在就會沿用；走路線 B（`draw.py`）時檔名會被加時間戳，要再改名。這條路不經過 `gen_image.py`，`out/image_backends.json` 不會記到——全部用 `agent-draw` 時片尾會預設寫「OpenAI Image 2.5」，混用本機 Qwen 時會只寫 Qwen，出片前要核對片尾的生圖工具名稱，不對就改 `film.json` 片尾的 `tools`。附定妝照當參考圖的做法尚未實測。
+
+### 配音
+- 預設引擎 VoxCPM2（聲音設計＋台詞，`tools/voxcpm_batch.py`）；`VOICE_ENGINE=breezyvoice` 改用 Breeze TTS 2＋BreezyVoice（台灣腔較準、可標注音，但官方以 Linux 為準，RTX Spark 大概率裝不起來）。
+- 挑音兩個引擎共用 `breezyvoice_pick.py`；VoxCPM2 不支援注音標記，念錯的字改同音字。
+- 聽寫（ASR）一律經 `tools/stt.py` 的 `load_asr()`，不要直接 import `faster_whisper`：Windows on Arm 沒有 ctranslate2，靠它自動改用 openai-whisper。
+- 改了 repo 的 `tools/` 要重新 `xcopy /E /I <repo>\tools C:\AI\tools`：`make_*.cmd` 與各腳本跑的是 `C:\AI\tools` 的副本。
 
 ### 兩台硬體
 - 桌機：RTX 5060 Ti 16GB＋64GB RAM，用 `configs\profile.cmd`。筆電：RTX Spark（Windows on Arm、64GB 統一記憶體），用 `configs\profile_rtxspark.cmd`。

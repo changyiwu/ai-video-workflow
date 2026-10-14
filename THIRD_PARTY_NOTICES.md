@@ -7,7 +7,7 @@
 
 1. **非商業限制**（本 repo 的預設就是非商業用途）：以下三者**只能非商業使用**，有廣告、贊助、會員收入的頻道不能直接用，要換成下方「營利時的替換方向」：
    - **Qwen-Image 2.1**（Qwen Research License）：本 repo 用它生「角色定妝照」與「LoRA 首幀」。可商用的替代：Qwen-Image-Edit 2511（Apache-2.0）。
-   - **Breeze TTS 2**（BreezeBlue Research and Non-Commercial License v1.1，**自己架設產生的聲音也算**）：本 repo 只用它「設計角色參考音」；每句台詞由 BreezyVoice（Apache-2.0）念。條款另禁止用其產出訓練／微調／蒸餾其他模型；拿它設計出來的聲音當 BreezyVoice 的零樣本參考音是否違約，條文沒寫清楚。要營利請把角色參考音換成可商用來源（VoxCPM2 聲音設計或真人錄音）。
+   - **Breeze TTS 2**（BreezeBlue Research and Non-Commercial License v1.1，**自己架設產生的聲音也算**）：2026-10-14 起**只有選用配音引擎**（`VOICE_ENGINE=breezyvoice`）才用它「設計角色參考音」，預設引擎 VoxCPM2（Apache-2.0）不會用到；選用引擎的台詞由 BreezyVoice（Apache-2.0）念。條款另禁止用其產出訓練／微調／蒸餾其他模型；拿它設計出來的聲音當 BreezyVoice 的零樣本參考音是否違約，條文沒寫清楚。要營利請把角色參考音換成可商用來源（VoxCPM2 聲音設計或真人錄音）。
    - **YuE2**（CC BY-NC 4.0，選用的歌曲模型）。
 2. **MiniMax H3 地區限制**：授權不允許在**美國、歐盟、英國、南韓**使用，條文（第 I.5、V.4 條）也涵蓋在這些地區散布或展示 H3 本身與其產出。公開影片在這些地區看得到，屬灰色地帶，請自行評估。
    **用 Google Colab 跑 H3（cloud/）時特別注意**：實測 Colab 的 G4 機器 30 次全在美國或歐盟（荷蘭）。授權沒有定義「使用」看使用者還是機器所在地；權重在那些機器上被複製、執行，照字面比較可能不在授權範圍內。是否使用由使用者自行評估、風險自負；想確定可依授權第 II 條聯絡 MiniMax。另外 Colab 本身有使用條款（不得挖礦、不得當代理伺服器等），本工具不開網頁介面、不用外連通道，ComfyUI 只在機器內部被程式呼叫。
@@ -61,22 +61,22 @@
 
 ## 本 repo 的定位：非商業使用
 
-本工作流預設給**非商業**用途（教學、研究、個人創作、非營利頻道），所以預設用 Qwen-Image 2.1 與 Breeze TTS 2（只用於設計角色參考音；台詞由可商用的 BreezyVoice 念）。**要營利（廣告、贊助、會員、接案）就必須換掉非商用的元件**，方向如下：
+本工作流預設給**非商業**用途（教學、研究、個人創作、非營利頻道），本機生圖備選是 Qwen-Image 2.1；配音預設 VoxCPM2（Apache-2.0，可商用），選用引擎會用到非商用的 Breeze TTS 2。**要營利（廣告、贊助、會員、接案）就必須換掉非商用的元件**，方向如下：
 
 | 環節 | 本 repo 預設（非商用） | 營利時的替換方向 | 本 repo 驗證狀態 |
 |---|---|---|---|
 | 角色定妝照、LoRA 首幀 | Qwen-Image 2.1 | 雲端 OpenAI Image 2.5（`tools/img25.py`，產出歸使用者，依 OpenAI 條款）；或向 Qwen 申請商業授權 | Image 2.5 是原專案實際出片用的首幀工具；替換後的整條流程未在本 repo 重測 |
 | 首幀（附參考圖） | Qwen-Image-Edit 2511 | 不用換（Apache-2.0） | 已測 |
-| 台詞配音 | BreezyVoice | 不用換（Apache-2.0） | 已測：三種硬體配置都通過；2026-10-07 整片 53 句台灣國語腔調分數 0.85（舊做法 Breeze／VoxCPM2 0.80） |
-| 角色參考音（聲音設計） | Breeze TTS 2 | VoxCPM2 文字聲音設計（`gen_voice.py --design --control "描述"`，Apache-2.0）或自己有權利的真人錄音，再交給 BreezyVoice | VoxCPM2 聲音設計已能產生聲音；設計出的聲音台灣腔夠不夠未系統比較 |
+| 台詞配音 | VoxCPM2（2026-10-14 起預設；選用 BreezyVoice） | 不用換（兩者皆 Apache-2.0） | 上游實測：BreezyVoice 三種硬體配置都通過，整片 53 句台灣國語腔調分數 0.85（Breeze／VoxCPM2 0.80）；VoxCPM2 預設流程本專案尚未實測 |
+| 角色參考音（聲音設計） | VoxCPM2 文字聲音設計（預設，Apache-2.0）；選用引擎用 Breeze TTS 2（非商用） | 營利時不要用選用引擎的 Breeze TTS 2；用 VoxCPM2 或自己有權利的真人錄音 | VoxCPM2 聲音設計已能產生聲音；設計出的聲音台灣腔夠不夠未系統比較 |
 | 挑音的發音對照 | edge-tts | 自己錄標準音，或只靠聽寫（ASR）挑 | 未測 |
 | H3、Music 3 | — | 不用換，但要遵守地區限制、標示 AI 生成、商業顯著標示模型名稱 | — |
 
-### 台灣腔、可商用的聲音工具（2026-10-07 依官方頁面整理；BreezyVoice 已實測並成為本 repo 預設，其餘未實測）
+### 台灣腔、可商用的聲音工具（2026-10-07 依官方頁面整理；BreezyVoice 已實測，2026-10-14 起改為本 repo 選用引擎，其餘未實測）
 
 | 選項 | 本機／雲端 | 授權 | 台灣腔證據 | 備註 |
 |---|---|---|---|---|
-| **BreezyVoice（聯發科＋台大）＝本 repo 預設** | 本機 | Apache-2.0（程式與權重） | 強：官方專為台灣華語設計，注音控制、破音字處理；本 repo 實測腔調分數最高 | 參考音克隆；沒有文字聲音設計；底子是 CosyVoice 1。https://github.com/mtkresearch/BreezyVoice |
+| **BreezyVoice（聯發科＋台大）＝本 repo 選用引擎** | 本機 | Apache-2.0（程式與權重） | 強：官方專為台灣華語設計，注音控制、破音字處理；本 repo 實測腔調分數最高 | 參考音克隆；沒有文字聲音設計；底子是 CosyVoice 1。https://github.com/mtkresearch/BreezyVoice |
 | BreezeBlue 官方付費 API（Breeze TTS 2 雲端版） | 雲端 | 經官方平台產生的音訊可商用（模型卡與價格頁說法不一致，訂閱前請向官方確認） | 與本 repo 用的 Breeze TTS 2 同一模型 | https://breezeblue.ai/pricing |
 | Microsoft Azure Speech zh-TW | 雲端 | 付費可商用 | 強：官方「Taiwanese Mandarin」 | 只有 3 個聲音、沒有童聲 |
 | VoAI 絕好聲創 | 雲端 | 商用條款未查到 | 強：主打台灣口音 | 快速克隆、多位配音員。https://www.voai.ai/ |

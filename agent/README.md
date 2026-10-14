@@ -11,7 +11,7 @@
 > ⚠️ 兩個技能寫於專案早期（2026-08～09），references 裡還有幾處舊說法，用的時候以 `docs/` 為準（`ai-drama/SKILL.md` 開頭已寫明怎麼對應）：
 > - 「Seedance 2.5、每段 30 秒」→ 本機 H3、單鏡 ≤12 秒、對話靠切鏡
 > - 「主角」「角色資產/<主角>/角色設定.md」→ 佔位例子，請換成你自己的角色設定檔
-> - 「voice-clone 技能」→ BreezyVoice（`make_breezyvoice.cmd`）
+> - 「voice-clone 技能」→ VoxCPM2（`make_voxcpm.cmd`；選用 BreezyVoice `make_breezyvoice.cmd`）
 > - 首幀 → 本 repo 預設 OpenAI Image 2.5 附定妝照，本機 Qwen-Image-Edit 2511 為備選；定稿用 DMAD 4 步
 > - 「14 步＋EasyCache」→ 定稿不開 EasyCache
 

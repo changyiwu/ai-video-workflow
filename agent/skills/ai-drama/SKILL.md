@@ -8,7 +8,7 @@ description: AI 短劇編劇（改寫自 mathruffian-dot 的開源工作流）�
 > **本 repo 版本說明（2026-10-07 更新，優先於 references 裡的舊說法）**
 > - 影片模型是**本機 MiniMax H3**：每鏡 4–12 秒、對話與換場靠切鏡；references 裡「Seedance 2.5、每段 30 秒」的說法一律改讀成「H3、每鏡 ≤12 秒」，`segmentation.md` 的 30 秒片段表改成**鏡表**（每鏡：景別、誰在畫面、動作、台詞、秒數）。
 > - 角色是**你自己的角色**：references 裡的「主角」「阿凱」與 `角色資產/<主角>/角色設定.md` 都是佔位例子，本 repo 沒附。請先照 `docs/07_本地角色與首幀.md` 做好角色定妝照，把每個角色的外觀描述（年齡、臉、髮型、眼鏡、上衣與下半身）寫進你專案的角色設定檔，劇本與提示詞都引用它。
-> - 配音用 **BreezyVoice**（`C:\AI\tools\make_breezyvoice.cmd`），不是 voice-clone 技能；台詞避免單一個字（「考。」「接！」改成兩三個字）。
+> - 配音用 **VoxCPM2**（`C:\AI\tools\make_voxcpm.cmd`；選用 BreezyVoice `make_breezyvoice.cmd`），不是 voice-clone 技能；台詞避免單一個字（「考。」「接！」改成兩三個字）。
 > - 寫完劇本後的製作流程看 `docs/02_端到端流程.md`；技術限制看 `docs/03_規則與踩坑.md`。
 
 ## 開工前必讀（不可跳過）
@@ -26,7 +26,7 @@ description: AI 短劇編劇（改寫自 mathruffian-dot 的開源工作流）�
 | 單支長度 | 30 秒–2 分鐘，**獨立成篇**，沒有連續劇集數 |
 | 鏡頭長度 | **每鏡 4–12 秒**（H3 超過 12 秒容易自己切鏡、鏡頭漂移） |
 | 幀率 | 24 fps |
-| 配音 | BreezyVoice 用角色參考音念台詞，H3 用它當固定音軌對嘴 |
+| 配音 | VoxCPM2（選用 BreezyVoice）用角色參考音念台詞，H3 用它當固定音軌對嘴 |
 
 ## 判斷任務
 

@@ -1,6 +1,6 @@
 # template_local：全本地多鏡短片範本（做新片從這裡開始）
 
-一個設定檔 `film.json` 寫完整支片（角色、場景、每一鏡、台詞、配樂、片尾），`make_film.py` 從角色定妝照一路做到成片和自審。生圖預設用 OpenAI Image 2.5（要 `OPENAI_API_KEY`），沒有金鑰時自動改用本機 Qwen；其餘全部本機模型。片尾名單會依實際用到的生圖後端自動寫（記在 `out/image_backends.json`）。
+一個設定檔 `film.json` 寫完整支片（角色、場景、每一鏡、台詞、配樂、片尾），`make_film.py` 從角色定妝照一路做到成片和自審。生圖預設用 OpenAI Image 2.5（要 `OPENAI_API_KEY`），沒有金鑰時自動改用本機 Qwen；配音預設用 VoxCPM2（`set VOICE_ENGINE=breezyvoice` 改用 Breeze TTS 2＋BreezyVoice）；其餘全部本機模型。片尾名單會依實際用到的生圖後端自動寫（記在 `out/image_backends.json`）。
 
 範例 `film.json` 是〈被狗吃掉的作業〉：7 鏡、正片約 28 秒＋片尾 9.5 秒。2026-10-07 一個沒看過本專案的 agent，只靠本 repo 做出這支片，之後把它寫的腳本整理成這個範本，再從零重跑驗證過（時間見最後一節）。
 
@@ -18,7 +18,8 @@
    ```
 4. **人工關卡 1**：看 `out/first/_sheet.jpg`。臉、服裝要一致，不能多手多腳，背景不能有字，窗戶方向要對。不滿意的鏡：刪 `out/first/<鏡>.png`，在 `film.json` 的 `seeds` 加 `"frame_<鏡>": 新數字`，或改該鏡的 `frame` 描述，再跑 `frames`。
 5. `make_film.py voices h3`
-   - 有句子 8 個候選都念錯時程式會停下來：在該句加 `"tts"`，念錯的字後面標注音，例如 `"tts": "老師，連假[:ㄐㄧㄚ4]要去哪？"`。刪掉 `out/voice/bv` 再跑 `voices`。
+   - 有句子 8 個候選都念錯時程式會停下來：在該句加 `"tts"`，把念錯的字換成同音字（VoxCPM2 不支援注音）。用 BreezyVoice 時可以直接標注音，例如 `"tts": "老師，連假[:ㄐㄧㄚ4]要去哪？"`。刪掉 `out/voice/bv` 再跑 `voices`。
+   - 換配音引擎要刪掉整個 `out/voice` 再跑（`out/voice/engine.txt` 記著上次用哪個，不一致會擋下來）。
    - 單字喊叫這類 ASR 本來就聽不準的句子，人聽過沒問題就用 `set ALLOW_REVIEW=1` 繼續。
 6. **人工關卡 2**：看 `out/review/clips_<鏡>.jpg`（每鏡 6 格），檢查有沒有換臉、多出人、鏡頭漂移。不滿意就刪 `out/h3/<鏡>/clip.mp4`，在 `seeds` 加 `"h3_<鏡>": 新數字`，再跑 `set ONLY=S3 S5` → `make_film.py h3`。
 7. `make_film.py amb edl music ending cut review`
@@ -38,7 +39,7 @@
 | `set_sentence` | 場景參考圖那句，`{n}` 會換成場景圖的編號（角色數＋1） |
 | `frame_suffix` | 每張首幀結尾（不要字、不要浮水印…） |
 | `h3` | H3 共用設定：`style`、`setting`、`soundscape`（不寫台詞）、`camera`、`constraints`（每鏡都加的限制） |
-| `chars.<代號>` | `name`（字幕顯示）、`look`（**完整外觀描述**，每張首幀都會照抄）、`voice_design`（Breeze 設計聲音的描述）、`voice_sample`（設計聲音時念的句子，也是 BreezyVoice 的參考逐字稿）、`h3_voice`、`edge_voice`（挑音用的台灣國語答案卷聲音）、`sub_color`（字幕顏色，ASS 格式 `&H00BBGGRR`） |
+| `chars.<代號>` | `name`（字幕顯示）、`look`（**完整外觀描述**，每張首幀都會照抄）、`voice_design`（設計聲音的描述，VoxCPM2／Breeze 共用）、`voice_sample`（設計聲音時念的句子；用 BreezyVoice 時也是參考逐字稿）、`h3_voice`、`edge_voice`（挑音用的台灣國語答案卷聲音）、`sub_color`（字幕顏色，ASS 格式 `&H00BBGGRR`） |
 | `masters.<名稱>` | 場景母版（空景）提示詞。同一個場景的鏡頭都裁同一張母版，空間才一致 |
 | `shots[]` | 每一鏡，見下表 |
 | `seeds` | 想換的 seed：`char_<角色>`、`master_<名稱>`、`frame_<鏡>`、`h3_<鏡>`、`voice_<角色>` |
@@ -54,7 +55,7 @@
 | `refs` | 畫面裡的角色代號（依序對應 `<image1>`、`<image2>`…）。**只放畫面裡要演戲的人**，有定義但不入鏡的角色 H3 會把他叫進畫面 |
 | `scene` | `[母版名稱, [x0, y0, x1, y1]]`：從母版裁哪一塊當場景參考（0–1 比例） |
 | `dur` | 秒數（4–12）。有台詞時會自動延長到「開口時間＋台詞長度＋0.8 秒」 |
-| `line` | `{"who", "text", "at"}`：誰說、字幕文字、第幾秒開口；`"tts"`（選填）是送給 BreezyVoice 的寫法（可加注音）。沒台詞寫 `null`（H3 會收到靜音音軌，角色不會自己嘟囔） |
+| `line` | `{"who", "text", "at"}`：誰說、字幕文字、第幾秒開口；`"tts"`（選填）是送給配音引擎的寫法（VoxCPM2 用同音字；BreezyVoice 可加注音）。沒台詞寫 `null`（H3 會收到靜音音軌，角色不會自己嘟囔） |
 | `frame` | 首幀描述：景別、角色在哪、做什麼、表情、窗戶在畫面哪一邊 |
 | `action` | H3 的動作描述（沒台詞的鏡頭寫明 He does not speak） |
 | `extra_constraints` | 這一鏡額外的限制 |
@@ -68,6 +69,8 @@
 `chars/` 定妝照、`masters/` 場景母版與每鏡裁切、`first/` 首幀與 `_sheet.jpg`、`voice/` 角色參考音、答案卷與 `bv/`（候選、`picks.json`、選中的台詞）、`h3/<鏡>/` 每鏡 spec、提示詞與 clip、`music/`、`ending/`、`post/`（`edl.json` 時間軸、放大片段、混音、字幕）、`cut/film_1080p.mp4` 成片＋手機版、`review/` 自審、`timing.json` 各階段時間。
 
 ## 驗證紀錄
+
+> 以下是上游在 RTX 5090、配音用 BreezyVoice 時的紀錄；2026-10-14 改預設 VoxCPM2 後尚未重跑。
 
 - 2026-10-07 原始版（agent 自己寫的 film.py／post.py）：約 45 分鐘做完，成片 6 句聽寫全對、−15.8 LUFS、峰值 −2.0 dBFS。
 - 2026-10-07 整理成本範本後，在 RTX 5090 從零重跑（`make_film.py` 不帶參數一次跑完）：**共 28.7 分鐘**，成片 37.7 秒。

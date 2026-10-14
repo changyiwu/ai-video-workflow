@@ -73,9 +73,9 @@ def spark_plan(g, r):
             "劇本／剪接／字幕（CPU）": "本機",
             "首幀": "OpenAI Image 2.5（預設，雲端，不吃筆電記憶體）；備選本機 Qwen-Image（要先裝好 NVIDIA 預覽版 PyTorch）",
             "H3 影片": "本機先試；失敗或太慢 → H3_BACKEND=colab",
-            "角色參考音（聲音設計）": "先試本機 VoxCPM2（gen_voice.py --control … --design）；不行改雲端或桌機",
-            "台詞配音（BreezyVoice）": "大概率要雲端（Python 3.10 套件沒有 ARM64 wheel）：cloud/colab_h3.py full-setup；試做可用本機 VoxCPM2",
-            "聽寫校對（faster-whisper）": "雲端（ctranslate2 沒有 Windows ARM64 版）",
+            "配音（VoxCPM2，預設引擎：聲音設計＋台詞）": "先試本機（soxr 要現場編譯、附參考音克隆有 torchcodec 風險）；不行改雲端或桌機",
+            "配音選用引擎（VOICE_ENGINE=breezyvoice）": "大概率要雲端（Python 3.10 套件沒有 ARM64 wheel）：cloud/colab_h3.py full-setup",
+            "聽寫校對（ASR）": "本機 openai-whisper（ctranslate2 沒有 Windows ARM64 版，stt.py 會自動改用）；不行改雲端或桌機",
             "放大": "UPSCALE=lanczos 或 FlashVSR（RTX VSR 的 nvidia-vfx 沒有 ARM64 版）",
         },
         "notes": ["下一步：python setup/spark_check.py（檢查 Python 架構、驅動、PyTorch CUDA、各套件 ARM64 wheel）"],
@@ -103,7 +103,7 @@ def main():
     info["plan"] = {
         "劇本／剪接／字幕（CPU）": "本機",
         "首幀": "OpenAI Image 2.5（預設，不用顯卡，要 OPENAI_API_KEY）" + ("" if vram < 12 else "；備選本機 Qwen-Image"),
-        "配音（BreezyVoice／VoxCPM2／whisper）": "本機" if nv and vram >= 8 else "雲端（cloud/colab_h3.py full-setup）",
+        "配音（VoxCPM2／whisper；選用 BreezyVoice）":"本機" if nv and vram >= 8 else "雲端（cloud/colab_h3.py full-setup）",
         "H3 影片": "本機" if pick else "雲端 G4（cloud/colab_h3.py batch …）",
         "全部都跑不動時": "全雲端：python cloud/colab_h3.py full-setup，再 film／smoke",
     }

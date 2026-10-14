@@ -1,9 +1,9 @@
 """安裝完成後的自我驗證：每個本地模型各跑一個小工作，不需要任何外部素材（聲音、圖片都自己生）。
 用 H3 venv 執行（ComfyUI 要先啟動：call configs\\profile.cmd → tools\\start_comfy.cmd）：
   C:\\AI\\H3\\venv\\Scripts\\python.exe setup\\smoke_test.py [--quick]
-完整版 14 步；--quick 跳過 FlashVSR（13 步）。結果寫 setup\\smoke_out\\report.json，並印出跟 docs\\hardware.md 對照用的時間。
-流程：Breeze 設計聲音 → BreezyVoice 用它念台詞＋自動挑選 → VoxCPM2（備用引擎）→ faster-whisper 聽寫 → 聲調比對 → Qwen-Image 2.1 生首幀 → Qwen 附參考圖 →
-MiniMax Music 3 → BS-RoFormer 分離 → H3（DMAD 4 步，首幀＋配音當固定音軌）→ RTX VSR → FlashVSR"""
+完整版 12 步；--quick 跳過 FlashVSR（11 步）。有裝 Breeze TTS 2＋BreezyVoice（選用）會多驗 3 步。結果寫 setup\\smoke_out\\report.json，並印出跟 docs\\hardware.md 對照用的時間。
+流程：VoxCPM2 設計聲音 → VoxCPM2 用它念台詞＋自動挑選 →（選用：Breeze 設計聲音 → BreezyVoice 念＋挑選）→ faster-whisper 聽寫 → 聲調比對 →
+Qwen-Image 2.1 生首幀 → Qwen 附參考圖 → MiniMax Music 3 → BS-RoFormer 分離 → H3（DMAD 4 步，首幀＋配音當固定音軌）→ RTX VSR → FlashVSR"""
 import json
 import os
 import subprocess
@@ -82,27 +82,37 @@ def main():
         sys.exit(f"ComfyUI not running at {HOST}: call configs\\profile.cmd, then tools\\start_comfy.cmd")
     # --- 聲音（ComfyUI 先釋放顯存）
     free_comfy()
-    (OUT / "breeze.json").write_text(json.dumps(dict(out_dir="breeze", jobs=[dict(
-        name="design", text="大家好，我是阿福。今天天氣很好，我們一起去上課吧。",
-        instruction="A cheerful 12-year-old Taiwanese boy, bright and friendly, natural Taiwanese Mandarin accent.", seed=7)]), ensure_ascii=False), encoding="utf-8")
-    ref = step("breeze_design", [PYB, str(T / "breeze_batch.py"), "breeze.json"], "breeze/design.wav")
-    (OUT / "breeze_line.json").write_text(json.dumps(dict(out_dir="breeze", jobs=[dict(
-        name="line", text=LINE, instruction="A cheerful 12-year-old Taiwanese boy, natural Taiwanese Mandarin accent, standard pronunciation.", seed=11)]),
+    sample = "大家好，我是阿福。今天天氣很好，我們一起去上課吧。"
+    # 預設配音引擎＝VoxCPM2：設計聲音＋一段播報聲音當台灣國語答案卷（不需連網）
+    (OUT / "vox_design.json").write_text(json.dumps(dict(out_dir="vox", jobs=[
+        dict(name="design", text=sample, control="A cheerful 12-year-old Taiwanese boy, bright and friendly, natural Taiwanese Mandarin accent.", seed=7),
+        dict(name="tw", text=LINE, control="A clear, neutral standard Taiwanese Mandarin news-reading voice, calm, precise tones.", seed=11)]),
         ensure_ascii=False), encoding="utf-8")
-    tw = step("breeze_line", [PYB, str(T / "breeze_batch.py"), "breeze_line.json"], "breeze/line.wav")
-    # 台詞配音＝BreezyVoice：用設計好的聲音念台詞（3 個 seed），再自動挑（聽寫＋對照台灣國語參考音；這裡用 Breeze 那句當參考，不需連網）
-    (OUT / "bv.json").write_text(json.dumps(dict(out_dir="bv", seeds=3, jobs=[dict(
-        name="line", text=LINE, ref_audio="breeze/design.wav", ref_text="大家好，我是阿福。今天天氣很好，我們一起去上課吧。", tw_ref="breeze/line.wav")]),
-        ensure_ascii=False), encoding="utf-8")
-    bv = step("breezyvoice", [PYBV, str(T / "breezyvoice_batch.py"), "bv.json"], "bv/cand/line_s1.wav") if ref else None
-    if bv and tw:
-        bv = step("breezyvoice_pick", [PYV, str(T / "breezyvoice_pick.py"), "bv.json"], "bv/line.wav")
-    vox = step("voxcpm2", [PYV, str(T / "gen_voice.py"), "--text", LINE, "--ref", str(ref or ""), "--seed", "7", "--out", "voxcpm.wav"], "voxcpm.wav")
-    line_wav = bv or vox
+    ref = step("voxcpm_design", [PYV, str(T / "voxcpm_batch.py"), "vox_design.json"], "vox/design.wav")
+    tw = OUT / "vox" / "tw.wav" if ref and (OUT / "vox" / "tw.wav").exists() else None
+    # 台詞：用設計好的聲音念（3 個 seed），再自動挑（聽寫＋對照答案卷）
+    (OUT / "vox_line.json").write_text(json.dumps(dict(out_dir="vox", seeds=3, jobs=[dict(
+        name="line", text=LINE, ref_audio="vox/design.wav", tw_ref="vox/tw.wav")]), ensure_ascii=False), encoding="utf-8")
+    line_wav = step("voxcpm_line", [PYV, str(T / "voxcpm_batch.py"), "vox_line.json"], "vox/cand/line_s1.wav") if ref else None
+    if line_wav and tw:
+        line_wav = step("voice_pick", [PYV, str(T / "breezyvoice_pick.py"), "vox_line.json"], "vox/line.wav")
+    # 選用引擎：Breeze TTS 2 設計＋BreezyVoice 念（VOICE_ENGINE=breezyvoice；官方以 Linux 為準），有裝才驗
+    if Path(PYB).exists() and Path(PYBV).exists():
+        (OUT / "breeze.json").write_text(json.dumps(dict(out_dir="breeze", jobs=[dict(
+            name="design", text=sample, instruction="A cheerful 12-year-old Taiwanese boy, bright and friendly, natural Taiwanese Mandarin accent.", seed=7)]),
+            ensure_ascii=False), encoding="utf-8")
+        bref = step("breeze_design", [PYB, str(T / "breeze_batch.py"), "breeze.json"], "breeze/design.wav")
+        (OUT / "bv.json").write_text(json.dumps(dict(out_dir="bv", seeds=3, jobs=[dict(
+            name="line", text=LINE, ref_audio="breeze/design.wav", ref_text=sample, tw_ref="vox/tw.wav")]), ensure_ascii=False), encoding="utf-8")
+        bv = step("breezyvoice", [PYBV, str(T / "breezyvoice_batch.py"), "bv.json"], "bv/cand/line_s1.wav") if bref else None
+        if bv and tw:
+            step("breezyvoice_pick", [PYV, str(T / "breezyvoice_pick.py"), "bv.json"], "bv/line.wav")
+    else:
+        print("SKIP breeze/breezyvoice (not installed; optional engine)", flush=True)
     if line_wav:
         step("whisper", [PYV, str(T / "stt.py"), "--audio", str(line_wav), "--outdir", "stt"], "stt/transcript.txt")
     if line_wav and tw:
-        step("pron_compare", [PYV, str(T / "pron_compare.py"), str(line_wav), "breeze/line.wav", LINE])
+        step("pron_compare", [PYV, str(T / "pron_compare.py"), str(line_wav), str(tw), LINE])
     # --- 圖、音樂、影片（ComfyUI）
     (OUT / "prompt.txt").write_text(PROMPT, encoding="utf-8")
     img = step("qwen_image", [PYH3, str(T / "gen_image.py"), "--backend", "local", "--prompt-file", "prompt.txt", "--seed", "5101", "--prefix", "smoke/first", "--out", "qwen"],

@@ -1,6 +1,9 @@
 """Local speech-to-text with faster-whisper (GPU). Global tool.
 
 Prereqs: faster-whisper installed in C:/AI/Voice/venv; models cached in C:/AI/Voice/models/whisper.
+Fallback (2026-10-14): when faster-whisper / ctranslate2 cannot be imported (e.g. Windows on Arm, no ARM64 wheel),
+load_asr() switches to openai-whisper (pure PyTorch; slower; downloads its own large-v3 .pt to models/whisper/openai on first use).
+Force a backend with ASR_BACKEND=faster|openai. breezyvoice_pick.py and review.py use load_asr() too.
 
 Usage:
   & "C:\\AI\\Voice\\venv\\Scripts\\python.exe" C:\\AI\\tools\\stt.py --audio in.wav --outdir out [--model large-v3] [--language zh|auto]
@@ -54,6 +57,42 @@ def _add_cuda_dll_dirs():
 
 
 
+class _OpenAIWhisper:
+    """openai-whisper behind the faster-whisper interface: transcribe() -> (segments with .start/.end/.text, info)."""
+    backend = "openai"
+
+    def __init__(self, model, device):
+        import whisper
+        self.m = whisper.load_model(model, device=device, download_root=str(MODEL_CACHE / "openai"))
+        self.fp16 = device == "cuda"
+
+    def transcribe(self, audio, language=None, beam_size=5, initial_prompt=None, condition_on_previous_text=False, **_ignored):
+        from types import SimpleNamespace
+        import whisper
+        r = self.m.transcribe(str(audio), language=language, beam_size=beam_size, initial_prompt=initial_prompt,
+                              condition_on_previous_text=condition_on_previous_text, fp16=self.fp16)
+        segs = [SimpleNamespace(start=s["start"], end=s["end"], text=s["text"]) for s in r["segments"]]
+        dur = len(whisper.load_audio(str(audio))) / whisper.audio.SAMPLE_RATE
+        return segs, SimpleNamespace(language=r.get("language", language), language_probability=None, duration=dur)
+
+
+def load_asr(model="large-v3", device="cuda", compute_type="float16", local_files_only=False):
+    """faster-whisper if importable (default), else openai-whisper. ASR_BACKEND=faster|openai forces one. Result has .backend."""
+    want = os.environ.get("ASR_BACKEND", "auto")
+    if want != "openai":
+        try:
+            _add_cuda_dll_dirs()
+            from faster_whisper import WhisperModel
+            m = WhisperModel(model, device=device, compute_type=compute_type, download_root=str(MODEL_CACHE), local_files_only=local_files_only)
+            m.backend = "faster"
+            return m
+        except ImportError as e:
+            if want == "faster":
+                raise
+            print(f"[asr] faster-whisper unavailable ({e}); falling back to openai-whisper", file=sys.stderr, flush=True)
+    return _OpenAIWhisper(model, device)
+
+
 def fmt_ts(seconds: float, comma: bool = False) -> str:
     ms = int(round(seconds * 1000))
     h, ms = divmod(ms, 3600_000)
@@ -83,14 +122,11 @@ def main() -> int:
     outdir.mkdir(parents=True, exist_ok=True)
 
     try:
-        _add_cuda_dll_dirs()
-        from faster_whisper import WhisperModel
+        model = load_asr(a.model, device=a.device, compute_type=a.compute_type, local_files_only=True)
     except ImportError:
-        print("faster-whisper not found. Run with C:\\AI\\Voice\\venv\\Scripts\\python.exe", file=sys.stderr)
+        print("Neither faster-whisper nor openai-whisper found. Run with C:\\AI\\Voice\\venv\\Scripts\\python.exe", file=sys.stderr)
         return 3
 
-    model = WhisperModel(a.model, device=a.device, compute_type=a.compute_type,
-                         download_root=str(MODEL_CACHE), local_files_only=True)
     segments, info = model.transcribe(
         str(audio),
         language=None if a.language == "auto" else a.language,
@@ -107,7 +143,7 @@ def main() -> int:
         print(f"[{fmt_ts(seg.start)} -> {fmt_ts(seg.end)}] {seg.text.strip()}", flush=True)
 
     (outdir / "transcript.json").write_text(json.dumps(
-        {"audio": str(audio), "model": a.model, "language": info.language,
+        {"audio": str(audio), "model": a.model, "backend": model.backend, "language": info.language,
          "language_probability": info.language_probability, "duration": info.duration, "segments": rows},
         ensure_ascii=False, indent=2), encoding="utf-8")
     (outdir / "transcript.txt").write_text("\n".join(r["text"] for r in rows) + "\n", encoding="utf-8")

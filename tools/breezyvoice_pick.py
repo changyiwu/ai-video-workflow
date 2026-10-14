@@ -16,11 +16,9 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from stt import _add_cuda_dll_dirs, MODEL_CACHE  # noqa: E402
-_add_cuda_dll_dirs()
+from stt import load_asr  # noqa: E402  (faster-whisper；裝不了時自動改 openai-whisper)
 import soundfile as sf  # noqa: E402
 import opencc  # noqa: E402
-from faster_whisper import WhisperModel  # noqa: E402
 from pron_compare import compare  # noqa: E402
 
 DIG = "零一二三四五六七八九"
@@ -76,7 +74,7 @@ def main():
     spec = json.loads(spec_path.read_text(encoding="utf-8-sig"))
     out = (spec_path.parent / spec.get("out_dir", "bv")).resolve()
     refdir = out / "edge_ref"; refdir.mkdir(exist_ok=True)
-    asr = WhisperModel("large-v3", device="cuda", compute_type="float16", download_root=str(MODEL_CACHE))
+    asr = load_asr("large-v3")
     s2t = opencc.OpenCC("s2twp")
     picks_path = out / "picks.json"
     picks = json.loads(picks_path.read_text(encoding="utf-8")) if picks_path.exists() else {}

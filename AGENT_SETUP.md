@@ -32,14 +32,14 @@ python setup\detect_hardware.py
 |---|---|---|
 | Windows | 11 | `winver` |
 | NVIDIA 驅動 | 610.88（要支援 CUDA 13.0） | `nvidia-smi` 右上角 CUDA Version ≥ 13.0 |
-| Python | 3.12（3.12.10–3.12.14 都可）；BreezyVoice 另需 3.10（用 uv 安裝即可） | `py -3.12 --version` |
-| uv | 任意（裝 Python 3.10 與 BreezyVoice 環境用：`pip install uv`） | `uv --version` |
+| Python | 3.12（3.12.10–3.12.14 都可）；選用的 BreezyVoice 另需 3.10（用 uv 安裝即可） | `py -3.12 --version` |
+| uv | 任意（裝套件用；選用的 BreezyVoice 環境也靠它裝 Python 3.10：`pip install uv`） | `uv --version` |
 | Git | 任意 | `git --version` |
 | ffmpeg／ffprobe | 9.0.1 full build，要在 PATH | `ffmpeg -version` |
 | 硬碟 | C 槽至少 250GB 可用（必要模型約 150GB），NVMe SSD | `detect_hardware.py` |
 | 分頁檔 | Windows 預設「系統管理」即可，不要設成固定的小數字 | 系統 → 進階系統設定 → 效能 → 虛擬記憶體（**這是系統設定，要請使用者自己確認或改**） |
 
-## 2. 資料夾與四個 Python 環境
+## 2. 資料夾與 Python 環境（必裝兩個，選用兩個）
 
 所有程式假設安裝在 `C:\AI`。**ComfyUI 資料夾名稱請照抄 `ComfyUI-0.36.0`**（裡面放的是 0.37.0，名稱是歷史原因，很多腳本寫死這個路徑）。
 
@@ -48,8 +48,9 @@ python setup\detect_hardware.py
 **套件一律用 uv 裝**（比 pip 快很多；2026-10-07 全新安裝實測，pip 下載部分大檔只有 100–200 kB/s，H3 環境卡了 20 分鐘以上，改 uv 1.5 分鐘裝完）。四份清單都是原專案 `pip freeze` 的完整結果，所以都加 `--no-deps` 照清單裝，不要讓 pip／uv 自己重新解依賴（語音環境的 voxcpm 依賴會跟鎖定的 fsspec 衝突，照清單裝則沒問題）。uv 也卡住時，見文末常見問題。
 
 ```
-mkdir C:\AI\H3  C:\AI\Voice  C:\AI\BreezeTTS  C:\AI\BreezyVoice  C:\AI\tools
+mkdir C:\AI\H3  C:\AI\Voice  C:\AI\tools
 ```
+（要裝選用配音引擎時再建 `C:\AI\BreezeTTS`、`C:\AI\BreezyVoice`。）
 
 ### 2a. 主環境 C:\AI\H3（ComfyUI、H3、Qwen-Image、Music 3、放大）
 
@@ -63,7 +64,7 @@ copy <repo>\setup\extra_model_paths.yaml C:\AI\H3\ComfyUI-0.36.0\extra_model_pat
 自訂節點照 `setup\custom_nodes.txt` clone 到 `ComfyUI-0.36.0\custom_nodes\` 並 checkout 指定 commit。**節點自己的 requirements.txt 不用另外裝**（需要的套件，例如 triton-windows、nvidia-vfx，已經在上面的清單裡）。
 確認：`C:\AI\H3\venv\Scripts\python.exe -c "import torch;print(torch.__version__, torch.cuda.is_available())"` → `2.14.0+cu130 True`
 
-### 2b. 語音環境 C:\AI\Voice（VoxCPM2、faster-whisper、分軌、聲調比對）
+### 2b. 語音環境 C:\AI\Voice（⭐ VoxCPM2 預設配音引擎：聲音設計＋所有台詞；faster-whisper、分軌、聲調比對）
 
 ```
 py -3.12 -m venv C:\AI\Voice\venv
@@ -71,7 +72,9 @@ uv pip install --python C:\AI\Voice\venv\Scripts\python.exe --no-deps -r <repo>\
 ```
 確認：`C:\AI\Voice\venv\Scripts\python.exe -c "import voxcpm, faster_whisper, audio_separator, stable_whisper, edge_tts;print('ok')"` → `ok`
 
-### 2c. Breeze TTS 2 環境 C:\AI\BreezeTTS（只用來「設計新角色的參考音」）
+### 2c.（選用）Breeze TTS 2 環境 C:\AI\BreezeTTS（`VOICE_ENGINE=breezyvoice` 時設計新角色的參考音）
+
+2026-10-14 起預設配音引擎改為 VoxCPM2，2c、2d 只有要用選用引擎（台灣腔較準、可標注音）時才裝。兩者官方都以 Linux 為準，下面是上游作者在 Windows 跑通的非官方裝法；Breeze TTS 2 權重非商用。
 
 ```
 git clone https://github.com/breezeblue-ai/breeze-tts C:\AI\BreezeTTS\breeze-tts
@@ -80,9 +83,9 @@ uv pip install --python C:\AI\BreezeTTS\venv\Scripts\python.exe --no-deps -r <re
 ```
 （Breeze 用 cu128 的 torch，跟另外兩個環境不同，這是原專案實際狀態。）
 
-### 2d. BreezyVoice 環境 C:\AI\BreezyVoice（⭐ 所有台詞配音）
+### 2d.（選用）BreezyVoice 環境 C:\AI\BreezyVoice（`VOICE_ENGINE=breezyvoice` 時念台詞）
 
-BreezyVoice（聯發科＋台大，Apache-2.0）是本工作流的台詞配音引擎：用角色參考音念任何台詞，台灣國語腔，念不準的字可直接標注音。官方安裝說明只有 Linux 版（文字正規化需要的 pynini 在 PyPI 只有 Linux wheel，細節見 `docs/06_安裝.md` §5b），下面是原專案在 Windows 上實際跑通的非官方裝法：
+BreezyVoice（聯發科＋台大，Apache-2.0）是選用的台詞配音引擎：用角色參考音念任何台詞，台灣國語腔，念不準的字可直接標注音。官方安裝說明只有 Linux 版（文字正規化需要的 pynini 在 PyPI 只有 Linux wheel，細節見 `docs/06_安裝.md` §5b），下面是原專案在 Windows 上實際跑通的非官方裝法：
 
 ```
 git clone --recurse-submodules https://github.com/mtkresearch/BreezyVoice C:\AI\BreezyVoice\code
@@ -126,16 +129,16 @@ foreach ($f in 'downloads.json','downloads_uncensored.json','downloads_dmad.json
 | `downloads_qwen_image.json` | Qwen-Image 2.1 int8＋文字編碼器＋VAE（角色定妝照、LoRA 首幀） | 16.1GB |
 | `downloads_qwen_image_edit.json` | Qwen-Image-Edit 2511 fp8＋文字編碼器＋VAE（**預設的首幀做法**） | 28.1GB |
 | `downloads_music3.json` | MiniMax Music 3 | 11.1GB |
-| `downloads_voxcpm2.json` | VoxCPM2 主權重 | 4.6GB（另需同 repo 的 config／tokenizer 小檔，見下） |
-| `downloads_breeze_tts2.json` | Breeze TTS 2（含 tokenizer、audio_tokenizer；只用來設計新角色的參考音） | 7.1GB |
-| `downloads_breezyvoice.json` | BreezyVoice-300M（**台詞配音**） | 3.0GB |
+| `downloads_voxcpm2.json` | VoxCPM2 主權重（**預設配音引擎**） | 4.6GB（另需同 repo 的 config／tokenizer 小檔，見下） |
+| `downloads_breeze_tts2.json` | 選用：Breeze TTS 2（含 tokenizer、audio_tokenizer；`VOICE_ENGINE=breezyvoice` 時設計參考音） | 7.1GB |
+| `downloads_breezyvoice.json` | 選用：BreezyVoice-300M（`VOICE_ENGINE=breezyvoice` 時念台詞） | 3.0GB |
 | `downloads_flashvsr.json` | FlashVSR v1.1 | 6.3GB |
 | 選用 | `downloads_action_loras.json`（動作 LoRA）、`downloads_funcontrol.json`（舞蹈骨架控制） | — |
 
 另外四個會自動下載的：
 - VoxCPM2 小檔：`C:\AI\Voice\venv\Scripts\python.exe -c "from huggingface_hub import snapshot_download as s; s('openbmb/VoxCPM2', revision='32279effe8c19989596f05d353d1447f51d9e915', local_dir=r'C:\AI\Voice\models\VoxCPM2')"`
 - faster-whisper large-v3：`C:\AI\Voice\venv\Scripts\python.exe -c "from faster_whisper import WhisperModel; WhisperModel('large-v3', device='cpu', download_root='C:/AI/Voice/models/whisper')"`
-- g2pW 注音模型：第一次跑 BreezyVoice 時自動下載（見 2d）。
+- g2pW 注音模型（選用）：第一次跑 BreezyVoice 時自動下載（見 2d）。
 - BS-RoFormer：第一次跑 `audio-separator` 時自動下載到 `C:\AI\Voice\models\separator`（`smoke_test.py` 會觸發）。
 
 DMAD 轉檔：
@@ -153,9 +156,9 @@ call <repo>\configs\profile.cmd
 C:\AI\tools\start_comfy.cmd
 C:\AI\H3\venv\Scripts\python.exe <repo>\setup\smoke_test.py
 ```
-`smoke_test.py` 會自己設計一個聲音、生一張首幀，跑完 Breeze（設計聲音）→ BreezyVoice（念台詞＋自動挑選）→ VoxCPM2（備用引擎）→ faster-whisper → 聲調比對 → Qwen-Image 2.1 → Music 3 → BS-RoFormer → H3 → RTX VSR → FlashVSR，最後印出每一步 OK／FAIL 和秒數。
-- 全部 OK，且每步時間在 `docs/hardware.md` 列的範圍內（真實顯卡比 5090 慢是正常的），就算安裝完成。完整版 14 步；`--quick` 跳過 FlashVSR，13 步。
-- 2026-10-07 全新安裝實測（另一個 agent 只看本 repo、在清空的 `C:\AI` 從零安裝，RTX 5090）：完整版 14 步全部 OK，共 500 秒；第一次跑 BreezyVoice 會先下載 g2pW 注音模型，那一步多約 45 秒。
+`smoke_test.py` 會自己設計一個聲音、生一張首幀，跑完 VoxCPM2（設計聲音）→ VoxCPM2（念台詞）→ 自動挑選 →（有裝才跑：Breeze 設計 → BreezyVoice 念＋挑選）→ faster-whisper → 聲調比對 → Qwen-Image 2.1 → Music 3 → BS-RoFormer → H3 → RTX VSR → FlashVSR，最後印出每一步 OK／FAIL 和秒數。
+- 全部 OK，且每步時間在 `docs/hardware.md` 列的範圍內（真實顯卡比 5090 慢是正常的），就算安裝完成。完整版 12 步；`--quick` 跳過 FlashVSR，11 步；有裝選用的 Breeze＋BreezyVoice 會多 3 步。
+- 2026-10-07 全新安裝實測（上游，當時預設 BreezyVoice、smoke test 為 14 步；另一個 agent 只看本 repo、在清空的 `C:\AI` 從零安裝，RTX 5090）：完整版 14 步全部 OK，共 500 秒；第一次跑 BreezyVoice 會先下載 g2pW 注音模型，那一步多約 45 秒。
 - 打開 `setup\smoke_out\h3\clip.mp4` 看：畫面清楚、嘴型有跟著台詞動。
 
 ## 5. 跑全本地示範片
