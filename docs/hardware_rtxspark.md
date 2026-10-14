@@ -33,11 +33,25 @@
 |---|---|---|
 | 模型 | 跟 16GB 版完全一樣（H3 剪枝 int8、Heretic int8 文字編碼器、fp16 影片 VAE、DMAD 4 步） | 上游驗證過的組合，結果可對照 |
 | ComfyUI 參數 | `--reserve-vram 6 --disable-pinned-memory --disable-async-offload` | 統一記憶體不需要釘選記憶體與非同步搬移（只會重複佔用）；保留 6GB 給 Windows |
-| 放大 | `UPSCALE=lanczos`（或 `flashvsr`），第一次上機 6b 通過後改 `rtxvsr` | nvidia-vfx 0.2.0.0 有 ARM64 版，但 RTX Spark 上還沒實測 |
+| 放大 | `UPSCALE=lanczos`，第一次上機 6b 通過後改 `rtxvsr`；FlashVSR 見下方〈放大：FlashVSR〉 | nvidia-vfx 0.2.0.0 有 ARM64 版，但 RTX Spark 上還沒實測 |
 | 單鏡長度 | ≤12 秒 | 同主設定 |
 | 一次一件 GPU 工作 | 必須 | 同主設定，而且 CPU 程式也在搶同一池記憶體 |
 
 H3 還是記憶體不足時，依序試：`--reserve-vram` 調到 8–10 → 加 `--lowvram` → 換 NVFP4 文字編碼器（N1X 是 Blackwell，原生支援 FP4；上游實測畫面會跟 int8 不同但品質相當）→ `H3_BACKEND=colab`。
+
+## 放大：FlashVSR 要 Triton，筆電先不用
+
+2026-10-14 查 `ComfyUI-FlashVSR_Ultra_Fast`（鎖定 commit `4820b3f`）原始碼：有注意力遮罩的計算只有兩條路，`sparse_sage_attention`（預設，`src/models/sparse_sage/` 直接 `import triton`）與 `block_sparse_attention`（要另外編譯 Block-Sparse-Attention），**沒有純 PyTorch 退路**。其餘依賴（einops、safetensors…）是純 Python。
+
+- `triton-windows` 3.8.0.post28 起有 win_arm64 wheel，但 Triton 執行時要即時編譯 GPU 程式，能不能配 CUDA 13.4 預覽版沒人驗證過；ARM64 清單目前刻意不裝 Triton，所以照預設設定 FlashVSR 在筆電會失敗。
+- FlashVSR 只用在全景、舞蹈鏡（較銳但會幻覺細節），頻率低：**在桌機跑**。筆電放大優先 RTX VSR（官方支援 RTX Spark），其次 lanczos。
+- 真要在筆電試：等一般 H3 鏡頭穩定後，單獨 `uv pip install --python C:\AI\H3\venv\Scripts\python.exe triton-windows==3.8.0.post28`，用 `C:\AI\tools\flashvsr_cli.py` 跑一支短片；失敗就移除 Triton，不影響其他流程。
+
+| 放大方式 | 筆電 | 說明 |
+|---|---|---|
+| lanczos（ffmpeg） | ✅ 一定能 | 畫質最普通，目前預設 |
+| RTX VSR | 🟡 很有機會 | nvidia-vfx 0.2.0.0 有官方 ARM64 版，第一次上機 6b 驗證 |
+| FlashVSR | 🟠 不確定 | 要 Triton，且要能在預覽版 CUDA 上編譯 |
 
 ## 語音：VoxCPM2（本專案預設配音引擎）
 
