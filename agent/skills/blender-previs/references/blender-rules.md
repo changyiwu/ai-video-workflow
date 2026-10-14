@@ -10,7 +10,7 @@
 ## 角色 proxy
 
 - **方塊人／簡化人形優於精緻人偶**；形狀越陽春，模型的「代理感」越好被忽略。
-- 命名：`V5_<角色>_<部位>`（例 `V5_teacher_torso`、`V5_friend_head`），相機 `V5_<鏡號>`，場景物件一律加前綴，避免與舊素材混在一起。
+- 命名：`<前綴>_<角色>_<部位>`（前綴用片代號或版本，例 `P1_teacher_torso`、`P1_friend_head`），相機 `<前綴>_<鏡號>`，場景物件一律加前綴，避免與舊素材混在一起。
 - 用 `object.color` 平塗色區分角色（老師深色、朋友橄欖綠），**不要**花時間做材質。
 - 道具（碗、盤、筷子、手機、紙張）也要有，因為它們是**空間錨點**；但畫面中要讀的文字一律留後製。
 
@@ -20,7 +20,7 @@
 
 ```python
 for o in sc.objects:
-    if any(o.name.startswith("V5_"+p) for p in ("teacher_", "friend_")) \
+    if any(o.name.startswith("P1_"+p) for p in ("teacher_", "friend_")) \
        and not any(k in o.name for k in ("bowl", "plate", "chopsticks")):
         o.hide_render = True
 ```
@@ -40,7 +40,7 @@ for o in sc.objects:
 
 | 實測數據 | 值 |
 |:---|:---|
-| 13 鏡布置圖總耗時 | **0.8 秒** |
+| 13 鏡布置圖總耗時（上游範例片） | **0.8 秒** |
 | 對比一次 H3 生成 | 數百秒 |
 
 能攔下的問題：座位／朝向錯、背景多出物件、景別不符、道具位置、**不同鏡號共用同一機位**。
@@ -67,7 +67,7 @@ cam.keyframe_insert("location", frame=N)
 
 ## 可重用檔案
 
-- **不要覆寫既有 `.blend`**；另存新檔（例 `eatery_v5_reusable.blend`），原檔保留為歷史。
+- **不要覆寫既有 `.blend`**；另存新檔（例 `<場景>_reusable.blend`），原檔保留為歷史。
 - 只保留**一個場景**。多場景＋多套相機是已發生的混淆來源。
 - 移除不用的場景後，清掉 `users == 0` 的孤兒資料（objects / meshes / actions / worlds / collections），迴圈執行到沒有為止。
 - 存檔前還原**正常預設狀態**：預設相機、角色全部可見、1536×864、frame range 覆蓋最長的鏡。
@@ -85,4 +85,4 @@ cam.keyframe_insert("location", frame=N)
 
 ## 檢查節點 ID
 
-不同工作流的 Save 節點 ID 不同（v5 是 `SaveVideo` 15／生圖 `SaveImage` 7；外部工作流是 33／9）。**收件要鎖該工作流自己的節點**，不要遍歷所有輸出，否則會把輸入影片／圖片當成成品。
+不同工作流的 Save 節點 ID 不同（上游範例片：影片工作流 `SaveVideo` 15、生圖 `SaveImage` 7；另一個外部工作流則是 33／9）。**收件要鎖該工作流自己的節點**，不要遍歷所有輸出，否則會把輸入影片／圖片當成成品。

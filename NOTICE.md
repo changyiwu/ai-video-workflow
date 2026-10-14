@@ -39,4 +39,5 @@
 - 2026-10-14 `agent/CLAUDE.md範本.md`、`README.md` 釐清首幀指令 `--model qwen-edit` 只在退回本機時作用（預設 Image 2.5 時不作用）。
 - 2026-10-14 `agent/skills/ai-drama/NOTICE.md` 改動表中上游頻道固定主角的名稱改為佔位說法（原作者署名不變）。
 - 2026-10-14 編劇技能 `agent/skills/ai-drama/` 改成本機 H3 版本：`references/workflow.md` 全文改寫為白話；`references/segmentation.md` 由「≤30 秒片段＋LoRA caption」改寫為「每鏡 ≤12 秒的鏡表」並對應 `film.json`（移除上游角色資產檔名與服裝）；`references/checklists.md` 的技術可行性與切分段落、`references/format.md`、`SKILL.md` 版本說明同步更新。
+- 2026-10-14 Blender 預演技能 `agent/skills/blender-previs/` 移除指向上游私人知識庫的路徑（`專案現況.md`、`資源索引/AI短片/…`、`角色資產/…`、上游片的 `.blend`）：`SKILL.md`〈開工前必讀〉改指 `handoff.md`、`films/`、`docs/`，〈固定規格〉生圖改為 Image 2.5 預設；`references/shot-contract.md`「現成可沿用（小吃店）」改寫為「沿用既有場景」；`references/interview.md`、`references/checklists.md` 路徑同步更新。上游片的版本代號（`v5`、`V5_` 物件前綴、`eatery_v5_reusable.blend`、鏡號實例）改為「上游範例片」與 `<前綴>_` 等通用寫法（`references/blender-rules.md`、`prompt-package.md`、`shot-contract.md`、`interview.md`）。
 - 其餘程式邏輯、模型下載清單、音效（Freesound CC0）與圖片素材未修改。

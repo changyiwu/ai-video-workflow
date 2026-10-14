@@ -16,10 +16,10 @@ AI 影片最常見的失敗是**空間隨機性**：座位跑掉、人物增生�
 
 ## 開工前必讀（不可跳過）
 
-1. 專案 `CLAUDE.md` 頂部最新紀錄與 `專案現況.md`
-2. `資源索引/AI短片/答案索引_真人短劇交付工作流_20260922.md`（固定流程與踩坑對策）
-3. 該片角色設定；生任何圖／影片前讀 `角色資產/<主角>/角色設定.md`
-4. 要用 Blender 時：`資源索引/AI短片/Blender_MCP_安裝_20260920.md`（連線方式與安全警告）
+1. 專案進度與做片規則：repo 根目錄 `handoff.md`、`films/AGENTS.md`，以及該片的 `films/<片名>/製作紀錄.md`
+2. 固定流程與踩坑對策：`docs/02_端到端流程.md`（§2 Blender 預演）、`docs/03_規則與踩坑.md`
+3. 該片角色設定；生任何圖／影片前讀 `films/角色/<角色>/README.md`（鎖定的外觀與聲音描述）
+4. 要用 Blender 時：安裝見 `docs/06_安裝.md`（`C:\AI\Blender\` portable 版）；布置圖用無介面 Blender 跑 `make_plan.py`、`render_layouts.py`（範例在 `pipeline/example_D-7/blender/`），不需要 Blender MCP。要讓 agent 即時操作 Blender 介面時改用全域技能 `agent-blender`
 
 ## 固定規格（本專案，不重複問）
 
@@ -28,7 +28,7 @@ AI 影片最常見的失敗是**空間隨機性**：座位跑掉、人物增生�
 | 畫面 | **16:9 橫式**、**24fps** |
 | 長度 | 1–2 分鐘成片；本機 H3 單鏡長度依台詞與合法幀數，**不套 Seedance 30 秒分段** |
 | 影片模型預設 | 本機 **H3 Ref2VA**（＋實際配音引導） |
-| 生圖 | 本機 Qwen-Image 2.1 |
+| 生圖 | OpenAI Image 2.5（`gen_image.py` 預設），本機 Qwen-Image 2.1 為備選 |
 | 高解析 | 原生 768p → 上下裁切 → RTX VSR 1080p |
 | 運鏡參考 | Blender `Workbench` 平塗色算圖，不是最終風格 |
 
