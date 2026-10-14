@@ -34,4 +34,5 @@
 - 文件補上無 API 金鑰時的替代生圖路線：改呼叫全域技能 `agent-draw`（交給 Codex CLI 以 ChatGPT 訂閱生圖），見 `README.md`、`docs/06_安裝.md` §6。
 - 2026-10-14 配音預設引擎改為 VoxCPM2（聲音設計＋台詞），Breeze TTS 2＋BreezyVoice 改為選用（`VOICE_ENGINE=breezyvoice`）：新增 `tools/voxcpm_batch.py`、`tools/make_voxcpm.cmd`；修改 `pipeline/template_local/make_film.py`、`film.json`、`pipeline/demo_local/run_demo.py`、`setup/smoke_test.py`、`setup/detect_hardware.py`，以及 `README.md`、`AGENT_SETUP.md`、`docs/01`、`docs/02`、`docs/03`、`docs/06`、`docs/hardware_rtxspark.md`、`THIRD_PARTY_NOTICES.md`、`agent/` 下的說明與 `agent/skills/ai-drama/SKILL.md`。
 - 2026-10-14 聽寫（ASR）加 openai-whisper 備援（給 Windows on Arm 用）：`tools/stt.py` 新增 `load_asr()`，`tools/breezyvoice_pick.py`、`pipeline/template_local/review.py` 改用它。
+- 2026-10-14 `nvidia-vfx` 升到 0.2.0.0（API 向下相容，`tools/upscale_vsr.py` 不用改；0.2.0.0 起在 pypi.nvidia.com 有 win_arm64 版）：更新 `setup/env/requirements_h3_venv.txt`、`requirements_voice_venv.txt` 與重產的 ARM64 清單；`setup/spark_check.py` 改為也查 pypi.nvidia.com；更正 `configs/profile_rtxspark.cmd`、`docs/hardware_rtxspark.md`、`setup/detect_hardware.py` 中「RTX VSR 沒有 ARM64 版」的說法。
 - 其餘程式邏輯、模型下載清單、音效（Freesound CC0）與圖片素材未修改。

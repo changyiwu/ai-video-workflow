@@ -20,7 +20,7 @@
 
    | 環境 | 可直接裝 | 主要問題 | 對策 |
    |---|---|---|---|
-   | `C:\AI\H3`（ComfyUI、H3、Qwen、Music 3） | 98／109 | torch 家族要換來源；`triton-windows`、`nvidia-vfx`（RTX VSR）只有 x64 | 用 `setup/env/arm64/requirements_h3_venv_arm64.txt`；放大改 `UPSCALE=lanczos` 或 FlashVSR |
+   | `C:\AI\H3`（ComfyUI、H3、Qwen、Music 3） | 98／109 | torch 家族要換來源；`triton-windows` 只有 x64；`nvidia-vfx`（RTX VSR）0.2.0.0 起在 pypi.nvidia.com 有 win_arm64 版（PyPI 上只有 sdist 空殼，2026-10-14 更正） | 用 `setup/env/arm64/requirements_h3_venv_arm64.txt`；RTX VSR 驗證前放大先用 `UPSCALE=lanczos` |
    | `C:\AI\Voice`（VoxCPM2、faster-whisper、分軌） | 127／146 | **`ctranslate2`（faster-whisper 核心）沒有 Windows ARM64 版**；CUDA 12 函式庫只有 x64；VoxCPM2 需要的 `soxr`、`torchcodec` 沒有 ARM64 wheel（見下方〈語音〉） | 聽寫校對改在 Colab 跑，或之後改用 openai-whisper；VoxCPM2 先試本機 |
    | `C:\AI\BreezeTTS`（選用引擎） | 83／88 | 少數套件要現場編譯 | 用 arm64 清單試裝 |
    | `C:\AI\BreezyVoice`（選用引擎，Python 3.10） | 116／136 | **numpy 1.26、scipy、pandas、scikit-learn 等在 Python 3.10 沒有 ARM64 wheel**，要自己編譯，很可能失敗 | 要用選用引擎就送 Colab（`cloud/colab_h3.py full-setup`）或在桌機跑 |
@@ -33,7 +33,7 @@
 |---|---|---|
 | 模型 | 跟 16GB 版完全一樣（H3 剪枝 int8、Heretic int8 文字編碼器、fp16 影片 VAE、DMAD 4 步） | 上游驗證過的組合，結果可對照 |
 | ComfyUI 參數 | `--reserve-vram 6 --disable-pinned-memory --disable-async-offload` | 統一記憶體不需要釘選記憶體與非同步搬移（只會重複佔用）；保留 6GB 給 Windows |
-| 放大 | `UPSCALE=lanczos`（或 `flashvsr`） | RTX VSR 沒有 ARM64 版 |
+| 放大 | `UPSCALE=lanczos`（或 `flashvsr`），第一次上機 6b 通過後改 `rtxvsr` | nvidia-vfx 0.2.0.0 有 ARM64 版，但 RTX Spark 上還沒實測 |
 | 單鏡長度 | ≤12 秒 | 同主設定 |
 | 一次一件 GPU 工作 | 必須 | 同主設定，而且 CPU 程式也在搶同一池記憶體 |
 
@@ -71,7 +71,7 @@ ARM64 套件狀況：
 | H3 影片 | 筆電先試；不行改 `set H3_BACKEND=colab` |
 | 角色參考音＋台詞配音 | 筆電本機 VoxCPM2（預設引擎）；不行改 Colab 或桌機。要更準的台灣腔：選用引擎 BreezyVoice 在 Colab 或桌機 |
 | 聽寫校對（挑配音、自審） | 筆電本機：faster-whisper 裝不起來時 `stt.py` 自動改用 openai-whisper（較慢，第一次另下載約 3GB 權重）；不行再改 Colab 或桌機 |
-| 放大 | 筆電，ffmpeg lanczos |
+| 放大 | 筆電：先用 ffmpeg lanczos；RTX VSR（nvidia-vfx 0.2.0.0 ARM64 版）驗證通過後改用它 |
 
 > 專案放在 Google 雲端硬碟，桌機（RTX 5060 Ti 16GB＋64GB）和筆電看得到同一份檔案：配音這類筆電跑不了的步驟，也可以直接在桌機做。
 
@@ -89,6 +89,10 @@ ARM64 套件狀況：
    ComfyUI 與自訂節點照 `AGENT_SETUP.md` 2a（`Nvidia_RTX_Nodes_ComfyUI` 先不要裝）。
 5. **相容性總檢查**：`python setup\spark_check.py --torch-python C:\AI\H3\venv\Scripts\python.exe --out spark_report.json` → 看 `torch.cuda` 是否為 `true`、`gpu_total_gb` 報多少。
 6. **ComfyUI 啟動**：`call configs\profile_rtxspark.cmd` 後 `C:\AI\tools\start_comfy.cmd`。
+6b. **RTX VSR 放大**（nvidia-vfx 0.2.0.0 win_arm64；Windows 驅動要 570.65 以上）：
+   - 確認裝到了：`C:\AI\H3\venv\Scripts\python.exe -c "import nvvfx;print(nvvfx.__version__)"` → `0.2.0.0`。沒裝到就補：`C:\AI\H3\venv\Scripts\python.exe -m pip install nvidia-vfx==0.2.0.0 --extra-index-url https://pypi.nvidia.com`
+   - 實跑：拿任一支 768p 短片 `C:\AI\H3\venv\Scripts\python.exe C:\AI\tools\upscale_vsr.py --source in.mp4 --output vsr\out.mp4`，看 `vsr\comparison_*.png` 與 `vsr_result.json` 的秒數
+   - 通過就把 `configs\profile_rtxspark.cmd` 的 `UPSCALE=lanczos` 改成 `UPSCALE=rtxvsr`，並更新上面的分工表
 7. **語音環境（VoxCPM2）**：
    ```
    py -V:3.12-arm64 -m venv C:\AI\Voice\venv

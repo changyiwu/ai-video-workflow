@@ -8,6 +8,7 @@ set H3_UNET=minimax_h3_ref2va_pruned_int8_convrot.safetensors
 set H3_CLIP=qwen3vl_32b_h3_ultra_uncensored_heretic_int8_convrot.safetensors
 set H3_VIDEO_VAE=minimax_h3_video_vae_fp16.safetensors
 set COMFY_EXTRA_ARGS=--reserve-vram 6 --disable-pinned-memory --disable-async-offload
-rem RTX VSR (nvidia-vfx) has no Windows ARM64 build: upscale with ffmpeg lanczos (or set UPSCALE=flashvsr)
+rem nvidia-vfx 0.2.0.0 has a win_arm64 wheel (pypi.nvidia.com), but RTX VSR on RTX Spark is untested: keep lanczos until
+rem docs\hardware_rtxspark.md first-run step 6b passes, then change this to UPSCALE=rtxvsr (or set UPSCALE=flashvsr)
 set UPSCALE=lanczos
 echo [profile] RTX Spark (Windows on Arm, unified memory, UNTESTED): ComfyUI %COMFY_EXTRA_ARGS%, UPSCALE=%UPSCALE%. Close other big apps.

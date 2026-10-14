@@ -73,7 +73,7 @@ numpy==2.5.2
 nvidia-cublas-cu12==12.9.2.10
 nvidia-cuda-nvrtc-cu12==12.9.86
 nvidia-cudnn-cu12==9.26.0.51
-nvidia-vfx==0.1.0.1
+nvidia-vfx==0.2.0.0
 onnx-weekly==1.24.0.dev20260928
 onnx2torch-py313==1.6.0
 onnxruntime==1.30.0

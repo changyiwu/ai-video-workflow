@@ -36,9 +36,20 @@ SPECIAL = {
     "torchvision": "同 torch",
     "torchaudio": "同 torch",
     "triton-windows": "x64 專用；ARM64 不裝，ComfyUI 不用 torch.compile 即可",
-    "nvidia-vfx": "RTX VSR 放大；沒有 ARM64 版時改用 FlashVSR 或 ffmpeg lanczos（UPSCALE=lanczos）",
     "onnxruntime-gpu": "沒有 ARM64 CUDA 版時改裝 onnxruntime（CPU）",
 }
+# NVIDIA 有些套件在 PyPI 只放 wheel-stub 空殼（sdist），真正的 wheel 在這個索引（例：nvidia-vfx 0.2.0.0 起有 win_arm64）
+NV_INDEX = "https://pypi.nvidia.com"
+
+
+def nv_index_wheels(name):
+    """pypi.nvidia.com 上這個套件的 wheel 檔名（查不到回傳空清單）。"""
+    try:
+        with urllib.request.urlopen(f"{NV_INDEX}/{name.lower().replace('_', '-')}/", timeout=30) as r:
+            html = r.read().decode("utf-8", "replace")
+    except Exception:
+        return []
+    return sorted(set(re.findall(r"[A-Za-z0-9_.\-]+\.whl", html)))
 
 
 def parse_req(path):
@@ -72,6 +83,9 @@ def classify(name, ver):
         return "ok", "win_arm64 wheel"
     if any(w.endswith("-none-any.whl") for w in wheels):
         return "ok", "純 Python wheel"
+    stem = name.lower().replace("-", "_") + "-" + base + "-"
+    if any(w.lower().startswith(stem) and w.endswith("win_arm64.whl") for w in nv_index_wheels(name)):
+        return "ok", f"win_arm64 wheel（{NV_INDEX}；PyPI 上的 sdist 會自動去那裡抓）"
     if any(f["packagetype"] == "sdist" for f in files):
         return "build", "只有原始碼，要在 ARM64 上編譯"
     tags = sorted({w.rsplit("-", 1)[-1][:-4] for w in wheels})

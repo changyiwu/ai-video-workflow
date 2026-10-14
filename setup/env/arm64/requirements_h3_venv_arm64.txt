@@ -60,7 +60,7 @@ multidict==6.9.0
 networkx==3.6.1
 numba==0.67.0
 numpy==2.5.2
-# nvidia-vfx：RTX VSR 放大；沒有 ARM64 版時改用 FlashVSR 或 ffmpeg lanczos（UPSCALE=lanczos）
+nvidia-vfx==0.2.0.0
 openai-whisper==20250625
 openpyxl==3.1.5
 packaging==26.3

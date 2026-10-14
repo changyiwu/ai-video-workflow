@@ -74,7 +74,7 @@ numpy==2.5.2
 # TODO nvidia-cublas-cu12==12.9.2.10：只有 manylinux_2_27_aarch64, manylinux_2_27_x86_64, win_amd64
 # TODO nvidia-cuda-nvrtc-cu12==12.9.86：只有 manylinux2010_x86_64.manylinux_2_12_x86_64, manylinux2014_aarch64.manylinux_2_17_aarch64, win_amd64
 # TODO nvidia-cudnn-cu12==9.26.0.51：只有 manylinux_2_27_aarch64, manylinux_2_27_x86_64, win_amd64
-# nvidia-vfx：RTX VSR 放大；沒有 ARM64 版時改用 FlashVSR 或 ffmpeg lanczos（UPSCALE=lanczos）
+nvidia-vfx==0.2.0.0
 onnx-weekly==1.24.0.dev20260928
 onnx2torch-py313==1.6.0
 onnxruntime==1.30.0
