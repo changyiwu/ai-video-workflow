@@ -31,7 +31,7 @@ FILM = HERE / (ARGS[ARGS.index("--film") + 1] if "--film" in ARGS else "film.jso
 CFG = json.loads(FILM.read_text(encoding="utf-8"))
 OUT = HERE / "out"; OUT.mkdir(exist_ok=True)
 REPO = (HERE / CFG.get("repo_dir", "../..")).resolve()
-T = Path(os.environ.get("AI_TOOLS", r"C:\AI\tools"))
+T = Path(os.environ.get("AI_TOOLS", REPO / "tools"))     # 預設直接用 repo 的 tools/
 PYH3 = os.environ.get("PY_H3", r"C:\AI\H3\venv\Scripts\python.exe")
 PYV = os.environ.get("PY_VOICE", r"C:\AI\Voice\venv\Scripts\python.exe")
 PYB = os.environ.get("PY_BREEZE", r"C:\AI\BreezeTTS\venv\Scripts\python.exe")

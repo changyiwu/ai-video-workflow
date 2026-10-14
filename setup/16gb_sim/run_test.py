@@ -16,6 +16,7 @@ import psutil
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
+TOOLS = Path(os.environ.get("AI_TOOLS", ROOT / "tools"))     # 預設直接用 repo 的 tools/
 FILM = ROOT / "短片" / "阿禾出場介紹_20261006" / "h3"
 SHOTS = [("B06", "B06_a0", "對白近景 158 格（老師兩句）"), ("B08", "B08_a1", "手部動作 158 格（摺紙）"), ("C04", "C04_a0", "雙人耳語 107 格")]
 PY = r"C:\AI\H3\venv\Scripts\python.exe"
@@ -113,7 +114,7 @@ def main(prof, tag=""):
         od = out_root / (shot + ("_r2" if kind == "warm-repeat" else "")); od.mkdir(parents=True, exist_ok=True)
         sp = od / "spec.json"; sp.write_text(json.dumps(spec, ensure_ascii=False, indent=1), encoding="utf-8")
         mon.reset(); t0 = time.time()
-        r = subprocess.run([PY, r"C:\AI\tools\h3_shot.py", str(sp), "--out", str(od)], env=env, capture_output=True, text=True, encoding="utf-8", errors="replace")
+        r = subprocess.run([PY, str(TOOLS / "h3_shot.py"), str(sp), "--out", str(od)], env=env, capture_output=True, text=True, encoding="utf-8", errors="replace")
         wall = round(time.time() - t0, 1)
         meta = json.loads((od / "meta.json").read_text(encoding="utf-8")) if (od / "meta.json").exists() else {}
         exec_s, status = history_time(meta.get("tag", "")) if meta else (None, "no-meta")

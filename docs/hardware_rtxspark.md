@@ -45,7 +45,7 @@ H3 還是記憶體不足時，依序試：`--reserve-vram` 調到 8–10 → 加
 
 - `triton-windows` 3.8.0.post28 起有 win_arm64 wheel，但 Triton 執行時要即時編譯 GPU 程式，能不能配 CUDA 13.4 預覽版沒人驗證過；ARM64 清單目前刻意不裝 Triton，所以照預設設定 FlashVSR 在筆電會失敗。
 - FlashVSR 只用在全景、舞蹈鏡（較銳但會幻覺細節），頻率低：**在桌機跑**。筆電放大優先 RTX VSR（官方支援 RTX Spark），其次 lanczos。
-- 真要在筆電試：等一般 H3 鏡頭穩定後，單獨 `uv pip install --python C:\AI\H3\venv\Scripts\python.exe triton-windows==3.8.0.post28`，用 `C:\AI\tools\flashvsr_cli.py` 跑一支短片；失敗就移除 Triton，不影響其他流程。
+- 真要在筆電試：等一般 H3 鏡頭穩定後，單獨 `uv pip install --python C:\AI\H3\venv\Scripts\python.exe triton-windows==3.8.0.post28`，用 `<repo>\tools\flashvsr_cli.py` 跑一支短片；失敗就移除 Triton，不影響其他流程。
 
 | 放大方式 | 筆電 | 說明 |
 |---|---|---|
@@ -102,10 +102,10 @@ ARM64 套件狀況：
    ```
    ComfyUI 與自訂節點照 `AGENT_SETUP.md` 2a（`Nvidia_RTX_Nodes_ComfyUI` 先不要裝）。
 5. **相容性總檢查**：`python setup\spark_check.py --torch-python C:\AI\H3\venv\Scripts\python.exe --out spark_report.json` → 看 `torch.cuda` 是否為 `true`、`gpu_total_gb` 報多少。
-6. **ComfyUI 啟動**：`call configs\profile_rtxspark.cmd` 後 `C:\AI\tools\start_comfy.cmd`。
+6. **ComfyUI 啟動**：`call configs\profile_rtxspark.cmd` 後 `<repo>\tools\start_comfy.cmd`。
 6b. **RTX VSR 放大**（nvidia-vfx 0.2.0.0 win_arm64；Windows 驅動要 570.65 以上）：
    - 確認裝到了：`C:\AI\H3\venv\Scripts\python.exe -c "import nvvfx;print(nvvfx.__version__)"` → `0.2.0.0`。沒裝到就補：`C:\AI\H3\venv\Scripts\python.exe -m pip install nvidia-vfx==0.2.0.0 --extra-index-url https://pypi.nvidia.com`
-   - 實跑：拿任一支 768p 短片 `C:\AI\H3\venv\Scripts\python.exe C:\AI\tools\upscale_vsr.py --source in.mp4 --output vsr\out.mp4`，看 `vsr\comparison_*.png` 與 `vsr_result.json` 的秒數
+   - 實跑：拿任一支 768p 短片 `C:\AI\H3\venv\Scripts\python.exe <repo>\tools\upscale_vsr.py --source in.mp4 --output vsr\out.mp4`，看 `vsr\comparison_*.png` 與 `vsr_result.json` 的秒數
    - 通過就把 `configs\profile_rtxspark.cmd` 的 `UPSCALE=lanczos` 改成 `UPSCALE=rtxvsr`，並更新上面的分工表
 7. **語音環境（VoxCPM2）**：
    ```
@@ -113,13 +113,13 @@ ARM64 套件狀況：
    C:\AI\Voice\venv\Scripts\python.exe -m pip install --pre --upgrade --only-binary=:all: --extra-index-url https://pypi.nvidia.com/nvtorch_oot_nightly torch torchvision torchaudio
    uv pip install --python C:\AI\Voice\venv\Scripts\python.exe --no-deps -r <repo>\setup\env\arm64\requirements_voice_venv_arm64.txt --index-strategy unsafe-best-match
    ```
-   逐項確認並回填（下面的 `gen_voice.py` 指 `C:\AI\Voice\venv\Scripts\python.exe C:\AI\tools\gen_voice.py`）：
+   逐項確認並回填（下面的 `gen_voice.py` 指 `C:\AI\Voice\venv\Scripts\python.exe <repo>\tools\gen_voice.py`）：
    - `soxr` 有沒有編譯成功：`C:\AI\Voice\venv\Scripts\python.exe -c "import soxr, librosa; print('ok')"`
    - VoxCPM2 載入：`C:\AI\Voice\venv\Scripts\python.exe -c "import voxcpm; print('ok')"`
    - 純聲音設計：`gen_voice.py --control "a calm Taiwanese male teacher in his thirties" --design --text "大家好" --out design.wav`
    - 附參考音克隆（torchcodec 風險）：`gen_voice.py --ref design.wav --text "明天要考試" --out clone.wav`；報 `libtorchcodec` 錯誤就記下來，改送 Colab／桌機
    - 失敗時記下卡在哪個套件，再評估 llama.cpp-omni 備案
-   - 聽寫備援（openai-whisper）：`C:\AI\Voice\venv\Scripts\python.exe C:\AI\tools\stt.py --audio design.wav --outdir stt` → `stt\transcript.json` 的 `backend` 應為 `openai`，記下秒數
+   - 聽寫備援（openai-whisper）：`C:\AI\Voice\venv\Scripts\python.exe <repo>\tools\stt.py --audio design.wav --outdir stt` → `stt\transcript.json` 的 `backend` 應為 `openai`，記下秒數
 8. **smoke test**：`setup\smoke_test.py`；過了再跑 `pipeline\demo_local\run_demo.py`（聽寫應該會印出 `[asr] ... falling back to openai-whisper`，代表備援生效；選用的 Breeze／BreezyVoice 沒裝會自動跳過）。
 9. 把每一步的結果（成功／失敗、速度、記憶體峰值）寫回本文件，並更新上面的分工表。
 

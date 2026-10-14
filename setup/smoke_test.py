@@ -20,7 +20,7 @@ for _s in (sys.stdout, sys.stderr):                 # 中文輸出在非 UTF-8 �
 
 HERE = Path(__file__).resolve().parent
 OUT = HERE / "smoke_out"; OUT.mkdir(exist_ok=True)
-T = Path(os.environ.get("AI_TOOLS", r"C:\AI\tools"))
+T = Path(os.environ.get("AI_TOOLS", HERE.parent / "tools"))     # 預設直接用 repo 的 tools/
 PYH3 = os.environ.get("PY_H3", r"C:\AI\H3\venv\Scripts\python.exe")
 PYV = os.environ.get("PY_VOICE", r"C:\AI\Voice\venv\Scripts\python.exe")
 PYB = os.environ.get("PY_BREEZE", r"C:\AI\BreezeTTS\venv\Scripts\python.exe")

@@ -113,7 +113,7 @@ def main(prof, target):
         sp = od / "spec.json"; sp.write_text(json.dumps(spec, ensure_ascii=False, indent=1), encoding="utf-8")
         mon.reset(); t0 = time.time(); timed_out = False
         try:
-            r = subprocess.run([R.PY, r"C:\AI\tools\h3_shot.py", str(sp), "--out", str(od)], env=env, capture_output=True, text=True,
+            r = subprocess.run([R.PY, str(R.TOOLS / "h3_shot.py"), str(sp), "--out", str(od)], env=env, capture_output=True, text=True,
                                encoding="utf-8", errors="replace", timeout=TIMEOUT)
             tail = (r.stdout + r.stderr)[-500:]
         except subprocess.TimeoutExpired:

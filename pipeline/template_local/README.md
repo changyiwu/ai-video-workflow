@@ -12,7 +12,7 @@
    ```
    set PYTHONUTF8=1
    call <repo>\configs\profile.cmd
-   C:\AI\tools\start_comfy.cmd
+   <repo>\tools\start_comfy.cmd
    cd <repo>\pipeline\my_film
    C:\AI\H3\venv\Scripts\python.exe make_film.py chars masters frames
    ```

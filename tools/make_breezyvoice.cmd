@@ -4,7 +4,7 @@ REM See breezyvoice_batch.py / breezyvoice_pick.py headers. Keep this file ASCII
 setlocal
 set PYTHONUTF8=1
 set PYTHONPATH=C:\AI\BreezyVoice\winstub;C:\AI\BreezyVoice\code;C:\AI\BreezyVoice\code\third_party\Matcha-TTS
-C:\AI\BreezyVoice\venv\Scripts\python.exe C:\AI\tools\breezyvoice_batch.py %1 < NUL || exit /b 1
+C:\AI\BreezyVoice\venv\Scripts\python.exe "%~dp0breezyvoice_batch.py" %1 < NUL || exit /b 1
 set PYTHONPATH=
-C:\AI\Voice\venv\Scripts\python.exe C:\AI\tools\breezyvoice_pick.py %1
+C:\AI\Voice\venv\Scripts\python.exe "%~dp0breezyvoice_pick.py" %1
 endlocal

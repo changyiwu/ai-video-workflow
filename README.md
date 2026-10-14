@@ -56,7 +56,7 @@ docs/
   06_安裝.md                環境、模型、資料夾慣例
   07_本地角色與首幀.md      不用雲端：Qwen 做角色與首幀（兩種做法）
   hardware.md               ⭐ 你這個硬體版本：模型組合、啟動參數、實測數據、風險
-tools/                      全域工具（放到 C:\AI\tools）
+tools/                      全域工具（各腳本直接用，不用複製）
   h3_shot.py ⭐             分鏡 JSON → 官方格式提示詞 → 格式檢查 → H3 生成
   make_voxcpm.cmd ⭐        台詞配音（預設）：VoxCPM2 每句 8 候選 → 聽寫＋腔調自動挑
   make_breezyvoice.cmd      台詞配音（選用）：BreezyVoice，台灣腔較準、可標注音，官方以 Linux 為準
@@ -79,8 +79,8 @@ configs/profile.cmd         這個硬體版本的環境變數
 ## 4. 最快上手
 
 0. **AI agent 請先讀 [AGENT_SETUP.md](AGENT_SETUP.md)**，它會一步步帶你檢查硬體、安裝、下載、驗證。`python setup/detect_hardware.py` 會列出每個元件建議在本機還是雲端跑；**本機跑不動 H3 → [cloud/README.md](cloud/README.md)**（用 Google AI 方案的 Colab 運算單元跑）。
-1. 照 [AGENT_SETUP.md](AGENT_SETUP.md) 裝好 ComfyUI＋H3、Voice 環境（含 VoxCPM2；Breeze TTS、BreezyVoice 選用），把 `tools/` 複製到 `C:\AI\tools`。
-2. 先讀 [docs/hardware.md](docs/hardware.md)，再在同一個 cmd 視窗 `call configs\profile.cmd` 套用這個硬體版本的設定，然後執行 `C:\AI\tools\start_comfy.cmd`。
+1. 照 [AGENT_SETUP.md](AGENT_SETUP.md) 裝好 ComfyUI＋H3、Voice 環境（含 VoxCPM2；Breeze TTS、BreezyVoice 選用）。`tools/` 不用複製，腳本直接用 repo 裡的。
+2. 先讀 [docs/hardware.md](docs/hardware.md)，再在同一個 cmd 視窗 `call configs\profile.cmd` 套用這個硬體版本的設定，然後執行 `<repo>\tools\start_comfy.cmd`。
 3. 跑 `setup\smoke_test.py` 與 `pipeline\demo_local\run_demo.py` 確認全部正常。
 4. 開始做自己的片，照下面的檢查表一步一步來（2026-10-07 實測：一個沒看過本專案的 agent 照這個 repo，約 45 分鐘做出 7 鏡、28 秒的片）。
 

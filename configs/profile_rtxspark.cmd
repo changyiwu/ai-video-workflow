@@ -2,6 +2,7 @@
 rem RTX Spark laptop (Windows on Arm, 64GB unified memory shared by CPU and GPU). NOT TESTED YET - see docs\hardware_rtxspark.md
 rem Same models as the 16GB VRAM versions. Unified memory: pinned host memory and async offload only duplicate data in the same pool, so turn them off.
 rem --reserve-vram 6 leaves room for Windows and the desktop in the shared pool. If H3 runs out of memory, raise it or add --lowvram.
+set PYTHONDONTWRITEBYTECODE=1
 set COMFY_HOST=http://127.0.0.1:8188
 set COMFY_DIR=C:\AI\H3\ComfyUI-0.36.0
 set H3_UNET=minimax_h3_ref2va_pruned_int8_convrot.safetensors

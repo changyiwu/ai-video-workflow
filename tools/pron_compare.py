@@ -17,7 +17,7 @@ import numpy as np
 sys.path.insert(0, __import__("os").path.dirname(__import__("os").path.abspath(__file__)))
 from pron_check import expected, align, f0_track  # noqa: E402
 
-THRESH = 3.0      # 半音；校準後更新（見 C:\AI\tools\README.md 發音審核段）
+THRESH = 3.0      # 半音；校準後更新（見 tools/README.md 發音審核段）
 
 
 def contours(path, base):

@@ -16,7 +16,7 @@ py -3.12 -m venv .venv
 ## 2. 產生訓練圖
 
 ```
-C:\AI\H3\venv\Scripts\python.exe C:\AI\tools\make_lora_dataset.py --ref chars\yun.png --trigger yun_local --desc "the girl Xiaoyun, a bright 11-year-old Taiwanese schoolgirl with a short black bob haircut and straight bangs, round friendly face, wearing a plain white short-sleeve school shirt" --out C:\AI\lora\datasets\yun_local
+C:\AI\H3\venv\Scripts\python.exe <repo>\tools\make_lora_dataset.py --ref chars\yun.png --trigger yun_local --desc "the girl Xiaoyun, a bright 11-year-old Taiwanese schoolgirl with a short black bob haircut and straight bangs, round friendly face, wearing a plain white short-sleeve school shirt" --out C:\AI\lora\datasets\yun_local
 ```
 - 會產生 25 張（定妝照本身＋24 種景別／角度／表情／場景）和同名 caption。
 - **一定要逐張看**：刪掉臉不像、多手多腳、有字、穿錯衣服的圖。
@@ -39,7 +39,7 @@ C:\AI\H3\venv\Scripts\python.exe C:\AI\tools\make_lora_dataset.py --ref chars\yu
 
 把 `.safetensors` 複製到 `C:\AI\H3\ComfyUI-0.36.0\models\loras\`，生首幀：
 ```
-C:\AI\H3\venv\Scripts\python.exe C:\AI\tools\gen_image.py --lora yun_local.safetensors:1.0 --prompt "yun_local, the girl Xiaoyun, <外觀照抄> <電影感句> <這一鏡>"
+C:\AI\H3\venv\Scripts\python.exe <repo>\tools\gen_image.py --lora yun_local.safetensors:1.0 --prompt "yun_local, the girl Xiaoyun, <外觀照抄> <電影感句> <這一鏡>"
 ```
 - 提示詞一定要有觸發詞＋外觀描述（只有觸發詞不保證像）。
 - 單人 1.0；多人同框不要同時掛兩個 LoRA（會互相稀釋），改成先出構圖、再用 `qwen21_face_refine.py` 對每個人的框各掛自己的 LoRA 重繪。

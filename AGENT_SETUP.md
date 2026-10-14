@@ -48,7 +48,7 @@ python setup\detect_hardware.py
 **套件一律用 uv 裝**（比 pip 快很多；2026-10-07 全新安裝實測，pip 下載部分大檔只有 100–200 kB/s，H3 環境卡了 20 分鐘以上，改 uv 1.5 分鐘裝完）。四份清單都是原專案 `pip freeze` 的完整結果，所以都加 `--no-deps` 照清單裝，不要讓 pip／uv 自己重新解依賴（語音環境的 voxcpm 依賴會跟鎖定的 fsspec 衝突，照清單裝則沒問題）。uv 也卡住時，見文末常見問題。
 
 ```
-mkdir C:\AI\H3  C:\AI\Voice  C:\AI\tools
+mkdir C:\AI\H3  C:\AI\Voice
 ```
 （要裝選用配音引擎時再建 `C:\AI\BreezeTTS`、`C:\AI\BreezyVoice`。）
 
@@ -103,9 +103,7 @@ xcopy /E /I <repo>\setup\breezyvoice\winstub C:\AI\BreezyVoice\winstub
 
 ### 2e. 工具
 
-```
-xcopy /E /I <repo>\tools C:\AI\tools
-```
+不用複製：`make_film.py`、`run_demo.py`、`smoke_test.py` 預設直接用 repo 的 `tools/`（要放別處才設 `AI_TOOLS`）。repo 放在 Google 雲端硬碟時，把 repo 資料夾設成「可離線使用」（或雲端硬碟用鏡像模式），否則串流模式下工具檔可能只在雲端，離線時會失敗。
 
 ## 3. 下載模型（全部鎖定版本、逐檔驗證雜湊、可續傳）
 
@@ -143,7 +141,7 @@ foreach ($f in 'downloads.json','downloads_uncensored.json','downloads_dmad.json
 
 DMAD 轉檔：
 ```
-C:\AI\H3\venv\Scripts\python.exe C:\AI\tools\dmad_lora_convert.py C:\AI\H3\ComfyUI-0.36.0\models\loras\dmad_raw\dmad_minimax_h3_4step_lora_critic.safetensors C:\AI\H3\ComfyUI-0.36.0\models\loras\dmad_h3_4step_lora_critic_comfy.safetensors
+C:\AI\H3\venv\Scripts\python.exe <repo>\tools\dmad_lora_convert.py C:\AI\H3\ComfyUI-0.36.0\models\loras\dmad_raw\dmad_minimax_h3_4step_lora_critic.safetensors C:\AI\H3\ComfyUI-0.36.0\models\loras\dmad_h3_4step_lora_critic_comfy.safetensors
 ```
 （只需要 `lora_critic` 這一顆；`full_critic` 實測構圖會漂，不用。）
 
@@ -153,7 +151,7 @@ C:\AI\H3\venv\Scripts\python.exe C:\AI\tools\dmad_lora_convert.py C:\AI\H3\Comfy
 ```
 set PYTHONUTF8=1
 call <repo>\configs\profile.cmd
-C:\AI\tools\start_comfy.cmd
+<repo>\tools\start_comfy.cmd
 C:\AI\H3\venv\Scripts\python.exe <repo>\setup\smoke_test.py
 ```
 `smoke_test.py` 會自己設計一個聲音、生一張首幀，跑完 VoxCPM2（設計聲音）→ VoxCPM2（念台詞）→ 自動挑選 →（有裝才跑：Breeze 設計 → BreezyVoice 念＋挑選）→ faster-whisper → 聲調比對 → Qwen-Image 2.1 → Music 3 → BS-RoFormer → H3 → RTX VSR → FlashVSR，最後印出每一步 OK／FAIL 和秒數。
@@ -176,7 +174,7 @@ C:\AI\H3\venv\Scripts\python.exe <repo>\pipeline\demo_local\run_demo.py
 
 | 症狀 | 處理 |
 |---|---|
-| `ComfyUI not reachable` | 先 `call configs\profile.cmd`，再 `C:\AI\tools\start_comfy.cmd` |
+| `ComfyUI not reachable` | 先 `call configs\profile.cmd`，再 `<repo>\tools\start_comfy.cmd` |
 | 跑 H3 時整台電腦卡住 | 關掉瀏覽器等大程式；確認沒有兩個 GPU 工作同時跑 |
 | 「分頁檔太小」（Windows error 1455） | 請使用者把分頁檔改回「系統管理」或設 64GB 以上 |
 | VAE 解碼時當掉 | `configs\profile.cmd` 的 `COMFY_EXTRA_ARGS` 加 `--disable-pinned-memory --disable-async-offload` |

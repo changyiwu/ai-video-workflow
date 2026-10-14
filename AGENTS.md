@@ -24,7 +24,7 @@ NOTICE.md                      來源與作者、本分支修改清單（必須�
 LICENSE / LICENSE-docs.md      MIT（程式）／CC BY-NC 4.0（文件素材）
 THIRD_PARTY_NOTICES.md         第三方模型與工具授權
 docs/                          總覽、端到端流程、規則與踩坑、自審清單、安裝、硬體說明
-tools/                         全域工具（安裝時複製到 C:\AI\tools）
+tools/                         全域工具（各腳本直接用這裡，不再複製到 C:\AI\tools）
 films/                         自己的片與角色資產（.gitignore，不進 repo；規則見 films/AGENTS.md）
 pipeline/                      template_local（新片範本）、demo_local（安裝驗證）、example_D-7（上游範例，缺角色資產，不能直接照跑）
 setup/                         模型下載清單、套件清單、smoke_test、硬體偵測、16GB 模擬測試
@@ -52,7 +52,7 @@ setup/spark_check.py、setup/env/arm64/   RTX Spark 相容性檢查與 ARM64 套
 - 預設引擎 VoxCPM2（聲音設計＋台詞，`tools/voxcpm_batch.py`）；`VOICE_ENGINE=breezyvoice` 改用 Breeze TTS 2＋BreezyVoice（台灣腔較準、可標注音，但官方以 Linux 為準，RTX Spark 大概率裝不起來）。
 - 挑音兩個引擎共用 `breezyvoice_pick.py`；VoxCPM2 不支援注音標記，念錯的字改同音字。
 - 聽寫（ASR）一律經 `tools/stt.py` 的 `load_asr()`，不要直接 import `faster_whisper`：Windows on Arm 沒有 ctranslate2，靠它自動改用 openai-whisper。
-- 改了 repo 的 `tools/` 要重新 `xcopy /E /I <repo>\tools C:\AI\tools`：`make_*.cmd` 與各腳本跑的是 `C:\AI\tools` 的副本。
+- 工具一律直接跑 repo 的 `tools/`（入口腳本預設就找它，`make_*.cmd` 用自己所在的資料夾），不要再複製到 `C:\AI\tools`；要改位置才設 `AI_TOOLS`。新寫的腳本找工具也要用相對 repo 的路徑，不要寫死 `C:\AI\tools`。
 
 ### 兩台硬體
 - 桌機：RTX 5060 Ti 16GB＋64GB RAM，用 `configs\profile.cmd`。筆電：RTX Spark（Windows on Arm、64GB 統一記憶體），用 `configs\profile_rtxspark.cmd`。

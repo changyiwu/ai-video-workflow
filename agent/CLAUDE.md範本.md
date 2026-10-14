@@ -26,14 +26,14 @@
 - 生角色圖前：讀 `角色資產/<角色>/README.md`，照抄鎖定提示詞，不要自己重寫外觀。
 - 寫劇本：用 `ai-drama` 技能。
 - 預演：用 `blender-previs` 技能。
-- H3：一律寫分鏡 JSON，用 `C:\AI\tools\h3_shot.py`（官方格式＋格式檢查），不手寫提示詞。
+- H3：一律寫分鏡 JSON，用 `<repo>\tools\h3_shot.py`（官方格式＋格式檢查），不手寫提示詞。
 - 做片前讀：`docs/03_規則與踩坑.md`、`docs/04_自審清單.md`。
 
 ## 預設做法
 
 - 首幀：`gen_image.py --model qwen-edit --ref <定妝照>`。預設送 OpenAI Image 2.5 附定妝照（`--model` 這時不作用）；沒有金鑰或 API 失敗時自動退回本機，`--model qwen-edit` 讓它退回 Qwen-Image-Edit 2511，而不是會把參考圖照抄成正面姿勢的 Qwen-Image 2.1。**每一鏡提示詞都照抄角色完整外觀描述**；做法見 `docs/07_本地角色與首幀.md`。
 - 影片：本機 H3，只給首幀；需要時加尾幀。`"draft": true`（DMAD 4 步）是定稿。
-- 配音：角色參考音定了就不換；台詞一律 `C:\AI\tools\make_voxcpm.cmd jobs.json`（VoxCPM2，每句 8 候選自動挑），念不準的字改同音字（要標注音 `連假[:ㄐㄧㄚ4]` 就改用選用的 `make_breezyvoice.cmd`），`needs_review` 的句子請人聽。
+- 配音：角色參考音定了就不換；台詞一律 `<repo>\tools\make_voxcpm.cmd jobs.json`（VoxCPM2，每句 8 候選自動挑），念不準的字改同音字（要標注音 `連假[:ㄐㄧㄚ4]` 就改用選用的 `make_breezyvoice.cmd`），`needs_review` 的句子請人聽。
 - 配樂：MiniMax Music 3 純器樂。
 - 放大：近景 RTX VSR、全景 FlashVSR。
 - 雲端影片服務（Seedance 等）：使用者明說才用。

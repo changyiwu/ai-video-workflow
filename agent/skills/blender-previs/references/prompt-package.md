@@ -1,6 +1,6 @@
 # 提示詞與素材包（交付包）
 
-> **2026-09-28 起：實際送 H3 的提示詞一律用 `C:\AI\tools\make_shot.cmd`（`h3_shot.py`）產生**，不要手抄下面的範本。把本技能產出的首幀、Blender 鏡位影片（`camera_video`）、聲音（`audio.voice_ref` 或 `audio.fixed`）、每鏡動作與台詞寫進分鏡 JSON，工具會組成官方六段格式（段名**要有冒號**、`<Subject N> (S1)`、`<d>[Chinese]…</d>`、畫外音 `says in an off-screen voiceover … lips remain completely closed`、環境音不寫台詞、無配樂寫 `N/A`）並做格式檢查。下面上游範例片的範本保留作為**內容**參考（每個參考素材要寫清楚用途），格式以工具為準。說明見 `C:\AI\tools\README.md` §2b。
+> **2026-09-28 起：實際送 H3 的提示詞一律用 `<repo>\tools\make_shot.cmd`（`h3_shot.py`）產生**，不要手抄下面的範本。把本技能產出的首幀、Blender 鏡位影片（`camera_video`）、聲音（`audio.voice_ref` 或 `audio.fixed`）、每鏡動作與台詞寫進分鏡 JSON，工具會組成官方六段格式（段名**要有冒號**、`<Subject N> (S1)`、`<d>[Chinese]…</d>`、畫外音 `says in an off-screen voiceover … lips remain completely closed`、環境音不寫台詞、無配樂寫 `N/A`）並做格式檢查。下面上游範例片的範本保留作為**內容**參考（每個參考素材要寫清楚用途），格式以工具為準。說明見 `<repo>\tools\README.md` §2b。
 
 ## 一個已修好的關鍵缺陷
 

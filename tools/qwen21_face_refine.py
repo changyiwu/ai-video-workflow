@@ -17,7 +17,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFilter
 
-sys.path.insert(0, r"C:\AI\tools")
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 import gen_image as gi  # noqa: E402
 
 WORK = 1024  # crop is processed at this size (square boxes recommended)

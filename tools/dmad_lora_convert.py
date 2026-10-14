@@ -88,6 +88,6 @@ if __name__ == "__main__":
     out, pairs = convert(src)
     check(out, pairs)
     save_file(out, sys.argv[2], metadata={"source": sys.argv[1].split("\\")[-1].split("/")[-1],
-                                          "converted_by": "C:/AI/tools/dmad_lora_convert.py (Diffusers -> ComfyUI H3, exact qkv fusion)"})
+                                          "converted_by": "tools/dmad_lora_convert.py (Diffusers -> ComfyUI H3, exact qkv fusion)"})
     n_mod = sum(1 for k in out if k.endswith(".alpha"))
     print(f"[ok] {len(src)} tensors / {len(pairs)} modules in -> {n_mod} ComfyUI modules out -> {sys.argv[2]}")

@@ -23,7 +23,7 @@ CH = ROOT / "角色資產" / "老師這次換你"
 PYH3, PYV = R.PY, r"C:\AI\Voice\venv\Scripts\python.exe"
 PYB = r"C:\AI\BreezeTTS\venv\Scripts\python.exe"
 SEP = r"C:\AI\Voice\venv\Scripts\audio-separator.exe"
-T = r"C:\AI\tools"
+T = str(R.TOOLS)
 TIERS = {"base": dict(vram_hog=False, ramcap=None, flags=[]),
          "t1": dict(vram_hog=False, ramcap=64, flags=[]),
          "t2": dict(vram_hog=True, ramcap=64, flags=["--reserve-vram", "1.5"]),
