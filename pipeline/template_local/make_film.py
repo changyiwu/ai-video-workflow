@@ -131,11 +131,11 @@ def newest(d, ext=".png"):
 
 
 IMG_LOG = OUT / "image_backends.json"
-IMG_BACKEND = os.environ.get("IMAGE_BACKEND", "img25")   # img25（預設，沒金鑰自動走 Codex，失敗就停）｜codex｜local（千問備選）；一支片固定一個
+IMG_BACKEND = os.environ.get("IMAGE_BACKEND", "auto")   # auto（預設：Codex CLI 優先、API 次之，失敗就停）｜codex｜img25｜local（千問備選）；一支片固定一個
 
 
 def gen_img(cmd):
-    """跑一次 gen_image.py（預設 OpenAI Image 2.5，沒金鑰改走 Codex，失敗就停、不自動改用千問），記下實際用的後端，片尾名單照實際寫。"""
+    """跑一次 gen_image.py（預設 Codex CLI 優先、Image 2.5 API 次之，失敗就停、不自動改用千問），記下實際用的後端，片尾名單照實際寫。"""
     r = run(cmd)
     used = next((b for b in ("img25", "codex") if f"[backend] {b}" in r.stdout), "local")
     log = json.loads(IMG_LOG.read_text(encoding="utf-8")) if IMG_LOG.exists() else {}
@@ -195,7 +195,7 @@ def char_refs(k):
 @stage("chars")
 def chars():
     """角色定妝（docs/07 §1）。不滿意就在 seeds 加 char_<角色> 換 seed、刪檔重跑。
-    預設 Image 2.5：先生轉面圖 <角色>_turn.png（純文字，角色的基準），再附它生表情表 <角色>_expr.png（同一張臉）。
+    預設（Codex 或 Image 2.5）：先生轉面圖 <角色>_turn.png（純文字，角色的基準），再附它生表情表 <角色>_expr.png（同一張臉）。
     IMAGE_BACKEND=local（千問備選）：單張、灰底、正面半身 <角色>.png。"""
     for k, c in CHARS.items():
         if IMG_BACKEND == "local":
@@ -247,7 +247,7 @@ def masters():
 
 @stage("frames")
 def frames():
-    """首幀：OpenAI Image 2.5（預設）附「每個角色的轉面圖＋表情表＋場景裁切（最後一張）」；IMAGE_BACKEND=local 時
+    """首幀：OpenAI 生圖（預設 Codex 優先、Image 2.5 API 次之）附「每個角色的轉面圖＋表情表＋場景裁切（最後一張）」；IMAGE_BACKEND=local 時
     Qwen-Image-Edit 附「角色單張半身＋場景裁切」。每鏡都照抄角色完整外觀描述，否則會掉眼鏡、換髮型。"""
     for s in SHOTS:
         dst = OUT / "first" / f"{s['id']}.png"

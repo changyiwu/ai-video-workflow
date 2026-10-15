@@ -1,16 +1,18 @@
-"""Image generation. Default backend = OpenAI Image 2.5 (tools/img25.py); local ComfyUI (Qwen) is the opt-in alternative.
+"""Image generation. Default = OpenAI image models: Codex CLI first, Image 2.5 API second; local ComfyUI (Qwen) is opt-in.
 
 Backend (--backend or env IMAGE_BACKEND):
-  img25 (default)  OpenAI Image 2.5. Needs OPENAI_API_KEY / OPENAI_KEY_FILE. <imageN> in the prompt becomes "Image N".
-                   --seed/--steps/--cfg are ignored (cloud). Missing key or API error -> STOPS with an error (2026-10-15:
-                   no silent switch to Qwen - the two backends look different and need different character refs).
-                   IMAGE_FALLBACK=1 restores the old fall-back-to-local. --lora, --uncensored and krea*/*-unc presets
-                   always run locally.
-                   NO key (env, OPENAI_KEY_FILE or ~/.openai.env) -> switches to codex automatically (2026-10-15; IMAGE_CODEX=0 = stop instead).
-                   A key that fails (quota, model ID, ...) still STOPS - only a missing key goes to Codex.
+  auto (default)   2026-10-15: Codex CLI if usable here (codex.exe found, logged in with ChatGPT, image_generation on),
+                   otherwise img25 if an API key is found, otherwise STOP. The choice is made per run BEFORE generating:
+                   a Codex/API call that fails STOPS - no retry on the other one, never Qwen (if Codex stops being usable
+                   between images a film can mix both; make_film.py credits whatever was really used)
+                   Qwen is never picked automatically: it looks different and needs different character refs.
   codex            Codex CLI built-in image tool on the ChatGPT subscription (tools/codex_image.py, no API key).
-                   Refs attached, result cropped to the requested aspect ratio; failure STOPS (no switch to Qwen).
+                   Refs attached, result cropped to the requested aspect ratio; seed ignored.
+  img25            OpenAI Image 2.5 API (tools/img25.py). Key: OPENAI_API_KEY / OPENAI_KEY_FILE / ~/.openai.env.
+                   <imageN> in the prompt becomes "Image N". --seed/--steps/--cfg are ignored (cloud).
+                   IMAGE_FALLBACK=1 restores the old fall-back-to-local when the API fails.
   local            ComfyUI on this machine (below).
+--lora, --uncensored and krea*/*-unc presets always run locally.
 Every run prints "[backend] img25", "[backend] codex" or "[backend] local" so callers can credit the right tool.
 
 Local image generation via the ComfyUI API.
@@ -231,7 +233,15 @@ def has_openai_key():
         return False
 
 
-def gen_codex(a, prompt):
+def codex_available():
+    """(codex path, None) or (None, reason) - see tools/codex_image.py."""
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import codex_image
+    return codex_image.available()
+
+
+def gen_codex(a, prompt, cx=None):
     """Generate through the Codex CLI (ChatGPT subscription). Returns True on success, False on failure (main() stops)."""
     import re
     import sys
@@ -243,7 +253,7 @@ def gen_codex(a, prompt):
     t0 = time.time()
     print(f"[queued] backend=codex {size} refs={len(a.ref or [])}", flush=True)
     try:
-        f = codex_image.generate(prompt, a.ref, dst, size=size)
+        f = codex_image.generate(prompt, a.ref, dst, size=size, cx=cx)
     except Exception as e:
         print(f"[codex] error: {str(e)[:800]}", flush=True)
         return False
@@ -280,8 +290,8 @@ def main():
     ap.add_argument("--host", default=DEFAULT_HOST)
     ap.add_argument("--out", default=None, help="optional folder to copy the finished image into")
     ap.add_argument("--lora", action="append", default=None, help="LoRA file[:strength], repeatable (e.g. afu_qwen21.safetensors:1.0)")
-    ap.add_argument("--backend", choices=("img25", "codex", "local"), default=os.environ.get("IMAGE_BACKEND", "img25"),
-                    help="img25 = OpenAI Image 2.5 (default; no key -> codex), codex = Codex CLI (ChatGPT), local = ComfyUI")
+    ap.add_argument("--backend", choices=("auto", "codex", "img25", "local"), default=os.environ.get("IMAGE_BACKEND", "auto"),
+                    help="auto = Codex CLI if usable, else Image 2.5 API (default); codex; img25; local = ComfyUI")
     a = ap.parse_args()
 
     name = "qwen21-unc" if a.uncensored else a.model
@@ -304,14 +314,25 @@ def main():
         raise SystemExit("need --prompt or --prompt-file")
 
     local_only = bool(a.lora) or a.uncensored or name.startswith("krea") or name.endswith("-unc")
-    if a.backend == "img25" and not local_only and not has_openai_key() and os.environ.get("IMAGE_CODEX", "1") != "0":
-        print("[img25] no OpenAI API key (env / OPENAI_KEY_FILE / ~/.openai.env) -> using Codex CLI (ChatGPT subscription)", flush=True)
-        a.backend = "codex"
+    cx = None
+    if a.backend in ("auto", "codex") and not local_only:
+        cx, why = codex_available()
+        if a.backend == "codex" and why:
+            raise SystemExit(f"[codex] not usable: {why}")
+        if a.backend == "auto":
+            if cx:
+                a.backend = "codex"
+            elif has_openai_key():
+                print(f"[auto] Codex CLI not usable ({why}) -> OpenAI Image 2.5 API", flush=True)
+                a.backend = "img25"
+            else:
+                raise SystemExit(f"[auto] no OpenAI image backend: Codex CLI not usable ({why}) and no API key "
+                                 "(OPENAI_API_KEY / OPENAI_KEY_FILE / ~/.openai.env). Or rerun the whole film with IMAGE_BACKEND=local")
     if a.backend == "codex" and not local_only:
-        if gen_codex(a, prompt):
+        if gen_codex(a, prompt, cx):
             return
-        raise SystemExit("[codex] failed - stopped (no automatic switch to local Qwen). Check `codex login status`, "
-                         "or set OPENAI_API_KEY, or rerun the whole film with IMAGE_BACKEND=local")
+        raise SystemExit("[codex] failed - stopped (no automatic switch to the API or local Qwen). Check `codex login status` "
+                         "/ subscription quota, or rerun the whole film with IMAGE_BACKEND=img25 or local")
     if a.backend == "img25" and not local_only:
         if gen_img25(a, prompt):
             return

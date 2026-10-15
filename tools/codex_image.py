@@ -1,5 +1,5 @@
 """Image generation through the Codex CLI's built-in image tool (ChatGPT subscription, no OpenAI API key).
-gen_image.py switches here automatically when img25.py finds no API key (env, OPENAI_KEY_FILE, ~/.openai.env) (IMAGE_CODEX=0 turns that off).
+gen_image.py's default backend (auto) tries this FIRST and uses the Image 2.5 API only when Codex is not usable here.
 
 Finding codex.exe (same order as the global agent-draw skill, route C; the version folder changes on every update):
   env CODEX_EXE -> Windows Codex App (Get-AppxPackage OpenAI.Codex) -> ~/.codex/.sandbox-bin/codex.exe -> codex on PATH.
@@ -68,13 +68,21 @@ def _fit(src, dst, size):
     im.resize((w, h), Image.LANCZOS).save(dst)
 
 
-def generate(prompt, refs, out_png, size="1536x1024", cx=None):
-    cx = cx or find_codex()
+def available():
+    """(codex path, None) when Codex can generate images on this machine, else (None, reason)."""
+    cx = find_codex()
     if not cx:
-        raise RuntimeError("codex.exe not found (install the Codex app/CLI, or set CODEX_EXE)")
+        return None, "codex.exe not found (install the Codex app/CLI, or set CODEX_EXE)"
     why = check(cx)
-    if why:
-        raise RuntimeError(why)
+    return (None, why) if why else (cx, None)
+
+
+def generate(prompt, refs, out_png, size="1536x1024", cx=None):
+    """cx = a path already returned by available() (skips the checks); None = check here."""
+    if cx is None:
+        cx, why = available()
+        if why:
+            raise RuntimeError(why)
     out_png = Path(out_png)
     wd = out_png.parent / f"{out_png.stem}_work"
     wd.mkdir(parents=True, exist_ok=True)

@@ -47,7 +47,7 @@ setup/spark_check.py、setup/env/arm64/   RTX Spark 相容性檢查與 ARM64 套
 - **必須保留來源標示**：`LICENSE`、`LICENSE-docs.md`、`THIRD_PARTY_NOTICES.md`、`NOTICE.md`、`skills/ai-film/NOTICE.md`、`skills/ai-film/LICENSE-AI-drama-pound.txt` 不可刪除或移除原作者署名；修改上游文件時在 `NOTICE.md` 的修改清單補一筆。
 
 ### 生圖
-- 預設 OpenAI Image 2.5（`gen_image.py` 預設後端），本機 Qwen-Image 為備選；完全找不到金鑰時自動改走 Codex CLI（`tools/codex_image.py`，扣 ChatGPT 訂閱），有金鑰但 API 錯誤、或 Codex 也失敗就停下，不自動改用千問，要用千問就整支片設 `IMAGE_BACKEND=local`。金鑰由使用者自己設定（`OPENAI_API_KEY`／`OPENAI_KEY_FILE`／`~/.openai.env`），agent 不經手、不讀出內容、不寫進 repo。
+- 預設 OpenAI 生圖（`gen_image.py` 的 `IMAGE_BACKEND=auto`）：第一優先 Codex CLI（`tools/codex_image.py`，扣 ChatGPT 訂閱），這台 Codex 不能用才走 Image 2.5 API（金鑰），兩者都不行、或選定後生成失敗就停下，不改試另一個、不自動改用千問；本機 Qwen-Image 為備選，要用就整支片設 `IMAGE_BACKEND=local`。金鑰由使用者自己設定（`OPENAI_API_KEY`／`OPENAI_KEY_FILE`／`~/.openai.env`），agent 不經手、不讀出內容、不寫進 repo。
 - `run_demo.py`、`smoke_test.py` 固定 `--backend local`（驗證本機安裝用）。
 - 角色定妝預設兩張多格圖：轉面圖（全身正、3/4、側、背）＋表情表（六格），首幀兩張都附；千問備選才用單張半身照（Qwen 會把多格版面照抄成拼貼）。
 - 走 Codex 的圖由 `make_film.py` 記成 `codex`，片尾寫「OpenAI 生圖（Codex）」；不要再手動用 `agent-draw` 代 `make_film.py` 生圖（不會記到 `out/image_backends.json`，片尾名稱會錯）。

@@ -19,7 +19,7 @@ description: 用 ai-video-workflow repo（本機 MiniMax H3）做 16:9、1–3 �
 | 長度 | 單支 1–3 分鐘，**獨立成篇**，沒有連續劇集數 |
 | 鏡頭 | **每鏡 4–12 秒**（超過 12 秒 H3 容易自己切鏡、漂移）；一鏡最多一句台詞、一個人說話 |
 | 影片 | 本機 MiniMax H3，只給首幀；顯卡跑不動時 `make_film.py` 自動送 Colab |
-| 生圖 | OpenAI Image 2.5（`gen_image.py` 預設，失敗就停、不自動改用千問）；本機 Qwen 為備選（整支片 `IMAGE_BACKEND=local`） |
+| 生圖 | OpenAI 生圖（`gen_image.py` 預設：Codex CLI 優先、Image 2.5 API 次之，失敗就停、不自動改用千問）；本機 Qwen 為備選（整支片 `IMAGE_BACKEND=local`） |
 | 定妝 | 轉面圖＋表情表兩張（Image 2.5）；千問備選用單張半身 |
 | 配音 | VoxCPM2（`make_voxcpm.cmd`，`make_film.py` 內建）；選用 BreezyVoice |
 
