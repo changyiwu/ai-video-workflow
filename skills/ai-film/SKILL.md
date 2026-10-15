@@ -27,7 +27,7 @@ description: 用 ai-video-workflow repo（本機 MiniMax H3）做 16:9、1–3 �
 
 | # | 階段 | 讀 | 產出（都在 `films/<片名>/`） | 人工 |
 |---|---|---|---|---|
-| 0 | 角色（只做一次，各片共用） | `<repo>/docs/07_本地角色與首幀.md`、`films/角色/README.md` | `films/角色/<角色>/` 轉面圖、表情表、`README.md`、參考音 | ✅ 定裝 |
+| 0 | 角色（只做一次，各片共用） | `<repo>/docs/07_角色與首幀.md`、`films/角色/README.md` | `films/角色/<角色>/` 轉面圖、表情表、`README.md`、參考音 | ✅ 定裝 |
 | 1 | 開新片 | 本檔〈開新片〉 | 資料夾、`film.json`、`劇本.md`、`製作紀錄.md` | |
 | 2 | 需求訪談 | `references/interview.md` | `需求確認.md` | ✅ 確認 |
 | 3 | 劇本＋鏡表 | `references/script/workflow.md`（格式 `format.md`、拆鏡 `segmentation.md`） | `劇本.md`（含鏡表） | ✅ 確認劇本 |
