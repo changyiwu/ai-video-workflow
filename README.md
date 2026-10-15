@@ -120,7 +120,7 @@ configs/profile.cmd         這個硬體版本的環境變數
 |---|---|---|
 | 上游原頻道的角色定妝照、轉面圖、表情表 | 原作者的角色資產 | 用本機 Qwen-Image 2.1 為自己的角色做單張半身定妝照（見 [07_本地角色與首幀.md](docs/07_本地角色與首幀.md)） |
 | 配音參考音 | 屬於個人聲音，不散布 | 自己錄或用 VoxCPM2 設計 |
-| 模型權重 | 檔案大、各有授權 | 照 [AGENT_SETUP.md](AGENT_SETUP.md) 第 3 節下載（約 150GB） |
+| 模型權重 | 檔案大、各有授權、可照清單重現（詳見 [docs/06 §1](docs/06_安裝.md)） | 照 [AGENT_SETUP.md](AGENT_SETUP.md) 第 3 節下載（約 150GB） |
 | 成片影片 | 檔案大 | — |
 | OpenAI 金鑰 | **生圖預設用 Image 2.5**；沒設時自動改用本機 Qwen | 自己設環境變數 `OPENAI_API_KEY`（或 `OPENAI_KEY_FILE`），見 `docs/06_安裝.md` §6。沒有金鑰但有 ChatGPT 訂閱時，也可請 agent 用 `agent-draw` 技能交給 Codex CLI 生圖 |
 | Google AI 方案／Colab 運算單元（選用） | 本機跑不動 H3 時才需要 | 見 [cloud/README.md](cloud/README.md) |
