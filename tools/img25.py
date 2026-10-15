@@ -1,4 +1,6 @@
-"""OpenAI Image 2.5 helper. API key from env OPENAI_API_KEY, or a text file named by env OPENAI_KEY_FILE (never printed).
+"""OpenAI Image 2.5 helper. API key (never printed), first found wins: env OPENAI_API_KEY -> the file named by env
+OPENAI_KEY_FILE -> ~/.openai.env (the global agent-draw skill's key file). A key file may hold the bare key or a line
+OPENAI_API_KEY=sk-... .
 generate(prompt, out_stem, n) -> /images/generations ; edit(prompt, images, out_stem, n) -> /images/edits (refs)."""
 import base64
 import os
@@ -9,9 +11,23 @@ import urllib.request
 import uuid
 from pathlib import Path
 
-KEY = os.environ.get("OPENAI_API_KEY") or (Path(os.environ["OPENAI_KEY_FILE"]).read_text(encoding="utf-8").strip() if os.environ.get("OPENAI_KEY_FILE") else "")
+
+def _key_from_file(p):
+    p = Path(p)
+    if not p.is_file():
+        return ""
+    lines = [l.strip() for l in p.read_text(encoding="utf-8-sig").splitlines() if l.strip() and not l.strip().startswith("#")]
+    for l in lines:
+        k, sep, v = l.removeprefix("export ").partition("=")
+        if sep and k.strip() == "OPENAI_API_KEY":
+            return v.strip().strip('"').strip("'")
+    return lines[0] if len(lines) == 1 and "=" not in lines[0] else ""
+
+
+KEY = (os.environ.get("OPENAI_API_KEY") or (_key_from_file(os.environ["OPENAI_KEY_FILE"]) if os.environ.get("OPENAI_KEY_FILE") else "")
+       or _key_from_file(Path.home() / ".openai.env"))
 if not KEY:
-    raise SystemExit("img25: set OPENAI_API_KEY (or OPENAI_KEY_FILE)")
+    raise SystemExit("img25: set OPENAI_API_KEY (or OPENAI_KEY_FILE, or put OPENAI_API_KEY=... in ~/.openai.env)")
 MODEL = "gpt-image-2.5-sunburst"
 SIZE = "1344x768"
 # 2026-09-30 全域預設改 medium（輸出 token 約 high 的 1/4；臉部特寫肉眼與 high 差異很小）。

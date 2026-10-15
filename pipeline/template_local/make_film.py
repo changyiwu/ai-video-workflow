@@ -131,13 +131,13 @@ def newest(d, ext=".png"):
 
 
 IMG_LOG = OUT / "image_backends.json"
-IMG_BACKEND = os.environ.get("IMAGE_BACKEND", "img25")   # img25（預設，失敗就停）｜local（千問備選）；一支片固定一個
+IMG_BACKEND = os.environ.get("IMAGE_BACKEND", "img25")   # img25（預設，沒金鑰自動走 Codex，失敗就停）｜codex｜local（千問備選）；一支片固定一個
 
 
 def gen_img(cmd):
-    """跑一次 gen_image.py（預設 OpenAI Image 2.5，失敗就停、不自動改用千問），記下實際用的後端，片尾名單照實際寫。"""
+    """跑一次 gen_image.py（預設 OpenAI Image 2.5，沒金鑰改走 Codex，失敗就停、不自動改用千問），記下實際用的後端，片尾名單照實際寫。"""
     r = run(cmd)
-    used = "img25" if "[backend] img25" in r.stdout else "local"
+    used = next((b for b in ("img25", "codex") if f"[backend] {b}" in r.stdout), "local")
     log = json.loads(IMG_LOG.read_text(encoding="utf-8")) if IMG_LOG.exists() else {}
     log[used] = log.get(used, 0) + 1
     IMG_LOG.write_text(json.dumps(log), encoding="utf-8")
@@ -147,7 +147,8 @@ def gen_img(cmd):
 def image_credit():
     """片尾的生圖工具名：依 out/image_backends.json 實際用到的後端。"""
     log = json.loads(IMG_LOG.read_text(encoding="utf-8")) if IMG_LOG.exists() else {"img25": 1}
-    names = (["OpenAI Image 2.5"] if log.get("img25") else []) + (["Qwen-Image 2.1／Edit 2511"] if log.get("local") else [])
+    names = ((["OpenAI Image 2.5"] if log.get("img25") else []) + (["OpenAI 生圖（Codex）"] if log.get("codex") else [])
+             + (["Qwen-Image 2.1／Edit 2511"] if log.get("local") else []))
     return "／".join(names)
 
 
@@ -185,7 +186,7 @@ def line_index(sid):
 
 # ------------------------------------------------------------------------------------------------ 圖
 def char_refs(k):
-    """首幀要附的角色參考圖：Image 2.5 用轉面圖＋表情表（預設）；本機 Qwen 用單張半身（Qwen 會把多格版面照抄成拼貼）。"""
+    """首幀要附的角色參考圖：Image 2.5／Codex 用轉面圖＋表情表（預設）；本機 Qwen 用單張半身（Qwen 會把多格版面照抄成拼貼）。"""
     if IMG_BACKEND == "local":
         return [OUT / "chars" / f"{k}.png"]
     return [OUT / "chars" / f"{k}_turn.png", OUT / "chars" / f"{k}_expr.png"]
@@ -633,7 +634,7 @@ STAGES = dict(chars=chars, masters=masters, frames=frames, voices=voices, h3=h3,
 
 if __name__ == "__main__":
     names = [a for i, a in enumerate(ARGS) if a in STAGES]
-    need = ({"music"} | ({"chars", "masters", "frames"} if IMG_BACKEND == "local" or os.environ.get("IMAGE_FALLBACK") == "1" else set())   # 只用 Image 2.5 時不用 ComfyUI
+    need = ({"music"} | ({"chars", "masters", "frames"} if IMG_BACKEND == "local" or os.environ.get("IMAGE_FALLBACK") == "1" else set())   # 只用 Image 2.5／Codex 時不用 ComfyUI
             | ({"h3", "amb"} if H3_BACKEND in ("local", "both") else set()))
     print(f"[make_film] IMAGE_BACKEND={IMG_BACKEND}  H3_BACKEND={H3_BACKEND}  UPSCALE={UPSCALE}", flush=True)
     if need & set(names or STAGES) and not comfy_ok():

@@ -21,7 +21,7 @@
 - 最難的一鏡先單獨跑（`set ONLY=<鏡號>`），過了再整批。
 - 不滿意只重做那幾鏡：刪該鏡產出、在 `seeds` 換數字、`set ONLY=…` 重跑；認可過的鏡頭不重拍。
 - 中斷後直接重跑同一段，已存在的檔案會跳過。
-- 用 `agent-draw` 代替 `gen_image.py` 生圖時，檔名直接存成 `out/chars/<角色>_turn.png`（轉面圖）、`<角色>_expr.png`（表情表）、`out/masters/<名稱>.png`、`out/first/<鏡號>.png`（規則見 repo 的 `AGENTS.md`〈生圖〉）。
+- 沒有 OpenAI 金鑰時 `make_film.py` 會自動改走 Codex CLI 生圖（ChatGPT 訂閱，每張約 1 分半），不用另外呼叫 `agent-draw`；規則見 repo 的 `AGENTS.md`〈生圖〉。
 
 ## 收件與紀錄
 

@@ -6,8 +6,12 @@ Backend (--backend or env IMAGE_BACKEND):
                    no silent switch to Qwen - the two backends look different and need different character refs).
                    IMAGE_FALLBACK=1 restores the old fall-back-to-local. --lora, --uncensored and krea*/*-unc presets
                    always run locally.
+                   NO key (env, OPENAI_KEY_FILE or ~/.openai.env) -> switches to codex automatically (2026-10-15; IMAGE_CODEX=0 = stop instead).
+                   A key that fails (quota, model ID, ...) still STOPS - only a missing key goes to Codex.
+  codex            Codex CLI built-in image tool on the ChatGPT subscription (tools/codex_image.py, no API key).
+                   Refs attached, result cropped to the requested aspect ratio; failure STOPS (no switch to Qwen).
   local            ComfyUI on this machine (below).
-Every run prints "[backend] img25" or "[backend] local" so callers can credit the right tool.
+Every run prints "[backend] img25", "[backend] codex" or "[backend] local" so callers can credit the right tool.
 
 Local image generation via the ComfyUI API.
 
@@ -216,6 +220,42 @@ def gen_img25(a, prompt):
     return True
 
 
+def has_openai_key():
+    """True when img25.py finds a key (OPENAI_API_KEY / OPENAI_KEY_FILE / ~/.openai.env); img25 exits at import otherwise."""
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    try:
+        import img25  # noqa: F401
+        return True
+    except SystemExit:
+        return False
+
+
+def gen_codex(a, prompt):
+    """Generate through the Codex CLI (ChatGPT subscription). Returns True on success, False on failure (main() stops)."""
+    import re
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import codex_image
+    prompt = re.sub(r"<image(\d+)>", r"Image \1", prompt)
+    size = img25_size(a.width, a.height)
+    dst = Path(a.out or "codex_out") / "_codex" / f"{Path(a.prefix).name}_{int(time.time())}.png"
+    t0 = time.time()
+    print(f"[queued] backend=codex {size} refs={len(a.ref or [])}", flush=True)
+    try:
+        f = codex_image.generate(prompt, a.ref, dst, size=size)
+    except Exception as e:
+        print(f"[codex] error: {str(e)[:800]}", flush=True)
+        return False
+    print("[backend] codex", flush=True)
+    print(f"[out] {f}")
+    if a.out:
+        shutil.copy2(f, Path(a.out) / f.name)
+        print(f"[copy] {Path(a.out) / f.name}")
+    print(f"[done] total {time.time() - t0:.1f}s")
+    return True
+
+
 def main():
     ap = argparse.ArgumentParser(description="Generate an image locally via ComfyUI.")
     ap.add_argument("--prompt", default=None)
@@ -240,8 +280,8 @@ def main():
     ap.add_argument("--host", default=DEFAULT_HOST)
     ap.add_argument("--out", default=None, help="optional folder to copy the finished image into")
     ap.add_argument("--lora", action="append", default=None, help="LoRA file[:strength], repeatable (e.g. afu_qwen21.safetensors:1.0)")
-    ap.add_argument("--backend", choices=("img25", "local"), default=os.environ.get("IMAGE_BACKEND", "img25"),
-                    help="img25 = OpenAI Image 2.5 (default), local = ComfyUI")
+    ap.add_argument("--backend", choices=("img25", "codex", "local"), default=os.environ.get("IMAGE_BACKEND", "img25"),
+                    help="img25 = OpenAI Image 2.5 (default; no key -> codex), codex = Codex CLI (ChatGPT), local = ComfyUI")
     a = ap.parse_args()
 
     name = "qwen21-unc" if a.uncensored else a.model
@@ -264,6 +304,14 @@ def main():
         raise SystemExit("need --prompt or --prompt-file")
 
     local_only = bool(a.lora) or a.uncensored or name.startswith("krea") or name.endswith("-unc")
+    if a.backend == "img25" and not local_only and not has_openai_key() and os.environ.get("IMAGE_CODEX", "1") != "0":
+        print("[img25] no OpenAI API key (env / OPENAI_KEY_FILE / ~/.openai.env) -> using Codex CLI (ChatGPT subscription)", flush=True)
+        a.backend = "codex"
+    if a.backend == "codex" and not local_only:
+        if gen_codex(a, prompt):
+            return
+        raise SystemExit("[codex] failed - stopped (no automatic switch to local Qwen). Check `codex login status`, "
+                         "or set OPENAI_API_KEY, or rerun the whole film with IMAGE_BACKEND=local")
     if a.backend == "img25" and not local_only:
         if gen_img25(a, prompt):
             return

@@ -47,10 +47,10 @@ setup/spark_check.py、setup/env/arm64/   RTX Spark 相容性檢查與 ARM64 套
 - **必須保留來源標示**：`LICENSE`、`LICENSE-docs.md`、`THIRD_PARTY_NOTICES.md`、`NOTICE.md`、`skills/ai-film/NOTICE.md`、`skills/ai-film/LICENSE-AI-drama-pound.txt` 不可刪除或移除原作者署名；修改上游文件時在 `NOTICE.md` 的修改清單補一筆。
 
 ### 生圖
-- 預設 OpenAI Image 2.5（`gen_image.py` 預設後端），本機 Qwen-Image 為備選；Image 2.5 失敗（沒金鑰、API 錯誤）就停下，不自動改用千問，要用千問就整支片設 `IMAGE_BACKEND=local`。金鑰由使用者自己設定（`OPENAI_API_KEY`／`OPENAI_KEY_FILE`），agent 不經手、不寫進 repo。
+- 預設 OpenAI Image 2.5（`gen_image.py` 預設後端），本機 Qwen-Image 為備選；完全找不到金鑰時自動改走 Codex CLI（`tools/codex_image.py`，扣 ChatGPT 訂閱），有金鑰但 API 錯誤、或 Codex 也失敗就停下，不自動改用千問，要用千問就整支片設 `IMAGE_BACKEND=local`。金鑰由使用者自己設定（`OPENAI_API_KEY`／`OPENAI_KEY_FILE`／`~/.openai.env`），agent 不經手、不讀出內容、不寫進 repo。
 - `run_demo.py`、`smoke_test.py` 固定 `--backend local`（驗證本機安裝用）。
 - 角色定妝預設兩張多格圖：轉面圖（全身正、3/4、側、背）＋表情表（六格），首幀兩張都附；千問備選才用單張半身照（Qwen 會把多格版面照抄成拼貼）。
-- 要用 OpenAI 生圖但沒有 API 金鑰時，可改呼叫全域技能 `agent-draw`：它的路線 C 會交給本機已用 ChatGPT 登入的 Codex CLI 代為生圖（扣訂閱額度、不需金鑰）。呼叫時直接把輸出資料夾與檔名指定成 `make_film.py` 要的位置（`out/chars/<角色>_turn.png`（轉面圖）、`<角色>_expr.png`（表情表）、`out/masters/<名稱>.png`、`out/first/<鏡號>.png`），`make_film.py` 看到檔案已存在就會沿用；走路線 B（`draw.py`）時檔名會被加時間戳，要再改名。這條路不經過 `gen_image.py`，`out/image_backends.json` 不會記到——全部用 `agent-draw` 時片尾會預設寫「OpenAI Image 2.5」，混用本機 Qwen 時會只寫 Qwen，出片前要核對片尾的生圖工具名稱，不對就改 `film.json` 片尾的 `tools`。附定妝照當參考圖的做法尚未實測。
+- 走 Codex 的圖由 `make_film.py` 記成 `codex`，片尾寫「OpenAI 生圖（Codex）」；不要再手動用 `agent-draw` 代 `make_film.py` 生圖（不會記到 `out/image_backends.json`，片尾名稱會錯）。
 
 ### 配音
 - 預設引擎 VoxCPM2（聲音設計＋台詞，`tools/voxcpm_batch.py`）；`VOICE_ENGINE=breezyvoice` 改用 Breeze TTS 2＋BreezyVoice（台灣腔較準、可標注音，但官方以 Linux 為準，RTX Spark 大概率裝不起來）。

@@ -1,6 +1,6 @@
 # template_local：全本地多鏡短片範本（做新片從這裡開始）
 
-一個設定檔 `film.json` 寫完整支片（角色、場景、每一鏡、台詞、配樂、片尾），`make_film.py` 從角色定妝照一路做到成片和自審。生圖預設用 OpenAI Image 2.5（要 `OPENAI_API_KEY`；失敗就停下，要用本機 Qwen 得整支片設 `IMAGE_BACKEND=local`），角色定妝是轉面圖＋表情表（千問備選為單張半身）；配音預設用 VoxCPM2（`set VOICE_ENGINE=breezyvoice` 改用 Breeze TTS 2＋BreezyVoice）；其餘全部本機模型。片尾名單會依實際用到的生圖後端自動寫（記在 `out/image_backends.json`）。
+一個設定檔 `film.json` 寫完整支片（角色、場景、每一鏡、台詞、配樂、片尾），`make_film.py` 從角色定妝照一路做到成片和自審。生圖預設用 OpenAI Image 2.5（要 `OPENAI_API_KEY`；沒金鑰自動改走 Codex CLI（ChatGPT 訂閱），失敗就停下，要用本機 Qwen 得整支片設 `IMAGE_BACKEND=local`），角色定妝是轉面圖＋表情表（千問備選為單張半身）；配音預設用 VoxCPM2（`set VOICE_ENGINE=breezyvoice` 改用 Breeze TTS 2＋BreezyVoice）；其餘全部本機模型。片尾名單會依實際用到的生圖後端自動寫（記在 `out/image_backends.json`）。
 
 範例 `film.json` 是〈被狗吃掉的作業〉：7 鏡、正片約 28 秒＋片尾 9.5 秒。2026-10-07 一個沒看過本專案的 agent，只靠本 repo 做出這支片，之後把它寫的腳本整理成這個範本，再從零重跑驗證過（時間見最後一節）。
 
