@@ -17,7 +17,7 @@
 - [ ] 階段三：跑 `setup/smoke_test.py` 與 `pipeline/demo_local/run_demo.py` 驗證
   - [ ] VoxCPM2 預設配音流程（`voxcpm_batch.py`＋挑音）實機驗證：台灣腔、聽寫通過率、速度
 - [ ] 階段三之二：RTX Spark 筆電上機驗證（照 `docs/hardware_rtxspark.md`「第一次上機」，結果回填該文件）
-- [ ] 階段四：建立自己的角色設定，用 `pipeline/template_local/` 做第一支片
+- [ ] 階段四：建立第一個角色（`films/角色/`），用 `ai-film` 技能（`tools/new_film.py`）做第一支片
 
 ## 資料夾結構
 ```
@@ -53,6 +53,7 @@ setup/spark_check.py、setup/env/arm64/   RTX Spark 相容性檢查與 ARM64 套
 ### 配音
 - 預設引擎 VoxCPM2（聲音設計＋台詞，`tools/voxcpm_batch.py`）；`VOICE_ENGINE=breezyvoice` 改用 Breeze TTS 2＋BreezyVoice（台灣腔較準、可標注音，但官方以 Linux 為準，RTX Spark 大概率裝不起來）。
 - 挑音兩個引擎共用 `breezyvoice_pick.py`；VoxCPM2 不支援注音標記，念錯的字改同音字。
+- 語音環境照 `AGENT_SETUP.md` §2b 自建（位置用 `AI_ROOT`／`PY_VOICE` 設定），不要拿其他專案的 venv 共用（例如 `voxcpm2-voice-cloner`）。
 - 聽寫（ASR）一律經 `tools/stt.py` 的 `load_asr()`，不要直接 import `faster_whisper`：Windows on Arm 沒有 ctranslate2，靠它自動改用 openai-whisper。
 - 工具一律直接跑 repo 的 `tools/`（入口腳本預設就找它，`make_*.cmd` 用自己所在的資料夾），不要再複製到 `C:\AI\tools`；要改位置才設 `AI_TOOLS`。新寫的腳本找工具也要用相對 repo 的路徑，不要寫死 `C:\AI\tools`。
 
