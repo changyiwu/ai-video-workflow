@@ -1,9 +1,11 @@
-"""Image generation. Default backend = OpenAI Image 2.5 (tools/img25.py); local ComfyUI is the fallback.
+"""Image generation. Default backend = OpenAI Image 2.5 (tools/img25.py); local ComfyUI (Qwen) is the opt-in alternative.
 
 Backend (--backend or env IMAGE_BACKEND):
   img25 (default)  OpenAI Image 2.5. Needs OPENAI_API_KEY / OPENAI_KEY_FILE. <imageN> in the prompt becomes "Image N".
-                   --seed/--steps/--cfg are ignored (cloud). Missing key or API error -> falls back to local
-                   (disable with IMAGE_FALLBACK=0). --lora, --uncensored and krea*/*-unc presets always run locally.
+                   --seed/--steps/--cfg are ignored (cloud). Missing key or API error -> STOPS with an error (2026-10-15:
+                   no silent switch to Qwen - the two backends look different and need different character refs).
+                   IMAGE_FALLBACK=1 restores the old fall-back-to-local. --lora, --uncensored and krea*/*-unc presets
+                   always run locally.
   local            ComfyUI on this machine (below).
 Every run prints "[backend] img25" or "[backend] local" so callers can credit the right tool.
 
@@ -180,7 +182,8 @@ def img25_size(w, h):
 
 
 def gen_img25(a, prompt):
-    """Generate with OpenAI Image 2.5. Returns True on success, False when the caller should fall back to local."""
+    """Generate with OpenAI Image 2.5. Returns True on success, False on failure (main() then stops, or falls back to
+    local only when IMAGE_FALLBACK=1)."""
     import re
     import sys
     sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -264,8 +267,9 @@ def main():
     if a.backend == "img25" and not local_only:
         if gen_img25(a, prompt):
             return
-        if os.environ.get("IMAGE_FALLBACK", "1") == "0":
-            raise SystemExit("[img25] failed and IMAGE_FALLBACK=0")
+        if os.environ.get("IMAGE_FALLBACK", "0") != "1":
+            raise SystemExit("[img25] failed - stopped (no automatic switch to local Qwen). Fix the key/API, "
+                             "or rerun the whole film with IMAGE_BACKEND=local (IMAGE_FALLBACK=1 = old auto fall-back)")
         print("[img25] falling back to local ComfyUI", flush=True)
     print("[backend] local", flush=True)
     ensure_server(a.host)

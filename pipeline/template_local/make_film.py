@@ -131,10 +131,11 @@ def newest(d, ext=".png"):
 
 
 IMG_LOG = OUT / "image_backends.json"
+IMG_BACKEND = os.environ.get("IMAGE_BACKEND", "img25")   # img25（預設，失敗就停）｜local（千問備選）；一支片固定一個
 
 
 def gen_img(cmd):
-    """跑一次 gen_image.py（預設 OpenAI Image 2.5，失敗自動退回本機 Qwen），記下實際用的後端，片尾名單照實際寫。"""
+    """跑一次 gen_image.py（預設 OpenAI Image 2.5，失敗就停、不自動改用千問），記下實際用的後端，片尾名單照實際寫。"""
     r = run(cmd)
     used = "img25" if "[backend] img25" in r.stdout else "local"
     log = json.loads(IMG_LOG.read_text(encoding="utf-8")) if IMG_LOG.exists() else {}
@@ -183,19 +184,47 @@ def line_index(sid):
 
 
 # ------------------------------------------------------------------------------------------------ 圖
+def char_refs(k):
+    """首幀要附的角色參考圖：Image 2.5 用轉面圖＋表情表（預設）；本機 Qwen 用單張半身（Qwen 會把多格版面照抄成拼貼）。"""
+    if IMG_BACKEND == "local":
+        return [OUT / "chars" / f"{k}.png"]
+    return [OUT / "chars" / f"{k}_turn.png", OUT / "chars" / f"{k}_expr.png"]
+
+
 @stage("chars")
 def chars():
-    """角色定妝照：單張、灰底、正面半身（docs/07 §1）。不滿意就在 seeds 加 char_<角色> 換 seed、刪檔重跑。"""
+    """角色定妝（docs/07 §1）。不滿意就在 seeds 加 char_<角色> 換 seed、刪檔重跑。
+    預設 Image 2.5：先生轉面圖 <角色>_turn.png（純文字，角色的基準），再附它生表情表 <角色>_expr.png（同一張臉）。
+    IMAGE_BACKEND=local（千問備選）：單張、灰底、正面半身 <角色>.png。"""
     for k, c in CHARS.items():
-        dst = OUT / "chars" / f"{k}.png"
-        if dst.exists():
+        if IMG_BACKEND == "local":
+            dst = OUT / "chars" / f"{k}.png"
+            if dst.exists():
+                continue
+            p = ("Studio character reference photo, single person only, one image (not a collage), medium close-up bust portrait facing the camera, "
+                 "plain light grey seamless background, soft even studio light, sharp focus, realistic photograph. " + c["look"] + ", gentle natural expression. "
+                 "No text, no watermark.")
+            gen_img([PYH3, T / "gen_image.py", "--prompt", p, "--width", "1024", "--height", "1024", "--seed", seed("char_" + k, 11),
+                 "--prefix", f"film/char_{k}", "--out", "chars"])
+            newest(OUT / "chars").rename(dst)
             continue
-        p = ("Studio character reference photo, single person only, one image (not a collage), medium close-up bust portrait facing the camera, "
-             "plain light grey seamless background, soft even studio light, sharp focus, realistic photograph. " + c["look"] + ", gentle natural expression. "
-             "No text, no watermark.")
-        gen_img([PYH3, T / "gen_image.py", "--prompt", p, "--width", "1024", "--height", "1024", "--seed", seed("char_" + k, 11),
-             "--prefix", f"film/char_{k}", "--out", "chars"])
-        newest(OUT / "chars").rename(dst)
+        turn, expr = char_refs(k)
+        if not turn.exists():
+            p = ("Character turnaround reference sheet of ONE single person, realistic photograph: four full-body views of the same person "
+                 "side by side in one row, left to right: front view, three-quarter view, side profile, back view. Same outfit, same hairstyle, "
+                 "standing in a relaxed neutral pose, head to shoes fully visible in every view, evenly spaced, plain light grey seamless background, "
+                 "soft even studio light, sharp focus. " + c["look"] + ". No text, no labels, no numbers, no watermark.")
+            gen_img([PYH3, T / "gen_image.py", "--prompt", p, "--width", "1536", "--height", "1024", "--seed", seed("char_" + k, 11),
+                 "--prefix", f"film/char_{k}_turn", "--out", "chars"])
+            newest(OUT / "chars").rename(turn)
+        if not expr.exists():
+            p = ("Expression reference sheet of exactly the same person as <image1> (same face, hairstyle and clothes): a 3 x 2 grid of six "
+                 "head-and-shoulders close-ups facing the camera, realistic photograph. Top row: neutral, warm smile, angry. Bottom row: surprised, "
+                 "sad, thinking. Natural, believable acting, not cartoonish. Plain light grey seamless background, soft even studio light, sharp focus. "
+                 + c["look"] + ". No text, no labels, no numbers, no watermark.")
+            gen_img([PYH3, T / "gen_image.py", "--prompt", p, "--ref", turn, "--width", "1536", "--height", "1024", "--seed", seed("char_" + k, 11),
+                 "--prefix", f"film/char_{k}_expr", "--out", "chars"])
+            newest(OUT / "chars").rename(expr)
 
 
 @stage("masters")
@@ -217,19 +246,30 @@ def masters():
 
 @stage("frames")
 def frames():
-    """首幀：OpenAI Image 2.5（預設；本機備選 Qwen-Image-Edit）附「角色定妝照（<image1>…）＋場景裁切（最後一張）」。每鏡都照抄角色完整外觀描述，否則會掉眼鏡、換髮型。"""
+    """首幀：OpenAI Image 2.5（預設）附「每個角色的轉面圖＋表情表＋場景裁切（最後一張）」；IMAGE_BACKEND=local 時
+    Qwen-Image-Edit 附「角色單張半身＋場景裁切」。每鏡都照抄角色完整外觀描述，否則會掉眼鏡、換髮型。"""
     for s in SHOTS:
         dst = OUT / "first" / f"{s['id']}.png"
         if dst.exists():
             continue
-        keep = " ".join(f"Keep exactly the same person as <image{i}>: same face, hairstyle and clothes ({CHARS[k]['look']})."
-                        for i, k in enumerate(s["refs"], 1))
-        set_s = (" " + CFG["set_sentence"].format(n=len(s["refs"]) + 1)) if s.get("scene") else ""
+        refs, keep = [], []
+        for k in s["refs"]:
+            rs = char_refs(k); i = len(refs) + 1; refs += rs
+            if len(rs) == 1:
+                keep.append(f"Keep exactly the same person as <image{i}>: same face, hairstyle and clothes ({CHARS[k]['look']}).")
+            else:
+                keep.append(f"<image{i}> (turnaround sheet) and <image{i + 1}> (expression sheet) both show the same person "
+                            f"({CHARS[k]['look']}); keep exactly that face, hairstyle and clothes.")
+        if len(refs) > len(s["refs"]):
+            keep.append("The reference sheets are only for the person's identity: do NOT copy their grid layout, grey background, "
+                        "labels or poses; the result is one single photo.")
+        keep = " ".join(keep)
+        set_s = (" " + CFG["set_sentence"].format(n=len(refs) + 1)) if s.get("scene") else ""
         p = keep + set_s + " New photo: " + CFG["cine"] + s["frame"] + CFG.get("frame_suffix", " No text, no watermark, no captions.")
         cmd = [PYH3, T / "gen_image.py", "--model", "qwen-edit", "--width", "1344", "--height", "768", "--prompt", p,
                "--seed", seed("frame_" + s["id"], 5101), "--prefix", f"film/{s['id']}", "--out", "first"]
-        for k in s["refs"]:
-            cmd += ["--ref", OUT / "chars" / f"{k}.png"]
+        for r in refs:
+            cmd += ["--ref", r]
         if s.get("scene"):
             cmd += ["--ref", OUT / "masters" / f"crop_{s['id']}.png"]
         gen_img(cmd)
@@ -593,8 +633,9 @@ STAGES = dict(chars=chars, masters=masters, frames=frames, voices=voices, h3=h3,
 
 if __name__ == "__main__":
     names = [a for i, a in enumerate(ARGS) if a in STAGES]
-    need = {"chars", "masters", "frames", "music"} | ({"h3", "amb"} if H3_BACKEND in ("local", "both") else set())
-    print(f"[make_film] H3_BACKEND={H3_BACKEND}  UPSCALE={UPSCALE}", flush=True)
+    need = ({"music"} | ({"chars", "masters", "frames"} if IMG_BACKEND == "local" or os.environ.get("IMAGE_FALLBACK") == "1" else set())   # 只用 Image 2.5 時不用 ComfyUI
+            | ({"h3", "amb"} if H3_BACKEND in ("local", "both") else set()))
+    print(f"[make_film] IMAGE_BACKEND={IMG_BACKEND}  H3_BACKEND={H3_BACKEND}  UPSCALE={UPSCALE}", flush=True)
     if need & set(names or STAGES) and not comfy_ok():
         sys.exit(f"ComfyUI not running at {HOST}: call configs\\profile.cmd, then {T / 'start_comfy.cmd'}")
     for name in (names or list(STAGES)):

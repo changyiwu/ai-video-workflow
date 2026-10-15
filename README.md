@@ -2,7 +2,7 @@
 
 > **來源**：本專案改作自 [mathruffian-dot/shanshiba-workflow-16gvram-64gram](https://github.com/mathruffian-dot/shanshiba-workflow-16gvram-64gram)，原作者「山獅霸的多重宇宙」（<https://github.com/mathruffian-dot>）。文件以 CC BY-NC 4.0、程式碼以 MIT 授權，修改內容與完整來源標示見 [NOTICE.md](NOTICE.md)。
 
-製作 1–3 分鐘、16:9、24fps 原創短片的完整工作流：劇本由 AI agent（Claude Code）協作；**角色與首幀預設用雲端 OpenAI Image 2.5，本機 Qwen-Image 為備選**（沒有金鑰或 API 失敗時自動切換）；影片、配音、配樂用本機模型生成，挑音、後製、自審全部腳本化；人只在劇本、首幀、成片三個關卡驗收。
+製作 1–3 分鐘、16:9、24fps 原創短片的完整工作流：劇本由 AI agent（Claude Code）協作；**角色與首幀預設用雲端 OpenAI Image 2.5，本機 Qwen-Image 為備選**（Image 2.5 失敗就停下，要用本機得整支片指定 `IMAGE_BACKEND=local`）；影片、配音、配樂用本機模型生成，挑音、後製、自審全部腳本化；人只在劇本、首幀、成片三個關卡驗收。
 
 > 本 repo 不含任何人物照片、克隆聲音、API 金鑰、角色定妝照與模型權重。
 
@@ -32,13 +32,13 @@ Windows on Arm＋64GB 統一記憶體的 RTX Spark 筆電另有設定（`configs
 ## 2. 流程一覽
 
 ```
-選題 → 劇本 ─✅─→ 角色定妝照（Qwen-Image 2.1）→ 首幀（Qwen-Image-Edit）─✅─→ 配音候選 → 自動挑音
+選題 → 劇本 ─✅─→ 角色定妝：轉面圖＋表情表（Image 2.5）→ 首幀（Image 2.5）─✅─→ 配音候選 → 自動挑音
      → H3 生成（DMAD 4 步）→ RTX VSR 放大 → 後製（名片、字卡、音效、配樂、字幕）
      → 組裝 → 片尾 → 自審五遍 → 封面＋YouTube 資訊 ─✅─→ 上片
                                            ✅ = 人工驗收關卡
 ```
 
-全部在本機生成（只有挑音用的「台灣國語答案卷」edge-tts 需要連網，沒網路時改用 VoxCPM2 設計的播報聲音）。
+除了生圖預設走雲端 Image 2.5，其餘全部在本機生成（另外只有挑音用的「台灣國語答案卷」edge-tts 需要連網，沒網路時改用 VoxCPM2 設計的播報聲音）。
 每一步用哪支腳本、輸入輸出是什麼：[docs/02_端到端流程.md](docs/02_端到端流程.md)；本地角色與首幀做法：[docs/07_本地角色與首幀.md](docs/07_本地角色與首幀.md)。
 
 **裝好之後先跑全本地示範片** `pipeline/demo_local/run_demo.py`：從零做兩個角色、4 鏡、配音、配樂，約 17 秒成片，證明整條工作流在你的電腦上能跑通。
@@ -87,9 +87,9 @@ configs/profile.cmd         這個硬體版本的環境變數
 | # | 步驟 | 工具 | 看哪份文件 | 產出 | 要人工看嗎 |
 |---|---|---|---|---|---|
 | 1 | 劇本＋鏡表（每鏡 ≤12 秒） | `skills/ai-film` | `SKILL.md`、`docs/03` | `劇本.md` | ✅ 確認劇本 |
-| 2 | 角色定妝照（單張、灰底、半身） | `gen_image.py`（預設 Image 2.5；備選 Qwen-Image 2.1） | `docs/07` §1 | `chars/<角色>.png` | ✅ 挑一張定案 |
+| 2 | 角色定妝：轉面圖＋表情表（備選千問：單張、灰底、半身） | `gen_image.py`（預設 Image 2.5；備選 Qwen-Image 2.1） | `docs/07` §0（備選 §1） | `chars/<角色>_turn.png`、`_expr.png`（備選 `chars/<角色>.png`） | ✅ 定案 |
 | 3 | 場景母版（空景，之後裁成各鏡景別） | `gen_image.py` | `docs/07` §4 | `masters/*.png` | |
-| 4 | 首幀（附定妝照＋母版裁切，**每鏡照抄角色完整外觀描述**） | `gen_image.py --model qwen-edit --ref`（預設 Image 2.5 附參考圖，`--model` 這時不作用；退回本機時才用 Qwen-Image-Edit，不加會退到不適合附參考圖的 Qwen-Image 2.1） | `docs/07` §2–3 | `first/<鏡>.png` | ✅ 逐張看：臉、服裝、多手多腳、背景有沒有字 |
+| 4 | 首幀（附定妝＋母版裁切，**每鏡照抄角色完整外觀描述**） | `gen_image.py --model qwen-edit --ref`（預設 Image 2.5 附轉面圖＋表情表，`--model` 這時不作用；`IMAGE_BACKEND=local` 時才用 Qwen-Image-Edit 附單張半身，不加會用到不適合附參考圖的 Qwen-Image 2.1） | `docs/07` §2–3 | `first/<鏡>.png` | ✅ 逐張看：臉、服裝、多手多腳、背景有沒有字 |
 | 5 | 角色聲音（一次）→ 台詞配音 | `voxcpm_batch.py`（設計參考音）→ `make_voxcpm.cmd`（選用：`breeze_batch.py` → `make_breezyvoice.cmd`） | `docs/03` §5 | `bv/<句>.wav`（已去頭尾靜音） | `needs_review` 的句子聽一次 |
 | 6 | H3 每鏡（DMAD 4 步、只給首幀、台詞當固定音軌；看得到臉又沒台詞的鏡給靜音） | `h3_shot.py`（spec 加 `"draft": true`） | `docs/03` §4、`tools/examples/` | `h3/<鏡>/clip.mp4` | ✅ 抽格看：換臉、多人、鏡頭漂移 |
 | 7 | 配樂（純器樂、多抽幾個 seed，挑人聲殘留最少的） | `gen_music3.py` → `audio-separator` | `docs/02` §9 | `music/*.flac` | |
@@ -118,11 +118,11 @@ configs/profile.cmd         這個硬體版本的環境變數
 
 | 東西 | 原因 | 你要自己準備 |
 |---|---|---|
-| 上游原頻道的角色定妝照、轉面圖、表情表 | 原作者的角色資產 | 用本機 Qwen-Image 2.1 為自己的角色做單張半身定妝照（見 [07_本地角色與首幀.md](docs/07_本地角色與首幀.md)） |
+| 上游原頻道的角色定妝照、轉面圖、表情表 | 原作者的角色資產 | 用 Image 2.5 為自己的角色做轉面圖＋表情表；備選用本機 Qwen-Image 2.1 做單張半身定妝照（見 [07_本地角色與首幀.md](docs/07_本地角色與首幀.md)） |
 | 配音參考音 | 屬於個人聲音，不散布 | 自己錄或用 VoxCPM2 設計 |
 | 模型權重 | 檔案大、各有授權、可照清單重現（詳見 [docs/06 §1](docs/06_安裝.md)） | 照 [AGENT_SETUP.md](AGENT_SETUP.md) 第 3 節下載（約 150GB） |
 | 成片影片 | 檔案大 | — |
-| OpenAI 金鑰 | **生圖預設用 Image 2.5**；沒設時自動改用本機 Qwen | 自己設環境變數 `OPENAI_API_KEY`（或 `OPENAI_KEY_FILE`），見 `docs/06_安裝.md` §6。沒有金鑰但有 ChatGPT 訂閱時，也可請 agent 用 `agent-draw` 技能交給 Codex CLI 生圖 |
+| OpenAI 金鑰 | **生圖預設用 Image 2.5**；沒設時會停下，要用本機 Qwen 得設 `IMAGE_BACKEND=local` | 自己設環境變數 `OPENAI_API_KEY`（或 `OPENAI_KEY_FILE`），見 `docs/06_安裝.md` §6。沒有金鑰但有 ChatGPT 訂閱時，也可請 agent 用 `agent-draw` 技能交給 Codex CLI 生圖 |
 | Google AI 方案／Colab 運算單元（選用） | 本機跑不動 H3 時才需要 | 見 [cloud/README.md](cloud/README.md) |
 
 （音效有附：`sfx/` 裡 58 個 Freesound CC0 音效。）

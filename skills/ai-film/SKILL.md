@@ -19,14 +19,15 @@ description: 用 ai-video-workflow repo（本機 MiniMax H3）做 16:9、1–3 �
 | 長度 | 單支 1–3 分鐘，**獨立成篇**，沒有連續劇集數 |
 | 鏡頭 | **每鏡 4–12 秒**（超過 12 秒 H3 容易自己切鏡、漂移）；一鏡最多一句台詞、一個人說話 |
 | 影片 | 本機 MiniMax H3，只給首幀；顯卡跑不動時 `make_film.py` 自動送 Colab |
-| 生圖 | OpenAI Image 2.5（`gen_image.py` 預設），本機 Qwen 為備選 |
+| 生圖 | OpenAI Image 2.5（`gen_image.py` 預設，失敗就停、不自動改用千問）；本機 Qwen 為備選（整支片 `IMAGE_BACKEND=local`） |
+| 定妝 | 轉面圖＋表情表兩張（Image 2.5）；千問備選用單張半身 |
 | 配音 | VoxCPM2（`make_voxcpm.cmd`，`make_film.py` 內建）；選用 BreezyVoice |
 
 ## 全片流程
 
 | # | 階段 | 讀 | 產出（都在 `films/<片名>/`） | 人工 |
 |---|---|---|---|---|
-| 0 | 角色（只做一次，各片共用） | `<repo>/docs/07_本地角色與首幀.md`、`films/角色/README.md` | `films/角色/<角色>/` 定妝照、`README.md`、參考音 | ✅ 定裝 |
+| 0 | 角色（只做一次，各片共用） | `<repo>/docs/07_本地角色與首幀.md`、`films/角色/README.md` | `films/角色/<角色>/` 轉面圖、表情表、`README.md`、參考音 | ✅ 定裝 |
 | 1 | 開新片 | 本檔〈開新片〉 | 資料夾、`film.json`、`劇本.md`、`製作紀錄.md` | |
 | 2 | 需求訪談 | `references/interview.md` | `需求確認.md` | ✅ 確認 |
 | 3 | 劇本＋鏡表 | `references/script/workflow.md`（格式 `format.md`、拆鏡 `segmentation.md`） | `劇本.md`（含鏡表） | ✅ 確認劇本 |
