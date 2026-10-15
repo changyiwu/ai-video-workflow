@@ -1,10 +1,12 @@
 # pipeline：每支片的製作腳本
 
-> **做新片請用 [`template_local/`](template_local/README.md)**：複製資料夾、改 `film.json`、跑 `make_film.py`，全本地從角色做到成片＋自審。下面的 `example_D-7/` 是原頻道的完整腳本（雲端 Image 2.5 首幀、舊配音流程），留作參考。
+> **做新片請用 [`template_local/`](template_local/README.md)**：在 repo 根目錄跑 `python tools/new_film.py <片名>`（`ai-film` 技能），它會從範本建好 `films/<片名>/`，不要手動複製；再改 `film.json`、跑 `make_film.py`，全本地從角色做到成片＋自審。下面的 `example_D-7/` 是原頻道的完整腳本（雲端 Image 2.5 首幀、舊配音流程），只留作參考，本頁以下都是它的做法。
 
 `example_D-7/` 是〈D-7〉（段考三種學生，2026-10-05，120 秒）實際用過的全套腳本，只把寫死的個人路徑改成 `C:\AI\tools` 慣例（本分支其他腳本已改成直接用 repo 的 `tools/`；要跑這些範例，把裡面的 `C:\AI\tools` 換成 repo 的 `tools` 路徑）。
 
-## 開新片
+## 照 example_D-7 舊流程做片（上游做法，不建議）
+
+> 這一節是上游頻道的資料夾慣例（`短片/`、`角色資產/`、`音效庫/`），跟本 repo 的 `films/` 不同；只有想照 D-7 的逐支腳本做時才用。
 
 1. 複製整個資料夾，改名 `<片名>_<日期>/`，放在專案的 `短片/` 底下。腳本用 `HERE.parents[1]`（專案根目錄）找 `角色資產/`、`音效庫/`、`templates/seals/`，所以把本 repo 的 `templates/` 也複製到專案根目錄，`sfx/` 複製到專案根目錄並改名 `音效庫/`。
 2. 改這幾張表，其他通常不用動：

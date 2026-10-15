@@ -8,7 +8,7 @@ with <Subject N>, <Picture N>, <Audio N> labels, speaker IDs (S1), dialogue as <
 Then generates the clip on local ComfyUI with the settings validated in 〈老師，這次換你〉 (Ref2VA INT8, first frame pinned at
 frame 0, 14 steps res_multistep, no EasyCache, lossless PNG frames re-encoded at CRF 12).
 
-Usage (H3 venv: C:\\AI\\H3\\venv\\Scripts\\python.exe, or C:\\AI\\tools\\make_shot.cmd):
+Usage (H3 venv: C:\\AI\\H3\\venv\\Scripts\\python.exe, or <repo>\\tools\\make_shot.cmd):
   h3_shot.py shot.json --out <dir>            build prompt + lint + generate  -> <dir>/{prompt.txt, workflow_api.json, clip.mp4, meta.json}
   h3_shot.py shot.json --out <dir> --dry-run  build prompt + lint only (no GPU)
   h3_shot.py --lint prompt.txt [--duration 4]  check a hand-written prompt against the official format
@@ -474,7 +474,7 @@ def main():
     try:
         req("/system_stats")
     except Exception as e:
-        sys.exit(f"ComfyUI not reachable at {HOST} ({e}); run C:\\AI\\tools\\start_comfy.cmd first")
+        sys.exit(f"ComfyUI not reachable at {HOST} ({e}); run {Path(__file__).with_name('start_comfy.cmd')} first")
     sys.exit(0 if generate(spec, prompt, spec_path.parent, out) else 1)
 
 

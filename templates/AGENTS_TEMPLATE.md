@@ -1,16 +1,24 @@
-# <專案名稱>
+# <頻道名稱>：做片規則
 
-> 這是給 AI agent 讀的專案入口範本：複製到專案根目錄、改名為 `AGENTS.md`（Codex、opencode 直接讀）。
-> Claude Code：同資料夾再放一個只有一行 `@AGENTS.md` 的 `CLAUDE.md` 橋接；Gemini 用 `GEMINI.md`。
-> **最新決策寫在最上面**，每條一段：日期、做了什麼、結論、連到詳細文件。被取代的不刪，標「已被取代」。
-
-> **YYYY-MM-DD <片名> v1 成片（待驗收）**：[成片](短片/<片名>/cut/<片名>_v1_1080p.mp4)、[製作紀錄](短片/<片名>/製作紀錄.md)。教訓：……
-
-> **YYYY-MM-DD <某項技術決定>**：實測結果……，決定……。[報告](試行/<測試>/README.md)
+> 做片入口範本：`tools/new_film.py` 在 `films/AGENTS.md` 不存在時把本檔複製過去（並建一行 `@AGENTS.md` 的 `CLAUDE.md` 橋接），再改成自己的頻道規則。Codex、opencode 直接讀 `AGENTS.md`；Claude Code 讀 `films/` 底下的檔案時透過 `CLAUDE.md` 自動載入。
+> 本資料夾已列入 repo 的 `.gitignore`：只走雲端硬碟同步，**沒有 GitHub 備份**。
+> 本檔只放長期有效的規則；每支片的進度與教訓寫在 `<片名>/製作紀錄.md`，退件理由寫進記憶（feedback）。
 
 ## 專案簡介
 
 <頻道名稱、主角、每月產量、片長、風格>
+
+## 資料夾
+
+```
+films/
+  AGENTS.md、CLAUDE.md   本檔＋橋接
+  角色/<角色>/            定妝照、README.md（鎖定的外觀描述）、參考音
+  <片名>/                 用 tools/new_film.py 從 ../pipeline/template_local/ 建立；film.json 的 repo_dir 維持 "../.."
+    劇本.md  製作紀錄.md  film.json  out/
+```
+
+開新片：說「開新片 <片名>」（`ai-film` 技能），或在 repo 根目錄跑 `python tools/new_film.py <片名>`；再改 `film.json`，照 `pipeline/template_local/README.md` 跑 `make_film.py`。
 
 ## 影片規格
 
@@ -23,18 +31,18 @@
 
 ## 必讀（開工前）
 
-- 生角色圖前：讀 `角色資產/<角色>/README.md`，照抄鎖定提示詞，不要自己重寫外觀。
-- 做片流程（訪談、劇本、預演、`film.json`、製作、自審）：照 `ai-film` 技能。
-- H3：一律寫分鏡 JSON，用 `<repo>\tools\h3_shot.py`（官方格式＋格式檢查），不手寫提示詞。
-- 做片前讀：`docs/03_規則與踩坑.md`、`docs/04_自審清單.md`。
+- 生角色圖前：讀 `角色/<角色>/README.md`，照抄鎖定的外觀描述，不要自己重寫。
+- 做片流程（訪談、劇本、預演、`film.json`、製作、自審）：照 `ai-film` 技能（`skills/ai-film/`）。
+- H3：一律寫分鏡 JSON，用 `<repo>\tools\h3_shot.py`（官方格式＋格式檢查），不手寫提示詞；用 `make_film.py` 時由它產生。
+- 做片前讀：`../docs/03_規則與踩坑.md`、`../docs/04_自審清單.md`。
 
 ## 預設做法
 
-- 首幀：`gen_image.py --model qwen-edit --ref <定妝照>`。預設送 OpenAI Image 2.5 附定妝照（`--model` 這時不作用）；沒有金鑰或 API 失敗時自動退回本機，`--model qwen-edit` 讓它退回 Qwen-Image-Edit 2511，而不是會把參考圖照抄成正面姿勢的 Qwen-Image 2.1。**每一鏡提示詞都照抄角色完整外觀描述**；做法見 `docs/07_本地角色與首幀.md`。
+- 首幀：`gen_image.py --model qwen-edit --ref <定妝照>`。預設送 OpenAI Image 2.5 附定妝照（`--model` 這時不作用）；沒有金鑰或 API 失敗時自動退回本機，`--model qwen-edit` 讓它退回 Qwen-Image-Edit 2511，而不是會把參考圖照抄成正面姿勢的 Qwen-Image 2.1。**每一鏡提示詞都照抄角色完整外觀描述**；做法見 `../docs/07_本地角色與首幀.md`。
 - 影片：本機 H3，只給首幀；需要時加尾幀。`"draft": true`（DMAD 4 步）是定稿。
-- 配音：角色參考音定了就不換；台詞一律 `<repo>\tools\make_voxcpm.cmd jobs.json`（VoxCPM2，每句 8 候選自動挑），念不準的字改同音字（要標注音 `連假[:ㄐㄧㄚ4]` 就改用選用的 `make_breezyvoice.cmd`），`needs_review` 的句子請人聽。
+- 配音：角色參考音定了就不換；台詞一律 `<repo>\tools\make_voxcpm.cmd jobs.json`（VoxCPM2，每句 8 候選自動挑；`make_film.py` 內建），念不準的字改同音字（要標注音 `連假[:ㄐㄧㄚ4]` 就改用選用的 `VOICE_ENGINE=breezyvoice`），`needs_review` 的句子請人聽。
 - 配樂：MiniMax Music 3 純器樂。
-- 放大：近景 RTX VSR、全景 FlashVSR。
+- 放大：近景 RTX VSR、全景 FlashVSR（RTX Spark 筆電見 `../docs/hardware_rtxspark.md`）。
 - 雲端影片服務（Seedance 等）：使用者明說才用。
 
 ## 工作習慣
@@ -44,7 +52,7 @@
 - 交片前自己跑 `review.py` 五遍＋常退件清單，不合格就重拍。
 - 使用者說「我去睡了」＝授權自動做完並自審；早上交成片＋自審報告。
 - 一幕一幕做，做完先給人看；認可過的鏡頭不重拍。
-- 收工前：在本檔最上面加一段紀錄；退件理由寫進記憶（feedback）。
+- 收工前：在該片 `製作紀錄.md` 補一段；退件理由寫進記憶（feedback）。
 - 金鑰不印出、不寫進專案。
 
 ## 已否決的做法（不要再提）

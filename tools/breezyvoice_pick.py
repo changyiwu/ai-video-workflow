@@ -5,7 +5,7 @@
   3. 合格者依 pron_compare（對照 edge-tts 台灣國語參考音的每字音高曲線）分數排序，同分取平均距離小的。
 都不合格 → 取聽寫最接近的，標 needs_review。
 輸出 <out_dir>/<name>.wav（選中的那支，已去頭尾靜音：保留開頭 80 ms、結尾 150 ms）＋ <out_dir>/picks.json（全部候選分數）。
-用法：C:\\AI\\Voice\\venv\\Scripts\\python.exe C:\\AI\\tools\\breezyvoice_pick.py jobs.json
+用法：C:\\AI\\Voice\\venv\\Scripts\\python.exe <repo>\\tools\\breezyvoice_pick.py jobs.json
 edge-tts 只產生參考音當「答案卷」，不進影片（要連網；微軟介面無公開授權）。job 給 "tw_ref"（自備參考音路徑）就不呼叫 edge-tts。"""
 import difflib
 import json

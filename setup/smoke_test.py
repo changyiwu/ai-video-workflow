@@ -156,10 +156,10 @@ def main():
                            "--output_dir", "sep", "--output_format", "WAV"], lambda: newest(OUT / "sep", {".wav"}))
     if clip:
         (OUT / "vsr_1080p.mp4").unlink(missing_ok=True)
-        if os.name == "nt":                      # RTX VSR (nvvfx) exists only on Windows; Linux/Colab uses FlashVSR or lanczos
+        if os.name == "nt":                      # RTX VSR (nvvfx): not installed on Linux/Colab (has Linux wheels, untested there); uses FlashVSR or lanczos
             step("rtx_vsr", [PYH3, str(T / "upscale_vsr.py"), "--source", str(clip), "--output", "vsr_1080p.mp4"], "vsr_1080p.mp4")
         else:
-            print("SKIP rtx_vsr        (Windows only)", flush=True)
+            print("SKIP rtx_vsr        (not installed on Linux)", flush=True)
         if not QUICK:
             step("flashvsr", [PYH3, str(T / "flashvsr_cli.py"), str(clip), "flashvsr"], "flashvsr/clip.mp4")
     (OUT / "report.json").write_text(json.dumps(rows, ensure_ascii=False, indent=1), encoding="utf-8")

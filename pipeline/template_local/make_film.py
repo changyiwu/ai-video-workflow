@@ -1,5 +1,5 @@
 """全本地多鏡短片範本：讀 film.json，從角色定妝照一路做到成片＋自審。做新片只改 film.json，這支程式不用改。
-H3 venv 執行（ComfyUI 要先開：同一個 cmd 視窗 call configs\\profile.cmd → C:\\AI\\tools\\start_comfy.cmd）：
+H3 venv 執行（ComfyUI 要先開：同一個 cmd 視窗 call configs\\profile.cmd → <repo>\\tools\\start_comfy.cmd）：
   C:\\AI\\H3\\venv\\Scripts\\python.exe make_film.py [stage ...] [--film 別的設定.json]
 stage（不給＝全部依序）：chars masters frames voices h3 amb edl music ending cut review
 每一步的輸出都在 out/，已存在的檔案會跳過，所以可以中斷後續跑、或刪掉某個檔重做：
@@ -32,10 +32,11 @@ CFG = json.loads(FILM.read_text(encoding="utf-8"))
 OUT = HERE / "out"; OUT.mkdir(exist_ok=True)
 REPO = (HERE / CFG.get("repo_dir", "../..")).resolve()
 T = Path(os.environ.get("AI_TOOLS", REPO / "tools"))     # 預設直接用 repo 的 tools/
-PYH3 = os.environ.get("PY_H3", r"C:\AI\H3\venv\Scripts\python.exe")
-PYV = os.environ.get("PY_VOICE", r"C:\AI\Voice\venv\Scripts\python.exe")
-PYB = os.environ.get("PY_BREEZE", r"C:\AI\BreezeTTS\venv\Scripts\python.exe")
-PYBV = os.environ.get("PY_BREEZYVOICE", r"C:\AI\BreezyVoice\venv\Scripts\python.exe")
+AI_ROOT = Path(os.environ.get("AI_ROOT", r"C:\AI"))   # 安裝根目錄（profile.cmd 有設 PY_* 時以 PY_* 為準）
+PYH3 = os.environ.get("PY_H3", str(AI_ROOT / "H3" / "venv" / "Scripts" / "python.exe"))
+PYV = os.environ.get("PY_VOICE", str(AI_ROOT / "Voice" / "venv" / "Scripts" / "python.exe"))
+PYB = os.environ.get("PY_BREEZE", str(AI_ROOT / "BreezeTTS" / "venv" / "Scripts" / "python.exe"))
+PYBV = os.environ.get("PY_BREEZYVOICE", str(AI_ROOT / "BreezyVoice" / "venv" / "Scripts" / "python.exe"))
 VOICE_ENGINE = os.environ.get("VOICE_ENGINE", "voxcpm2")   # voxcpm2（預設：聲音設計＋台詞都用 VoxCPM2）｜breezyvoice（Breeze TTS 2 設計＋BreezyVoice 念）
 SEP = str(Path(PYV).parent / ("audio-separator.exe" if os.name == "nt" else "audio-separator"))
 HOST = os.environ.get("COMFY_HOST", "http://127.0.0.1:8188")
@@ -454,7 +455,7 @@ def music():
     for sd_ in m.get("seeds", [7, 23, 51]):
         sd = md / f"s{sd_}"; src = next(sd.glob("*.flac"))
         if not list(sd.glob("*Instrumental*.wav")):
-            run([SEP, src, "--model_filename", "model_bs_roformer_ep_317_sdr_12.9755.ckpt", "--model_file_dir", Path(os.environ.get("AI_ROOT", r"C:\AI")) / "Voice" / "models" / "separator",
+            run([SEP, src, "--model_filename", "model_bs_roformer_ep_317_sdr_12.9755.ckpt", "--model_file_dir", AI_ROOT / "Voice" / "models" / "separator",
                  "--output_dir", sd, "--output_format", "WAV"])
         voc = load(next(sd.glob("*Vocals*.wav"))); ins = load(next(sd.glob("*Instrumental*.wav")))
         ratio = float(np.sqrt((voc ** 2).mean()) / (np.sqrt((ins ** 2).mean()) + 1e-9)); d = len(ins) / SR
@@ -595,7 +596,7 @@ if __name__ == "__main__":
     need = {"chars", "masters", "frames", "music"} | ({"h3", "amb"} if H3_BACKEND in ("local", "both") else set())
     print(f"[make_film] H3_BACKEND={H3_BACKEND}  UPSCALE={UPSCALE}", flush=True)
     if need & set(names or STAGES) and not comfy_ok():
-        sys.exit(f"ComfyUI not running at {HOST}: call configs\\profile.cmd, then C:\\AI\\tools\\start_comfy.cmd")
+        sys.exit(f"ComfyUI not running at {HOST}: call configs\\profile.cmd, then {T / 'start_comfy.cmd'}")
     for name in (names or list(STAGES)):
         STAGES[name]()
     print("timing", json.dumps({k: v["sec"] for k, v in timing.items()}, ensure_ascii=False), flush=True)

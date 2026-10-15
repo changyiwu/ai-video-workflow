@@ -151,7 +151,7 @@ python pipeline/template_local/make_film.py h3 amb # 或直接：python cloud/hy
 | BreezyVoice：`No module named torchmetrics` | 過濾 `^torch` 時連 torchmetrics 一起拿掉 → 同上 |
 | 第 2、3 個 ComfyUI 啟動失敗 | 複製程式碼時「跳過 models 資料夾」連 `comfy/ldm/models`（程式碼）也跳過 → 只跳過最上層 |
 | 字幕、片尾中文變方塊 | 字型寫死 Windows 路徑 → `tools/fonts.py`（Linux 用 Noto CJK／文鼎楷書，`install_full.sh` 會裝） |
-| RTX VSR 在 Linux 不能用 | `nvvfx` 只有 Windows → `UPSCALE=lanczos`（預設）或 `flashvsr` |
+| RTX VSR 在 Colab 沒有裝 | `nvidia-vfx` 在 pypi.nvidia.com 其實有 Linux x64 版，但 `install_full.sh` 沿用 Windows 清單時把它濾掉、Colab 上也還沒實測 → `UPSCALE=lanczos`（預設）或 `flashvsr` |
 | Colab 的 L4／A100 跑 H3 | 能跑但又慢又貴 → 只用 G4 |
 
 ## 8. 檔案

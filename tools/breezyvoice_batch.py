@@ -4,7 +4,7 @@
 執行（BreezyVoice venv，Python 3.10）：
   set PYTHONUTF8=1
   set PYTHONPATH=C:\\AI\\BreezyVoice\\winstub;C:\\AI\\BreezyVoice\\code;C:\\AI\\BreezyVoice\\code\\third_party\\Matcha-TTS
-  C:\\AI\\BreezyVoice\\venv\\Scripts\\python.exe C:\\AI\\tools\\breezyvoice_batch.py jobs.json
+  C:\\AI\\BreezyVoice\\venv\\Scripts\\python.exe <repo>\\tools\\breezyvoice_batch.py jobs.json
 
 jobs.json（相對路徑以 jobs.json 所在資料夾為準）：
 {"out_dir": "bv", "seeds": 8,

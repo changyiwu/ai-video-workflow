@@ -8,13 +8,8 @@
 
 本資料夾是技能的**原始檔**，agent 不會直接從這裡載入。裝成全域技能：說「同步技能」，交給全域技能 `sync-skills` 覆蓋到各 agent 的技能目錄；改了這裡的檔案要再同步一次。技能要用的腳本放在 `tools/`，不要放進技能資料夾（全域副本不在 repo 裡，找不到 repo 的檔案）。
 
-做片入口範本在 [`templates/AGENTS_TEMPLATE.md`](../templates/AGENTS_TEMPLATE.md)：複製到做片資料夾改名 `AGENTS.md`（Claude Code 另加一行 `@AGENTS.md` 的 `CLAUDE.md` 橋接）；`new_film.py` 在 `films/AGENTS.md` 不存在時會自動建。
+做片入口範本在 [`templates/AGENTS_TEMPLATE.md`](../templates/AGENTS_TEMPLATE.md)：`new_film.py` 在 `films/AGENTS.md` 不存在時會自動複製過去並加 `CLAUDE.md` 橋接，不用手動建。
 
-> ⚠️ 編劇與預演的 references 寫於專案早期（2026-08～09），裡面還有幾處舊說法，用的時候以 `docs/` 為準：
-> - 「Seedance 2.5、每段 30 秒」→ 本機 H3、單鏡 ≤12 秒、對話靠切鏡
-> - 「主角」「角色資產/<主角>/角色設定.md」→ 佔位例子，請換成 `films/角色/<角色>/README.md`
-> - 「voice-clone 技能」→ VoxCPM2（`make_voxcpm.cmd`；選用 BreezyVoice `make_breezyvoice.cmd`）
-> - 首幀 → 本 repo 預設 OpenAI Image 2.5 附定妝照，本機 Qwen-Image-Edit 2511 為備選；定稿用 DMAD 4 步
-> - 「14 步＋EasyCache」→ 定稿不開 EasyCache
+> 編劇與預演的 references 原寫於上游早期（2026-08～09，雲端 Seedance、每段 30 秒、`角色資產/`、voice-clone 技能），2026-10-15 併入 `ai-film` 時已改成本 repo 的做法（本機 H3 單鏡 ≤12 秒、`films/角色/<角色>/README.md`、VoxCPM2、首幀預設 Image 2.5、定稿 DMAD 4 步不開 EasyCache）。若還看到跟 `docs/` 衝突的說法，以 `docs/` 為準並回頭修技能。
 
 協作方法（知識庫分層、記憶、工作習慣）見 [docs/05_agent協作與知識庫.md](../docs/05_agent協作與知識庫.md)。

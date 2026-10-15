@@ -2,7 +2,7 @@
 挑選沿用 breezyvoice_pick.py（ASR 必須全對＋對照 edge-tts 台灣國語參考音的腔調分數，候選檔名格式相同）。
 
 執行（Voice venv）：
-  C:\\AI\\Voice\\venv\\Scripts\\python.exe C:\\AI\\tools\\voxcpm_batch.py jobs.json
+  C:\\AI\\Voice\\venv\\Scripts\\python.exe <repo>\\tools\\voxcpm_batch.py jobs.json
 
 jobs.json（相對路徑以 jobs.json 所在資料夾為準）：
 {"out_dir": "voice", "seeds": 8,

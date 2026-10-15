@@ -6,7 +6,7 @@ load_asr() switches to openai-whisper (pure PyTorch; slower; downloads its own l
 Force a backend with ASR_BACKEND=faster|openai. breezyvoice_pick.py and review.py use load_asr() too.
 
 Usage:
-  & "C:\\AI\\Voice\\venv\\Scripts\\python.exe" C:\\AI\\tools\\stt.py --audio in.wav --outdir out [--model large-v3] [--language zh|auto]
+  & "C:\\AI\\Voice\\venv\\Scripts\\python.exe" <repo>\\tools\\stt.py --audio in.wav --outdir out [--model large-v3] [--language zh|auto]
 
 Writes <outdir>/transcript.txt, transcript.srt and transcript.json.
 """

@@ -199,7 +199,7 @@ call <repo>\configs\profile.cmd
 
 ## 6. 開始做片
 
-讀 `docs/03_規則與踩坑.md`（規則）和 `pipeline/template_local/README.md`（做法），把 `templates/AGENTS_TEMPLATE.md` 放到使用者的專案根目錄改名 `AGENTS.md`（Claude Code 另加一行 `@AGENTS.md` 的 `CLAUDE.md` 橋接）。做新片照 `ai-film` 技能（`skills/ai-film/SKILL.md`）：`python tools/new_film.py <片名>`（把 `pipeline/template_local/` 複製成 `films/<片名>/`）→ 需求訪談 → 寫劇本與鏡表 →（選用）Blender 預演 → 把角色、場景、鏡表填進 `film.json` → `make_film.py` 分段跑，三個人工關卡（首幀總覽、每鏡抽格、成片）都要給使用者看。
+讀 `docs/03_規則與踩坑.md`（規則）和 `pipeline/template_local/README.md`（做法），做片規則入口是 `films/AGENTS.md`：第一次跑 `new_film.py` 時會從 `templates/AGENTS_TEMPLATE.md` 自動建好（含 Claude Code 的 `CLAUDE.md` 橋接），請使用者改成自己的頻道規則。做新片照 `ai-film` 技能（`skills/ai-film/SKILL.md`）：`python tools/new_film.py <片名>`（把 `pipeline/template_local/` 複製成 `films/<片名>/`）→ 需求訪談 → 寫劇本與鏡表 →（選用）Blender 預演 → 把角色、場景、鏡表填進 `film.json` → `make_film.py` 分段跑，三個人工關卡（首幀總覽、每鏡抽格、成片）都要給使用者看。
 
 ## 常見問題
 

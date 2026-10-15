@@ -1,5 +1,5 @@
 """MiniMax Music 3 via local ComfyUI API (int8 DiT + pruned int8 text encoder + DAV VAE).
-Usage: C:\\AI\\H3\\venv\\Scripts\\python.exe C:\\AI\\tools\\gen_music3.py --caption-file cap.txt --lyrics-file lyr.txt --seconds 60 --seed 7 --prefix audio/MM3/afu --out <dir>
+Usage: C:\\AI\\H3\\venv\\Scripts\\python.exe <repo>\\tools\\gen_music3.py --caption-file cap.txt --lyrics-file lyr.txt --seconds 60 --seed 7 --prefix audio/MM3/afu --out <dir>
 Instrumental: lyrics file with section tags only ([Intro] [Verse] [Chorus] [Instrumental] [Outro]) and no text under them.
 License: MiniMax-Music3 Community License (check LICENSE: attribution + AI disclosure; revenue cap) - verify before commercial use."""
 import argparse, json, shutil, time, urllib.request

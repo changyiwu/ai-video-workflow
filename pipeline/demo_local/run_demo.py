@@ -1,5 +1,5 @@
 """全本地示範片：從零做出一支約 20 秒、4 鏡的小短片，證明安裝好的工作流可以完整跑通。不需要任何外部素材。
-H3 venv 執行（ComfyUI 要先開：call configs\\profile.cmd → C:\\AI\\tools\\start_comfy.cmd）：
+H3 venv 執行（ComfyUI 要先開：call configs\\profile.cmd → <repo>\\tools\\start_comfy.cmd）：
   C:\\AI\\H3\\venv\\Scripts\\python.exe pipeline\\demo_local\\run_demo.py [stage ...]
 stage：chars → frames → voices → h3 → music → cut（不給就全部依序跑；已完成的檔案會跳過，可續跑）
 輸出 pipeline/demo_local/out/：角色定妝照、首幀、配音、H3 片段、配樂、cut/demo_1080p.mp4、timing.json
@@ -30,10 +30,11 @@ for _s in (sys.stdout, sys.stderr):                 # 中文輸出在非 UTF-8 �
 HERE = Path(__file__).resolve().parent
 OUT = HERE / "out"; OUT.mkdir(exist_ok=True)
 T = Path(os.environ.get("AI_TOOLS", HERE.parents[1] / "tools"))     # 預設直接用 repo 的 tools/
-PYH3 = os.environ.get("PY_H3", r"C:\AI\H3\venv\Scripts\python.exe")
-PYV = os.environ.get("PY_VOICE", r"C:\AI\Voice\venv\Scripts\python.exe")
-PYB = os.environ.get("PY_BREEZE", r"C:\AI\BreezeTTS\venv\Scripts\python.exe")
-PYBV = os.environ.get("PY_BREEZYVOICE", r"C:\AI\BreezyVoice\venv\Scripts\python.exe")
+AI_ROOT = Path(os.environ.get("AI_ROOT", r"C:\AI"))   # 安裝根目錄（profile.cmd 有設 PY_* 時以 PY_* 為準）
+PYH3 = os.environ.get("PY_H3", str(AI_ROOT / "H3" / "venv" / "Scripts" / "python.exe"))
+PYV = os.environ.get("PY_VOICE", str(AI_ROOT / "Voice" / "venv" / "Scripts" / "python.exe"))
+PYB = os.environ.get("PY_BREEZE", str(AI_ROOT / "BreezeTTS" / "venv" / "Scripts" / "python.exe"))
+PYBV = os.environ.get("PY_BREEZYVOICE", str(AI_ROOT / "BreezyVoice" / "venv" / "Scripts" / "python.exe"))
 VOICE_ENGINE = os.environ.get("VOICE_ENGINE", "voxcpm2")   # voxcpm2（預設）｜breezyvoice
 SEP = str(Path(PYV).parent / "audio-separator.exe")
 HOST = os.environ.get("COMFY_HOST", "http://127.0.0.1:8188")
@@ -249,7 +250,7 @@ def music():
     run([PYH3, str(T / "gen_music3.py"), "--caption-file", "cap.txt", "--lyrics-file", "lyr.txt", "--seconds", "40", "--seed", "7",
          "--prefix", "audio/MM3/demo", "--out", "music"])
     free_comfy()
-    run([SEP, str(newest(OUT / "music", ".flac")), "--model_filename", "model_bs_roformer_ep_317_sdr_12.9755.ckpt", "--model_file_dir", r"C:\AI\Voice\models\separator",
+    run([SEP, str(newest(OUT / "music", ".flac")), "--model_filename", "model_bs_roformer_ep_317_sdr_12.9755.ckpt", "--model_file_dir", str(AI_ROOT / "Voice" / "models" / "separator"),
          "--output_dir", str(OUT / "music"), "--output_format", "WAV"])
 
 
@@ -282,7 +283,7 @@ STAGES = dict(chars=chars, frames=frames, voices=voices, h3=h3, music=music, cut
 
 if __name__ == "__main__":
     if not comfy_ok():
-        sys.exit(f"ComfyUI not running at {HOST}: call configs\\profile.cmd, then C:\\AI\\tools\\start_comfy.cmd")
+        sys.exit(f"ComfyUI not running at {HOST}: call configs\\profile.cmd, then {T / 'start_comfy.cmd'}")
     for name in (sys.argv[1:] or list(STAGES)):
         STAGES[name]()
     print("timing", json.dumps(timing, ensure_ascii=False))

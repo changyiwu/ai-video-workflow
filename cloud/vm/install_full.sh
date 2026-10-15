@@ -2,7 +2,8 @@
 # Runs ON the Colab VM (started by cloud/colab_h3.py full-setup): the WHOLE local stack on Linux, for people whose computer
 # cannot run anything locally - voice (VoxCPM2, faster-whisper, separator), BreezyVoice, Breeze TTS 2, ComfyUI (H3, Qwen-Image 2.1,
 # Qwen-Edit 2511, Music 3, FlashVSR) + CJK fonts. Tested on a Colab L4 / G4 2026-10-10: setup/smoke_test.py passes everything
-# except rtx_vsr (Windows only; Linux uses FlashVSR or lanczos). Models ~150 GB of the VM's ~236 GB disk.
+# except rtx_vsr (nvidia-vfx is filtered out below - it has Linux x64 wheels on pypi.nvidia.com but is untested on Colab;
+# Linux uses FlashVSR or lanczos). Models ~150 GB of the VM's ~236 GB disk.
 # Usage: AI_ROOT=/content/AI REPO=/content/repo bash install_full.sh   (prints [full] lines, FULL_DONE at the end)
 set -u
 AI="${AI_ROOT:-/content/AI}"; REPO="${REPO:-/content/repo}"; C="$AI/H3/ComfyUI-0.36.0"

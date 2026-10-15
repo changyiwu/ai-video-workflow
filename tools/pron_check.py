@@ -2,7 +2,7 @@
 只比對 ASR 文字會漏掉「字對但聲調錯／腔調怪」；這支工具逐字檢查聲調走向。
 
 用法（Voice venv）：
-  C:\\AI\\Voice\\venv\\Scripts\\python.exe C:\\AI\\tools\\pron_check.py <wav> "台詞" [--json out.json] [--plot out.png]
+  C:\\AI\\Voice\\venv\\Scripts\\python.exe <repo>\\tools\\pron_check.py <wav> "台詞" [--json out.json] [--plot out.png]
   也可 import：from pron_check import check; r = check(wav, text)  → dict(score, bad, unsure, chars=[...])
 
 流程：

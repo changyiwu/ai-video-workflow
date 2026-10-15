@@ -99,7 +99,7 @@ configs/profile.cmd         這個硬體版本的環境變數
 
 **最快的做法：複製 [`pipeline/template_local/`](pipeline/template_local/README.md)，只改 `film.json`**，`make_film.py` 會把上面 2–10 步全部做完（已附一支 7 鏡範例片的設定，從零重跑驗證過）。`pipeline/demo_local/` 是 4 鏡的最小安裝驗證；`pipeline/example_D-7/` 是上游原頻道一支 120 秒成片的完整腳本，可參考剪接與自審寫法，但它用雲端 Image 2.5 首幀和舊配音流程，**不能直接照跑**。
 
-建議讓 AI agent 來跑：把 [templates/AGENTS_TEMPLATE.md](templates/AGENTS_TEMPLATE.md) 放進專案根目錄改名 `AGENTS.md`，它會照規則做、自審、寫紀錄。
+建議讓 AI agent 來跑：第一次跑 `python tools/new_film.py <片名>` 時，會把 [templates/AGENTS_TEMPLATE.md](templates/AGENTS_TEMPLATE.md) 複製成 `films/AGENTS.md`（做片規則入口），改成自己的頻道規則後，agent 會照規則做、自審、寫紀錄。
 
 ## 5. 最重要的十條經驗
 

@@ -5,7 +5,7 @@ same scene / camera / timing / action, the person replaced by the new character.
 (github.com/MiniMax-AI/MiniMax-H3/skills/h3-prompt-writing/references/ref-en.txt, sec. 2.3 / 3 / 4).
 Only use characters/faces you own or have permission for (project characters, San-shi-ba himself); no public figures or other people's likeness.
 
-Usage:  C:\\AI\\H3\\venv\\Scripts\\python.exe C:\\AI\\tools\\h3_edit.py edit.json --out <dir> [--dry-run]
+Usage:  C:\\AI\\H3\\venv\\Scripts\\python.exe <repo>\\tools\\h3_edit.py edit.json --out <dir> [--dry-run]
 edit.json:
 {
   "source_video": "C:/.../clip.mp4",        # clip to edit (<Video 1>); duration/frames/audio are taken from it

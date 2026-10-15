@@ -8,7 +8,7 @@ pron_check.py 只看每字聲調的升降方向，抓不到「方向對但高低
   4. 距離 > 門檻 的字標為「腔調偏」，門檻用「兩個台灣口音之間」的自然差距校準（本人真實錄音 vs 標準語音）。
 
 用法（Voice venv）：
-  python C:\\AI\\tools\\pron_compare.py <候選.wav> <參考.wav> "台詞"     → 每字距離、偏掉的字、整句分數
+  python <repo>\\tools\\pron_compare.py <候選.wav> <參考.wav> "台詞"     → 每字距離、偏掉的字、整句分數
   from pron_compare import compare
 參考音不放進影片，只當「答案卷」。"""
 import sys
