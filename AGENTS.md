@@ -14,6 +14,7 @@
   - [ ] 桌機 Comfy Desktop 補齊（`AGENT_SETUP.md` §2a）：補裝 7 個套件、FlashVSR 節點、下載 DMAD／FlashVSR
   - [ ] 建 `%AI_ROOT%\Voice` 語音環境並下載 VoxCPM2
   - [ ] 設定 `OPENAI_API_KEY`，生一張圖驗證 Image 2.5 模型 ID
+  - [ ] 實測多格定妝（`make_film.py chars frames`）：轉面圖四格同一人、首幀不照抄格子版面、臉夠像（不像先試 `IMG25_REF_SCALE=1`），結果寫進 `docs/07` §0
 - [ ] 階段三：跑 `setup/smoke_test.py` 與 `pipeline/demo_local/run_demo.py` 驗證
   - [ ] VoxCPM2 預設配音流程（`voxcpm_batch.py`＋挑音）實機驗證：台灣腔、聽寫通過率、速度
 - [ ] 階段三之二：RTX Spark 筆電上機驗證（照 `docs/hardware_rtxspark.md`「第一次上機」，結果回填該文件）
