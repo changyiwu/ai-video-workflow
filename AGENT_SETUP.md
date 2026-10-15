@@ -52,6 +52,8 @@ mkdir C:\AI\Voice
 ```
 （自己裝 ComfyUI 時再建 `C:\AI\H3`；要裝選用配音引擎時再建 `C:\AI\BreezeTTS`、`C:\AI\BreezyVoice`。）
 
+語音環境不一定要裝在 `C:\AI`：裝到別處（例如 `D:\AI`）時，在呼叫 `configs\profile*.cmd` 之前 `set AI_ROOT=D:\AI`（三個語音環境都在它底下），或個別設 `PY_VOICE`、`PY_BREEZE`、`PY_BREEZYVOICE` 指向各自的 `python.exe`。`make_film.py`、`smoke_test.py`、`make_voxcpm.cmd`、`make_breezyvoice.cmd` 都讀這幾個變數。下面的指令以預設的 `C:\AI` 為例。
+
 ### 2a. 主環境：Comfy Desktop（已安裝時用這個）
 
 連接、背景啟動、模型位置的通用做法以全域技能 `agent-comfyui` 為準；本專案只多做下面三件事。`configs\profile.cmd` 偵測到 Desktop（預設安裝名稱 `ComfyUI`）就自動改用它：`COMFY_DIR`、`PY_H3` 指向 Desktop 安裝裡的 `ComfyUI` 與 `.venv`，模型用 `ComfyUI-Shared\models`，`tools\start_comfy.cmd` 會在背景啟動它（不開 Desktop 視窗，帶上本硬體的 `--reserve-vram 1.5`）。工具的 input／output 資料夾會自動問執行中的 ComfyUI，不用設。

@@ -23,4 +23,9 @@ if exist "%DESKTOP_COMFY%\.venv\Scripts\python.exe" (
   echo [profile] Comfy Desktop: %DESKTOP_COMFY%
 )
 if not defined PY_H3 set PY_H3=C:\AI\H3\venv\Scripts\python.exe
+rem Voice environments live outside the repo. Installed somewhere else? set AI_ROOT (install root) or PY_VOICE / PY_BREEZE / PY_BREEZYVOICE before calling this.
+if not defined AI_ROOT set "AI_ROOT=C:\AI"
+if not defined PY_VOICE set "PY_VOICE=%AI_ROOT%\Voice\venv\Scripts\python.exe"
+if not defined PY_BREEZE set "PY_BREEZE=%AI_ROOT%\BreezeTTS\venv\Scripts\python.exe"
+if not defined PY_BREEZYVOICE set "PY_BREEZYVOICE=%AI_ROOT%\BreezyVoice\venv\Scripts\python.exe"
 echo [profile] 16GB VRAM + 64GB RAM: H3 text encoder %H3_CLIP%, start ComfyUI with %COMFY_EXTRA_ARGS%
