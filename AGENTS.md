@@ -106,3 +106,4 @@ setup/spark_check.py、setup/env/arm64/   RTX Spark 相容性檢查與 ARM64 套
 - 修改共用檔案前先讀最新內容，避免覆蓋其他 Agent 的變更
 - 所有回應與文件使用繁體中文
 - 修改前先確認計畫，優先保留原有資料結構
+- Windows 上 agent 用 Bash（Git Bash）改檔時，凡是字串裡有反斜線，一律先用 Write 把 Python 修改腳本寫成檔案再執行，不要用 heredoc 或 `python -c`（反斜線會被吃掉或變成控制字元，寫出壞掉的路徑）
