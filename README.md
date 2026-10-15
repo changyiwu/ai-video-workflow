@@ -65,14 +65,14 @@ tools/                      全域工具（各腳本直接用，不用複製）
   img25.py                  OpenAI Image 2.5 生圖／編輯（gen_image.py 預設呼叫它）
   pron_check.py／pron_compare.py  中文配音聲調審核
   ...（完整清單見 docs/06_安裝.md）
-pipeline/template_local/    ⭐ 做新片的範本：改 film.json → make_film.py 從角色做到成片＋自審
+pipeline/template_local/    ⭐ 做新片的範本：tools/new_film.py <片名> 複製成 films/<片名>/ → 改 film.json → make_film.py 從角色做到成片＋自審
 pipeline/demo_local/        全本地示範片（4 鏡，安裝驗證用，不需要任何素材）
 pipeline/example_D-7/       上游原專案一支真實短片〈D-7〉的全套腳本（參考用：首幀用雲端 Image 2.5、舊配音流程，不能直接照跑）
 setup/                      安裝：模型下載清單（鎖定版本＋逐檔雜湊）、套件清單、smoke_test、硬體偵測
 cloud/                      ⭐ 本機跑不動時：H3（或整套流程）送到 Google Colab G4 跑（colab_h3.py；見 cloud/README.md）
 sfx/                        58 個 Freesound CC0 音效（腳步、翻頁、門、球、歡呼…）
-templates/                  片尾範本、咒印法陣素材
-agent/                      AGENTS_TEMPLATE.md 入口範本、編劇技能、Blender 預演技能
+templates/                  片尾範本、咒印法陣素材、AGENTS_TEMPLATE.md 做片入口範本
+skills/                     agent 技能原始檔：編劇、Blender 預演、開新片（裝法見 skills/README.md）
 configs/profile.cmd         這個硬體版本的環境變數
 ```
 
@@ -86,7 +86,7 @@ configs/profile.cmd         這個硬體版本的環境變數
 
 | # | 步驟 | 工具 | 看哪份文件 | 產出 | 要人工看嗎 |
 |---|---|---|---|---|---|
-| 1 | 劇本＋鏡表（每鏡 ≤12 秒） | `agent/skills/ai-drama` | SKILL.md 開頭的版本說明、`docs/03` | `劇本.md` | ✅ 確認劇本 |
+| 1 | 劇本＋鏡表（每鏡 ≤12 秒） | `skills/ai-drama` | SKILL.md 開頭的版本說明、`docs/03` | `劇本.md` | ✅ 確認劇本 |
 | 2 | 角色定妝照（單張、灰底、半身） | `gen_image.py`（預設 Image 2.5；備選 Qwen-Image 2.1） | `docs/07` §1 | `chars/<角色>.png` | ✅ 挑一張定案 |
 | 3 | 場景母版（空景，之後裁成各鏡景別） | `gen_image.py` | `docs/07` §4 | `masters/*.png` | |
 | 4 | 首幀（附定妝照＋母版裁切，**每鏡照抄角色完整外觀描述**） | `gen_image.py --model qwen-edit --ref`（預設 Image 2.5 附參考圖，`--model` 這時不作用；退回本機時才用 Qwen-Image-Edit，不加會退到不適合附參考圖的 Qwen-Image 2.1） | `docs/07` §2–3 | `first/<鏡>.png` | ✅ 逐張看：臉、服裝、多手多腳、背景有沒有字 |
@@ -99,7 +99,7 @@ configs/profile.cmd         這個硬體版本的環境變數
 
 **最快的做法：複製 [`pipeline/template_local/`](pipeline/template_local/README.md)，只改 `film.json`**，`make_film.py` 會把上面 2–10 步全部做完（已附一支 7 鏡範例片的設定，從零重跑驗證過）。`pipeline/demo_local/` 是 4 鏡的最小安裝驗證；`pipeline/example_D-7/` 是上游原頻道一支 120 秒成片的完整腳本，可參考剪接與自審寫法，但它用雲端 Image 2.5 首幀和舊配音流程，**不能直接照跑**。
 
-建議讓 AI agent 來跑：把 [agent/AGENTS_TEMPLATE.md](agent/AGENTS_TEMPLATE.md) 放進專案根目錄改名 `AGENTS.md`，它會照規則做、自審、寫紀錄。
+建議讓 AI agent 來跑：把 [templates/AGENTS_TEMPLATE.md](templates/AGENTS_TEMPLATE.md) 放進專案根目錄改名 `AGENTS.md`，它會照規則做、自審、寫紀錄。
 
 ## 5. 最重要的十條經驗
 

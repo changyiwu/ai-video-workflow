@@ -7,7 +7,7 @@
 - 放在專案根目錄，agent 每次開工自動讀。
 - **最新決策寫在最上面**，每條一段：日期、做了什麼、結論、連到詳細文件。舊的不刪，被取代就標「已被取代」。
 - 固定段落：專案目標、影片規格、核心決策與否決理由、技術限制、工作注意事項（必讀文件清單）。
-- 範本：[agent/AGENTS_TEMPLATE.md](../agent/AGENTS_TEMPLATE.md)。其他 agent 用 `AGENTS.md`（Codex、opencode）、`GEMINI.md`，內容指向同一份知識。
+- 範本：[templates/AGENTS_TEMPLATE.md](../templates/AGENTS_TEMPLATE.md)。其他 agent 用 `AGENTS.md`（Codex、opencode）、`GEMINI.md`，內容指向同一份知識。
 
 ## 知識庫分層
 
@@ -40,8 +40,11 @@ Claude Code 的記憶資料夾，每個檔案一件事，分四類：
 
 ## 技能（Skills）
 
-- `agent/skills/ai-drama/`：編劇九階段流程、16:9 劇本格式、審稿清單。
-- `agent/skills/blender-previs/`：需求訪談 → 鏡位契約 → 布置圖檢查 → 提示詞包。
+- `skills/ai-drama/`：編劇九階段流程、16:9 劇本格式、審稿清單。
+- `skills/blender-previs/`：需求訪談 → 鏡位契約 → 布置圖檢查 → 提示詞包。
+- `skills/new-film/`：開新片，執行 `tools/new_film.py` 把範本複製成 `films/<片名>/`。
+
+`skills/` 是原始檔，agent 不會直接載入；裝法見 [skills/README.md](../skills/README.md)。
 
 > ⚠️ 兩個技能寫於專案早期，裡面還有「Seedance 2.5、30 秒一段」「Qwen 生圖、768p」等舊說法。現行做法以 docs/ 為準（本機 H3、單鏡 ≤12 秒、Image 2.5 首幀、DMAD）。
 

@@ -6,14 +6,14 @@
 
 ## 用法
 
-1. 把整個 `template_local/` 複製一份到 `pipeline/` 底下，改名成你的片名，例如 `pipeline/my_film/`。如果複製到別的地方，請把 `film.json` 的 `repo_dir` 改成指向本 repo 根目錄（片尾範本在 `<repo>/templates/ending/`）。
-2. 改 `film.json`（欄位說明見下一節）。劇本先用 `agent/skills/ai-drama` 寫好，再把鏡表填進 `shots`。
+1. 在 repo 根目錄跑 `python tools/new_film.py <片名>`（或 `tools\new_film.cmd <片名>`），會把本範本的 `film.json`、`make_film.py`、`review.py` 複製成 `films/<片名>/`，並建好 `劇本.md`、`製作紀錄.md`（`films/` 不進 repo）。如果手動複製到別的地方，請把 `film.json` 的 `repo_dir` 改成指向本 repo 根目錄（片尾範本在 `<repo>/templates/ending/`）。
+2. 改 `film.json`（欄位說明見下一節）。劇本先用 `skills/ai-drama` 寫好，再把鏡表填進 `shots`。
 3. 在同一個 cmd 視窗執行：
    ```
    set PYTHONUTF8=1
    call <repo>\configs\profile.cmd
    <repo>\tools\start_comfy.cmd
-   cd <repo>\pipeline\my_film
+   cd <repo>\films\<片名>
    "%PY_H3%" make_film.py chars masters frames
    ```
 4. **人工關卡 1**：看 `out/first/_sheet.jpg`。臉、服裝要一致，不能多手多腳，背景不能有字，窗戶方向要對。不滿意的鏡：刪 `out/first/<鏡>.png`，在 `film.json` 的 `seeds` 加 `"frame_<鏡>": 新數字`，或改該鏡的 `frame` 描述，再跑 `frames`。
@@ -34,7 +34,7 @@
 | 欄位 | 說明 |
 |---|---|
 | `title` | 片名（片尾標題） |
-| `repo_dir` | 本 repo 根目錄，相對於這個資料夾（放在 `pipeline/<片名>/` 時用預設 `../..`） |
+| `repo_dir` | 本 repo 根目錄，相對於這個資料夾（放在 `films/<片名>/` 或 `pipeline/<片名>/` 時都用預設 `../..`） |
 | `cine` | 每張首幀開頭的電影感句（底片、鏡頭、光線、調色）。光線要寫具體，只寫 soft daylight 會變平淡白光 |
 | `set_sentence` | 場景參考圖那句，`{n}` 會換成場景圖的編號（角色數＋1） |
 | `frame_suffix` | 每張首幀結尾（不要字、不要浮水印…） |
