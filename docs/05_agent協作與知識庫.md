@@ -7,7 +7,7 @@
 - 放在專案根目錄，agent 每次開工自動讀。
 - **最新決策寫在最上面**，每條一段：日期、做了什麼、結論、連到詳細文件。舊的不刪，被取代就標「已被取代」。
 - 固定段落：專案目標、影片規格、核心決策與否決理由、技術限制、工作注意事項（必讀文件清單）。
-- 範本：[agent/CLAUDE.md範本.md](../agent/CLAUDE.md範本.md)。其他 agent 用 `AGENTS.md`（Codex、opencode）、`GEMINI.md`，內容指向同一份知識。
+- 範本：[agent/AGENTS_TEMPLATE.md](../agent/AGENTS_TEMPLATE.md)。其他 agent 用 `AGENTS.md`（Codex、opencode）、`GEMINI.md`，內容指向同一份知識。
 
 ## 知識庫分層
 

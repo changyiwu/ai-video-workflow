@@ -1,7 +1,7 @@
 # <專案名稱>
 
-> 這是給 AI agent（Claude Code）讀的專案入口，放在專案根目錄、改名為 `CLAUDE.md`。
-> 其他 agent：複製一份叫 `AGENTS.md`（Codex、opencode）或 `GEMINI.md`。
+> 這是給 AI agent 讀的專案入口範本：複製到專案根目錄、改名為 `AGENTS.md`（Codex、opencode 直接讀）。
+> Claude Code：同資料夾再放一個只有一行 `@AGENTS.md` 的 `CLAUDE.md` 橋接；Gemini 用 `GEMINI.md`。
 > **最新決策寫在最上面**，每條一段：日期、做了什麼、結論、連到詳細文件。被取代的不刪，標「已被取代」。
 
 > **YYYY-MM-DD <片名> v1 成片（待驗收）**：[成片](短片/<片名>/cut/<片名>_v1_1080p.mp4)、[製作紀錄](短片/<片名>/製作紀錄.md)。教訓：……

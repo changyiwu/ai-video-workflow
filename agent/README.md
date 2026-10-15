@@ -2,7 +2,7 @@
 
 | 檔案 | 用途 |
 |---|---|
-| `CLAUDE.md範本.md` | 專案入口範本，改名 `CLAUDE.md` 放專案根目錄 |
+| `AGENTS_TEMPLATE.md` | 專案入口範本，改名 `AGENTS.md` 放專案根目錄（Claude Code 另加一行 `@AGENTS.md` 的 `CLAUDE.md`） |
 | `skills/ai-drama/` | 編劇技能：九階段流程、16:9 劇本格式、片段切分、審稿清單（改寫自 AI-drama-pound，MIT，見 NOTICE.md） |
 | `skills/blender-previs/` | Blender 預演技能：需求訪談、鏡位契約、布置圖規則、提示詞包、檢查清單 |
 

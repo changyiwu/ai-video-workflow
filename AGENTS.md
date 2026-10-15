@@ -33,7 +33,7 @@ setup/                         模型下載清單、套件清單、smoke_test、
 cloud/                         H3 送 Google Colab 跑
 sfx/                           Freesound CC0 音效
 templates/                     片尾範本、法陣素材
-agent/                         CLAUDE.md 範本、ai-drama 編劇技能、blender-previs 技能
+agent/                         AGENTS_TEMPLATE.md（做片入口範本）、ai-drama 編劇技能、blender-previs 技能
 configs/profile.cmd            桌機（16GB VRAM＋64GB RAM）環境變數
 configs/profile_rtxspark.cmd   RTX Spark 筆電（Windows on Arm＋64GB 統一記憶體）環境變數
 setup/spark_check.py、setup/env/arm64/   RTX Spark 相容性檢查與 ARM64 套件清單
@@ -69,7 +69,7 @@ setup/spark_check.py、setup/env/arm64/   RTX Spark 相容性檢查與 ARM64 套
 ### 做片
 - 自己的片一律放 `films/<片名>/`（從 `pipeline/template_local/` 複製，`repo_dir` 維持 `../..`）；`films/` 已列入 `.gitignore`，只走雲端硬碟、沒有 GitHub 備份。
 - 頻道與角色的做片規則在 `films/AGENTS.md`（`films/CLAUDE.md` 橋接），角色資產在 `films/角色/`；不要把這些寫進本檔或 `pipeline/`。
-- `films/AGENTS.md` 是從 `agent/CLAUDE.md範本.md` 改寫的獨立檔：改了範本裡的通用規則，要手動同步過去。
+- `films/AGENTS.md` 是從 `agent/AGENTS_TEMPLATE.md` 改寫的獨立檔：改了範本裡的通用規則，要手動同步過去。
 
 ### 安全與隱私
 - **不放個資與金鑰**：不 commit 真人照片、克隆聲音／參考音、API 金鑰（`.env`）、模型權重、成片影片。本 repo 為**公開** repo。

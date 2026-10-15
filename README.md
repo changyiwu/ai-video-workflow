@@ -72,7 +72,7 @@ setup/                      安裝：模型下載清單（鎖定版本＋逐檔�
 cloud/                      ⭐ 本機跑不動時：H3（或整套流程）送到 Google Colab G4 跑（colab_h3.py；見 cloud/README.md）
 sfx/                        58 個 Freesound CC0 音效（腳步、翻頁、門、球、歡呼…）
 templates/                  片尾範本、咒印法陣素材
-agent/                      CLAUDE.md 範本、編劇技能、Blender 預演技能
+agent/                      AGENTS_TEMPLATE.md 入口範本、編劇技能、Blender 預演技能
 configs/profile.cmd         這個硬體版本的環境變數
 ```
 
@@ -99,7 +99,7 @@ configs/profile.cmd         這個硬體版本的環境變數
 
 **最快的做法：複製 [`pipeline/template_local/`](pipeline/template_local/README.md)，只改 `film.json`**，`make_film.py` 會把上面 2–10 步全部做完（已附一支 7 鏡範例片的設定，從零重跑驗證過）。`pipeline/demo_local/` 是 4 鏡的最小安裝驗證；`pipeline/example_D-7/` 是上游原頻道一支 120 秒成片的完整腳本，可參考剪接與自審寫法，但它用雲端 Image 2.5 首幀和舊配音流程，**不能直接照跑**。
 
-建議讓 AI agent 來跑：把 [agent/CLAUDE.md範本.md](agent/CLAUDE.md範本.md) 放進專案根目錄，它會照規則做、自審、寫紀錄。
+建議讓 AI agent 來跑：把 [agent/AGENTS_TEMPLATE.md](agent/AGENTS_TEMPLATE.md) 放進專案根目錄改名 `AGENTS.md`，它會照規則做、自審、寫紀錄。
 
 ## 5. 最重要的十條經驗
 
