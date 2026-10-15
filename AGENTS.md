@@ -33,7 +33,7 @@ setup/                         模型下載清單、套件清單、smoke_test、
 cloud/                         H3 送 Google Colab 跑
 sfx/                           Freesound CC0 音效
 templates/                     片尾範本、法陣素材、AGENTS_TEMPLATE.md（做片入口範本）
-skills/                        技能原始檔：ai-drama 編劇、blender-previs 預演、new-film 開新片（說「同步技能」裝成全域）
+skills/                        技能原始檔：ai-film（做片全流程：開新片、訪談、編劇、預演、製作、自審；說「同步技能」裝成全域）
 configs/profile.cmd            桌機（16GB VRAM＋64GB RAM）環境變數
 configs/profile_rtxspark.cmd   RTX Spark 筆電（Windows on Arm＋64GB 統一記憶體）環境變數
 setup/spark_check.py、setup/env/arm64/   RTX Spark 相容性檢查與 ARM64 套件清單
@@ -43,7 +43,7 @@ setup/spark_check.py、setup/env/arm64/   RTX Spark 相容性檢查與 ARM64 套
 
 ### 授權與來源
 - **僅限非商業用途**：文件素材為 CC BY-NC 4.0；Qwen-Image 2.1、Breeze TTS 2（選用配音引擎才會用到）只能非商用。要營利前先照 `THIRD_PARTY_NOTICES.md` 替換模型。
-- **必須保留來源標示**：`LICENSE`、`LICENSE-docs.md`、`THIRD_PARTY_NOTICES.md`、`NOTICE.md`、`skills/ai-drama/NOTICE.md`、`skills/ai-drama/LICENSE-AI-drama-pound.txt` 不可刪除或移除原作者署名；修改上游文件時在 `NOTICE.md` 的修改清單補一筆。
+- **必須保留來源標示**：`LICENSE`、`LICENSE-docs.md`、`THIRD_PARTY_NOTICES.md`、`NOTICE.md`、`skills/ai-film/NOTICE.md`、`skills/ai-film/LICENSE-AI-drama-pound.txt` 不可刪除或移除原作者署名；修改上游文件時在 `NOTICE.md` 的修改清單補一筆。
 
 ### 生圖
 - 預設 OpenAI Image 2.5（`gen_image.py` 預設後端），本機 Qwen-Image 為備選；金鑰由使用者自己設定（`OPENAI_API_KEY`／`OPENAI_KEY_FILE`），agent 不經手、不寫進 repo。
@@ -67,7 +67,7 @@ setup/spark_check.py、setup/env/arm64/   RTX Spark 相容性檢查與 ARM64 套
 - 判斷套件有沒有 ARM64 版不要只看 PyPI：NVIDIA 的套件（如 `nvidia-vfx`）在 PyPI 只放 wheel-stub 空殼，真正的 wheel 在 pypi.nvidia.com；也要核對 wheel 的 Python 版本（cpXY／abi3）。
 
 ### 做片
-- 自己的片一律放 `films/<片名>/`，用 `tools/new_film.py <片名>`（`new-film` 技能）從 `pipeline/template_local/` 建立，不要手動複製；`repo_dir` 維持 `../..`；`films/` 已列入 `.gitignore`，只走雲端硬碟、沒有 GitHub 備份。
+- 自己的片一律放 `films/<片名>/`，用 `tools/new_film.py <片名>`（`ai-film` 技能）從 `pipeline/template_local/` 建立，不要手動複製；`repo_dir` 維持 `../..`；`films/` 已列入 `.gitignore`，只走雲端硬碟、沒有 GitHub 備份。
 - 頻道與角色的做片規則在 `films/AGENTS.md`（`films/CLAUDE.md` 橋接），角色資產在 `films/角色/`；不要把這些寫進本檔或 `pipeline/`。
 - `films/AGENTS.md` 是從 `templates/AGENTS_TEMPLATE.md` 改寫的獨立檔：改了範本裡的通用規則，要手動同步過去。
 - `skills/` 是技能原始檔，agent 不會直接從這裡載入；改完要說「同步技能」重裝全域副本。技能腳本要找 repo 的東西時放在 `tools/`，不要放進技能資料夾（全域副本不在 repo 裡）。

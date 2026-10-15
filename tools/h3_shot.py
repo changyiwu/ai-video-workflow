@@ -20,7 +20,7 @@ Shot spec (JSON; relative paths resolve against the JSON file's folder):
   "style": "a realistic live-action Taiwanese film shot on 35mm, natural window light, subtle believable acting",
   "setting": "a Taiwanese elementary school classroom",
   "first_frame": "kf.png",          # <Picture 1>; pinned at frame 0 (strongly recommended - project default)
-  "camera_video": {"file": "blender_S01.mp4"},   # optional <Video 1>: Blender previs camera/layout guide (blender-previs skill)
+  "camera_video": {"file": "blender_S01.mp4"},   # optional <Video 1>: Blender previs camera/layout guide (ai-film skill, previs step)
   "last_frame": "end.png",          # optional; pinned at the last frame (only for long continuous actions / fixed end states)
   "subjects": [                     # everyone visible or speaking; order = <Subject N>
                                     # {"key": "sky", "desc": "a deep, echoing off-screen male voice", "voice_only": true}
@@ -366,7 +366,7 @@ def build_graph(spec, prompt, base, tag):
             g[n] = {"class_type": "LoadImage", "inputs": {"image": stage(base / s["identity_image"], f"{tag}_id{i}.png")}}
             g["6"]["inputs"][f"ref_images.ref_image_{i}"] = [n, 0]
             i += 1
-    if spec.get("camera_video"):  # Blender previs camera guide (blender-previs skill), as in 〈那句話，我收回〉v5
+    if spec.get("camera_video"):  # Blender previs camera guide (ai-film skill, previs step), as in 〈那句話，我收回〉v5
         g["30"] = {"class_type": "LoadVideo", "inputs": {"file": stage(base / spec["camera_video"]["file"], f"{tag}_camera.mp4")}}
         g["31"] = {"class_type": "GetVideoComponents", "inputs": {"video": ["30", 0]}}
         g["6"]["inputs"]["ref_videos.ref_video_0"] = ["31", 0]

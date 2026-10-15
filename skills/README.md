@@ -2,17 +2,17 @@
 
 | 資料夾 | 用途 |
 |---|---|
-| `ai-drama/` | 編劇技能：九階段流程、16:9 劇本格式、片段切分、審稿清單（改寫自 AI-drama-pound，MIT，見 NOTICE.md） |
-| `blender-previs/` | Blender 預演技能：需求訪談、鏡位契約、布置圖規則、提示詞包、檢查清單 |
-| `new-film/` | 開新片：執行 `tools/new_film.py`，把 `pipeline/template_local/` 複製成 `films/<片名>/` |
+| `ai-film/` | 做片全流程：開新片（`tools/new_film.py`）→ 需求訪談 → 編劇與鏡表 →（選用）Blender 預演 → 填 `film.json` → `make_film.py` 三個人工關卡 → 自審交付。編劇部分改寫自 AI-drama-pound（MIT，見 `ai-film/NOTICE.md`） |
 
-本資料夾是技能的**原始檔**，agent 不會直接從這裡載入。裝成全域技能：說「同步技能」，交給全域技能 `sync-skills` 覆蓋到各 agent 的技能目錄；改了這裡的檔案要再同步一次。
+`ai-film/` 的結構：`SKILL.md` 是全片流程與「現在該讀哪份」的對照，細節依階段放在 `references/`（`interview.md`、`script/`、`previs/`、`film-json.md`、`production.md`、`review.md`）。2026-10-15 由 `ai-drama`、`blender-previs`、`new-film` 三個技能合併而成。
 
-做片入口範本在 [`templates/AGENTS_TEMPLATE.md`](../templates/AGENTS_TEMPLATE.md)：複製到做片資料夾改名 `AGENTS.md`（Claude Code 另加一行 `@AGENTS.md` 的 `CLAUDE.md` 橋接）。
+本資料夾是技能的**原始檔**，agent 不會直接從這裡載入。裝成全域技能：說「同步技能」，交給全域技能 `sync-skills` 覆蓋到各 agent 的技能目錄；改了這裡的檔案要再同步一次。技能要用的腳本放在 `tools/`，不要放進技能資料夾（全域副本不在 repo 裡，找不到 repo 的檔案）。
 
-> ⚠️ 兩個技能寫於專案早期（2026-08～09），references 裡還有幾處舊說法，用的時候以 `docs/` 為準（`ai-drama/SKILL.md` 開頭已寫明怎麼對應）：
+做片入口範本在 [`templates/AGENTS_TEMPLATE.md`](../templates/AGENTS_TEMPLATE.md)：複製到做片資料夾改名 `AGENTS.md`（Claude Code 另加一行 `@AGENTS.md` 的 `CLAUDE.md` 橋接）；`new_film.py` 在 `films/AGENTS.md` 不存在時會自動建。
+
+> ⚠️ 編劇與預演的 references 寫於專案早期（2026-08～09），裡面還有幾處舊說法，用的時候以 `docs/` 為準：
 > - 「Seedance 2.5、每段 30 秒」→ 本機 H3、單鏡 ≤12 秒、對話靠切鏡
-> - 「主角」「角色資產/<主角>/角色設定.md」→ 佔位例子，請換成你自己的角色設定檔
+> - 「主角」「角色資產/<主角>/角色設定.md」→ 佔位例子，請換成 `films/角色/<角色>/README.md`
 > - 「voice-clone 技能」→ VoxCPM2（`make_voxcpm.cmd`；選用 BreezyVoice `make_breezyvoice.cmd`）
 > - 首幀 → 本 repo 預設 OpenAI Image 2.5 附定妝照，本機 Qwen-Image-Edit 2511 為備選；定稿用 DMAD 4 步
 > - 「14 步＋EasyCache」→ 定稿不開 EasyCache

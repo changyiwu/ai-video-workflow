@@ -40,9 +40,7 @@ Claude Code 的記憶資料夾，每個檔案一件事，分四類：
 
 ## 技能（Skills）
 
-- `skills/ai-drama/`：編劇九階段流程、16:9 劇本格式、審稿清單。
-- `skills/blender-previs/`：需求訪談 → 鏡位契約 → 布置圖檢查 → 提示詞包。
-- `skills/new-film/`：開新片，執行 `tools/new_film.py` 把範本複製成 `films/<片名>/`。
+- `skills/ai-film/`：做片全流程——開新片（`tools/new_film.py`）→ 需求訪談 → 編劇九階段與鏡表 →（選用）Blender 預演 → 填 `film.json` → `make_film.py` 三個人工關卡 → 自審交付。
 
 `skills/` 是原始檔，agent 不會直接載入；裝法見 [skills/README.md](../skills/README.md)。
 

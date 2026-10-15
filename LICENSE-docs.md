@@ -20,7 +20,7 @@ Copyright (c) 2026 山獅霸的多重宇宙 (mathruffian-dot)
 - 用本 repo 的**程式**做出來的影片，不受本條款限制；但要遵守各模型自己的授權（見 `THIRD_PARTY_NOTICES.md`）。
 
 ## 例外
-- `skills/ai-drama/`（上游原名 `shanshiba-drama`）改寫自 [POUND0423/AI-drama-pound](https://github.com/POUND0423/AI-drama-pound)（MIT），原作者的 MIT 聲明見該資料夾 `NOTICE.md`，必須保留。
+- `skills/ai-film/` 的編劇部分（原 `ai-drama`，上游原名 `shanshiba-drama`）改寫自 [POUND0423/AI-drama-pound](https://github.com/POUND0423/AI-drama-pound)（MIT），原作者的 MIT 聲明見該資料夾 `NOTICE.md`，必須保留。
 
 ## 本分支（fork）的修改聲明
 
