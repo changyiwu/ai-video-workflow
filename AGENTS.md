@@ -12,7 +12,7 @@
 - [x] 階段一：複製上游 repo、移除原作者個人資訊、加上來源標示、專案初始化
 - [ ] 階段二：照 `AGENT_SETUP.md` 檢查硬體（`python setup/detect_hardware.py`）、安裝環境與下載模型
   - [ ] 桌機 Comfy Desktop 補齊（`AGENT_SETUP.md` §2a）：補裝 7 個套件、FlashVSR 節點、下載 DMAD／FlashVSR
-  - [ ] 建 `C:\AI\Voice` 語音環境並下載 VoxCPM2
+  - [ ] 建 `%AI_ROOT%\Voice` 語音環境並下載 VoxCPM2
   - [ ] 設定 `OPENAI_API_KEY`，生一張圖驗證 Image 2.5 模型 ID
 - [ ] 階段三：跑 `setup/smoke_test.py` 與 `pipeline/demo_local/run_demo.py` 驗證
   - [ ] VoxCPM2 預設配音流程（`voxcpm_batch.py`＋挑音）實機驗證：台灣腔、聽寫通過率、速度
@@ -58,7 +58,7 @@ setup/spark_check.py、setup/env/arm64/   RTX Spark 相容性檢查與 ARM64 套
 - 工具一律直接跑 repo 的 `tools/`（入口腳本預設就找它，`make_*.cmd` 用自己所在的資料夾），不要再複製到 `C:\AI\tools`；要改位置才設 `AI_TOOLS`。新寫的腳本找工具也要用相對 repo 的路徑，不要寫死 `C:\AI\tools`。
 
 ### ComfyUI
-- 桌機用 Comfy Desktop 的 ComfyUI（`configs\profile.cmd` 自動偵測），連接、背景啟動、模型位置照全域技能 `agent-comfyui`；不要另外在 `C:\AI\H3` 裝一份。
+- 桌機用 Comfy Desktop 的 ComfyUI（`configs\profile.cmd` 自動偵測），連接、背景啟動、模型位置照全域技能 `agent-comfyui`；不要另外在 `%AI_ROOT%\H3` 裝一份。
 - 工具讀寫 ComfyUI 的 input／output 一律經 `tools/comfy_paths.py`，不要寫死 `COMFY_DIR\input`／`output`（Desktop 放在 `ComfyUI-Shared`）。
 - 跑本專案前先關掉 Desktop 視窗，由 `tools\start_comfy.cmd` 在背景啟動，才會帶上 `--reserve-vram 1.5`。Desktop 自動更新後先跑 `smoke_test.py`，補裝的套件或 FlashVSR 節點不見了就照 `AGENT_SETUP.md` §2a 重裝。
 
@@ -75,7 +75,7 @@ setup/spark_check.py、setup/env/arm64/   RTX Spark 相容性檢查與 ARM64 套
 
 ### 安全與隱私
 - **不放個資與金鑰**：不 commit 真人照片、克隆聲音／參考音、API 金鑰（`.env`）、模型權重、成片影片。本 repo 為**公開** repo。
-- **模型權重與 venv 只留本機**：照 `setup/downloads_*.json` 下載到 `C:\AI`／Comfy Desktop，不搬進 repo 或雲端硬碟；新增權重格式時加進 `.gitignore`。理由見 `docs/06_安裝.md` §1〈為什麼模型權重與 venv 不放進 repo〉。
+- **模型權重與 venv 只留本機**：照 `setup/downloads_*.json` 下載到 `AI_ROOT`（預設 `C:\AI`）／Comfy Desktop，不搬進 repo 或雲端硬碟；新增權重格式時加進 `.gitignore`。理由見 `docs/06_安裝.md` §1〈為什麼模型權重與 venv 不放進 repo〉。
 
 ## 同步層級（本專案初始化至第 3 層級）
 
