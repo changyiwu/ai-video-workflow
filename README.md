@@ -34,7 +34,7 @@ Windows on Arm＋64GB 統一記憶體的 RTX Spark 筆電另有設定（`configs
 ```
 選題 → 劇本 ─✅─→ 角色定妝：轉面圖＋表情表（Image 2.5）→ 首幀（Image 2.5）─✅─→ 配音候選 → 自動挑音
      → H3 生成（DMAD 4 步）→ RTX VSR 放大 → 後製（名片、字卡、音效、配樂、字幕）
-     → 組裝 → 片尾 → 自審五遍 → 封面＋YouTube 資訊 ─✅─→ 上片
+     → 組裝 →（選用）片尾 → 自審五遍 ─✅─→ 發社群（貼文附 AI 生成標示；封面等上架資訊選用）
                                            ✅ = 人工驗收關卡
 ```
 
@@ -94,7 +94,7 @@ configs/profile.cmd         這個硬體版本的環境變數
 | 6 | H3 每鏡（DMAD 4 步、只給首幀、台詞當固定音軌；看得到臉又沒台詞的鏡給靜音） | `h3_shot.py`（spec 加 `"draft": true`） | `docs/03` §4、`tools/examples/` | `h3/<鏡>/clip.mp4` | ✅ 抽格看：換臉、多人、鏡頭漂移 |
 | 7 | 配樂（純器樂、多抽幾個 seed，挑人聲殘留最少的） | `gen_music3.py` → `audio-separator` | `docs/02` §9 | `music/*.flac` | |
 | 8 | 放大、剪接（台詞提前 0.2 秒）、配樂壓低（台詞期間 15–30%）、響度、字幕 | `upscale_vsr.py`、ffmpeg | `docs/02` §7、§10（**響度指令照抄，`alimiter` 要 `level=false`**） | `cut/<片名>_1080p.mp4` | |
-| 9 | 片尾（工具名單＋AI 生成標示） | `templates/ending/render_ending.py` | `templates/ending/README.md` | `ending.mp4` | |
+| 9 | （選用）片尾（工具名單＋AI 生成標示；不做就刪 `film.json` 的 `ending`，改在貼文標示） | `templates/ending/render_ending.py` | `templates/ending/README.md`、`docs/02` §11 | `ending.mp4` | |
 | 10 | 自審五遍（抽格、ASR、雜訊、黑畫面與響度、切點） | 參考 `pipeline/example_D-7/review.py`、`noise_scan.py`、`stt.py` | `docs/04_自審清單.md` | `review/` | ✅ 最後一定給人看成片 |
 
 **最快的做法：複製 [`pipeline/template_local/`](pipeline/template_local/README.md)，只改 `film.json`**，`make_film.py` 會把上面 2–10 步全部做完（已附一支 7 鏡範例片的設定，從零重跑驗證過）。`pipeline/demo_local/` 是 4 鏡的最小安裝驗證；`pipeline/example_D-7/` 是上游原頻道一支 120 秒成片的完整腳本，可參考剪接與自審寫法，但它用雲端 Image 2.5 首幀和舊配音流程，**不能直接照跑**。

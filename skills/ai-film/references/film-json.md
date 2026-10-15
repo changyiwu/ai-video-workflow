@@ -62,4 +62,4 @@
 - [ ] 沒台詞的鏡頭 `line: null` 且 `action` 寫明不說話
 - [ ] 同場景各鏡的母版、景別、窗戶方向一致
 - [ ] `look` 是照抄角色 README，不是改寫
-- [ ] 片尾 `ending.cards` 的生圖工具名稱符合實際用的後端（`make_film.py` 依 `out/image_backends.json` 自動寫；有手動放進去的圖要再核對）
+- [ ] 片尾是選用（不要就刪掉 `ending` 欄位）；有片尾時，`ending.cards` 的生圖工具名稱符合實際用的後端（`make_film.py` 依 `out/image_backends.json` 自動寫；有手動放進去的圖要再核對）
