@@ -5,8 +5,8 @@ Copyright (c) 2026 山獅霸的多重宇宙 (mathruffian-dot)
 本 repo 的**文件與素材**以 [創用 CC 姓名標示－非商業性 4.0 國際（CC BY-NC 4.0）](https://creativecommons.org/licenses/by-nc/4.0/deed.zh-hant) 授權，完整法律條文：<https://creativecommons.org/licenses/by-nc/4.0/legalcode.zh-hant>。
 
 ## 適用範圍
-- 所有 `*.md` 文件：`README.md`、`AGENT_SETUP.md`、`docs/`、`agent/`（含 `skills/` 的技能文字）、各資料夾的 README、`pipeline/example_D-7/` 的劇本與製作紀錄、YouTube 資訊範例。
-- 圖片素材：`templates/` 底下的法陣圖、`pipeline/example_D-7/blender/` 的布置圖。
+- 所有 `*.md` 文件：`README.md`、`AGENT_SETUP.md`、`docs/`、`agent/`（含 `skills/` 的技能文字）、各資料夾的 README。
+- 圖片素材：`templates/` 底下的法陣圖。
 
 程式碼（`*.py`、`*.ps1`、`*.cmd`、`*.sh`、設定檔）另以 MIT 授權，見 `LICENSE`。
 

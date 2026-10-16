@@ -1,6 +1,7 @@
-"""全本地多鏡短片範本：讀 film.json，從角色定妝照一路做到成片＋自審。做新片只改 film.json，這支程式不用改。
-H3 venv 執行（ComfyUI 要先開：同一個 cmd 視窗 call configs\\profile.cmd → <repo>\\tools\\start_comfy.cmd）：
-  C:\\AI\\H3\\venv\\Scripts\\python.exe make_film.py [stage ...] [--film 別的設定.json]
+"""多鏡短片範本：讀 film.json，從角色定妝一路做到成片＋自審。做新片只改 film.json，這支程式不用改。
+用 tools/new_film.py <片名> 建成 films/<片名>/ 再跑；生圖預設 OpenAI（IMAGE_BACKEND=local 改本機 Qwen），其餘都是本機模型。
+H3 venv 執行（同一個 cmd 視窗先 call <repo>\\configs\\profile.cmd → <repo>\\tools\\start_comfy.cmd）：
+  "%PY_H3%" make_film.py [stage ...] [--film 別的設定.json]
 stage（不給＝全部依序）：chars masters frames voices h3 amb edl music ending cut review
 每一步的輸出都在 out/，已存在的檔案會跳過，所以可以中斷後續跑、或刪掉某個檔重做：
   - 重生某一鏡首幀：刪 out/first/<鏡>.png，在 film.json 的 seeds 加 "frame_<鏡>": 新 seed，再跑 frames
@@ -8,7 +9,7 @@ stage（不給＝全部依序）：chars masters frames voices h3 amb edl music 
   - 改了台詞：刪 out/voice/bv 裡那句的檔（或整個 out/voice/bv），再跑 voices
   - 改了剪接（cut_in、tail…）：跑 edl cut review 即可
 人工關卡：frames 之後看 out/first/_sheet.jpg；h3 之後看 out/review/clips_*.jpg；review 之後一定要看成片。
-2026-10-07 由「一個沒看過本專案的 agent 照 repo 做出〈被狗吃掉的作業〉」時寫的 film.py／post.py 整理而成。"""
+完整流程見 docs/02_端到端流程.md，film.json 欄位見本資料夾的 README.md。"""
 import json
 import os
 import re
@@ -47,7 +48,7 @@ UPSCALE = os.environ.get("UPSCALE", "rtxvsr" if os.name == "nt" else "lanczos") 
 
 
 def local_h3_ok():
-    """本機能不能跑 H3：NVIDIA 顯卡 ≥15GB 且記憶體 ≥30GB（三份硬體版 repo 的最低配置）。"""
+    """本機能不能跑 H3：NVIDIA 顯卡 ≥15GB 且記憶體 ≥30GB（桌機 16GB VRAM＋64GB RAM 剛好過）。"""
     try:
         vram = int(subprocess.run(["nvidia-smi", "--query-gpu=memory.total", "--format=csv,noheader,nounits"],
                                   capture_output=True, text=True, timeout=20).stdout.split()[0]) / 1024

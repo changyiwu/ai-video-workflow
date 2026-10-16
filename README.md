@@ -67,7 +67,6 @@ tools/                      全域工具（各腳本直接用，不用複製）
   ...（完整清單見 docs/06_安裝.md）
 pipeline/template_local/    ⭐ 做新片的範本：tools/new_film.py <片名> 複製成 films/<片名>/ → 改 film.json → make_film.py 從角色做到成片＋自審
 pipeline/demo_local/        全本地示範片（4 鏡，安裝驗證用，不需要任何素材）
-pipeline/example_D-7/       上游原專案一支真實短片〈D-7〉的全套腳本（參考用：首幀用雲端 Image 2.5、舊配音流程，不能直接照跑）
 setup/                      安裝：模型下載清單（鎖定版本＋逐檔雜湊）、套件清單、smoke_test、硬體偵測
 cloud/                      ⭐ 本機跑不動時：H3（或整套流程）送到 Google Colab G4 跑（colab_h3.py；見 cloud/README.md）
 sfx/                        58 個 Freesound CC0 音效（腳步、翻頁、門、球、歡呼…）
@@ -92,12 +91,12 @@ configs/profile.cmd         這個硬體版本的環境變數
 | 4 | 首幀（附定妝＋母版裁切，**每鏡照抄角色完整外觀描述**） | `gen_image.py --model qwen-edit --ref`（預設 OpenAI 生圖（Image 2.5 或 Codex）附轉面圖＋表情表，`--model` 這時不作用；`IMAGE_BACKEND=local` 時才用 Qwen-Image-Edit 附單張半身，不加會用到不適合附參考圖的 Qwen-Image 2.1） | `docs/07` §2–3 | `first/<鏡>.png` | ✅ 逐張看：臉、服裝、多手多腳、背景有沒有字 |
 | 5 | 角色聲音（一次）→ 台詞配音 | `voxcpm_batch.py`（設計參考音）→ `make_voxcpm.cmd`（選用：`breeze_batch.py` → `make_breezyvoice.cmd`） | `docs/03` §5 | `bv/<句>.wav`（已去頭尾靜音） | `needs_review` 的句子聽一次 |
 | 6 | H3 每鏡（DMAD 4 步、只給首幀、台詞當固定音軌；看得到臉又沒台詞的鏡給靜音） | `h3_shot.py`（spec 加 `"draft": true`） | `docs/03` §4、`tools/examples/` | `h3/<鏡>/clip.mp4` | ✅ 抽格看：換臉、多人、鏡頭漂移 |
-| 7 | 配樂（純器樂、多抽幾個 seed，挑人聲殘留最少的） | `gen_music3.py` → `audio-separator` | `docs/02` §9 | `music/*.flac` | |
-| 8 | 放大、剪接（台詞提前 0.2 秒）、配樂壓低（台詞期間 15–30%）、響度、字幕 | `upscale_vsr.py`、ffmpeg | `docs/02` §7、§10（**響度指令照抄，`alimiter` 要 `level=false`**） | `cut/<片名>_1080p.mp4` | |
-| 9 | （選用）片尾（工具名單＋AI 生成標示；不做就刪 `film.json` 的 `ending`，改在貼文標示） | `templates/ending/render_ending.py` | `templates/ending/README.md`、`docs/02` §11 | `ending.mp4` | |
-| 10 | 自審五遍（抽格、ASR、雜訊、黑畫面與響度、切點） | 參考 `pipeline/example_D-7/review.py`、`noise_scan.py`、`stt.py` | `docs/04_自審清單.md` | `review/` | ✅ 最後一定給人看成片 |
+| 7 | 配樂（純器樂、多抽幾個 seed，挑人聲殘留最少的） | `gen_music3.py` → `audio-separator` | `docs/02` §8 | `music/*.flac` | |
+| 8 | 放大、剪接（台詞提前 0.2 秒）、配樂壓低（台詞期間 15–30%）、響度、字幕 | `upscale_vsr.py`、ffmpeg | `docs/02` §9、§10（**`alimiter` 要 `level=false`**） | `cut/<片名>_1080p.mp4` | |
+| 9 | （選用）片尾（工具名單＋AI 生成標示；不做就刪 `film.json` 的 `ending`，改在貼文標示） | `templates/ending/render_ending.py` | `templates/ending/README.md`、`docs/02` §12 | `ending.mp4` | |
+| 10 | 自審五遍（抽格、ASR、雜訊、黑畫面與響度、切點） | `pipeline/template_local/review.py`（呼叫 `noise_scan.py`、`stt.py`） | `docs/04_自審清單.md` | `review/` | ✅ 最後一定給人看成片 |
 
-**最快的做法：複製 [`pipeline/template_local/`](pipeline/template_local/README.md)，只改 `film.json`**，`make_film.py` 會把上面 2–10 步全部做完（已附一支 7 鏡範例片的設定，從零重跑驗證過）。`pipeline/demo_local/` 是 4 鏡的最小安裝驗證；`pipeline/example_D-7/` 是上游原頻道一支 120 秒成片的完整腳本，可參考剪接與自審寫法，但它用雲端 Image 2.5 首幀和舊配音流程，**不能直接照跑**。
+**最快的做法：`python tools/new_film.py <片名>` 從 [`pipeline/template_local/`](pipeline/template_local/README.md) 建好 `films/<片名>/`，只改 `film.json`**，`make_film.py` 會把上面 2–10 步全部做完（已附一支 7 鏡範例片的設定，從零重跑驗證過）。`pipeline/demo_local/` 是 4 鏡的最小安裝驗證。
 
 建議讓 AI agent 來跑：第一次跑 `python tools/new_film.py <片名>` 時，會把 [templates/AGENTS_TEMPLATE.md](templates/AGENTS_TEMPLATE.md) 複製成 `films/AGENTS.md`（做片規則入口），改成自己的頻道規則後，agent 會照規則做、自審、寫紀錄。
 

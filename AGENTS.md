@@ -29,7 +29,7 @@ THIRD_PARTY_NOTICES.md         第三方模型與工具授權
 docs/                          總覽、端到端流程、規則與踩坑、自審清單、安裝、硬體說明
 tools/                         全域工具（各腳本直接用這裡，不再複製到 C:\AI\tools）
 films/                         自己的片與角色資產（.gitignore，不進 repo；規則見 films/AGENTS.md）
-pipeline/                      template_local（新片範本）、demo_local（安裝驗證）、example_D-7（上游範例，缺角色資產，不能直接照跑）
+pipeline/                      template_local（新片範本）、demo_local（安裝驗證）
 setup/                         模型下載清單、套件清單、smoke_test、硬體偵測、16GB 模擬測試
 cloud/                         H3 送 Google Colab 跑
 sfx/                           Freesound CC0 音效

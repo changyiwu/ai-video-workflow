@@ -49,7 +49,7 @@ length = max(5, round(sec * fps)) + ((5 - (raw % 17)) % 17)
 ## 沿用既有場景
 
 - 每支片的場景與契約放在該片的 `films/<片名>/out/blender/`：`<場景>_reusable.blend`＋`camera_plan_v<N>.json`。
-- 範例：`pipeline/example_D-7/blender/`（`make_plan.py` 寫契約、`render_layouts.py` 算布置圖、`camera_plan_v1.json`）。
+- 寫契約與算布置圖的腳本（例如 `make_plan.py`、`render_layouts.py`）依該片場景的物件名稱寫，跟 `.blend` 放在一起；repo 不附通用版。
 - 開新片前先查 `films/*/out/blender/` 有沒有同一場景；有就複製過來，在該片 `製作紀錄.md` 記下沿用自哪支片。
 
 新片若同一場景，**沿用並只增修需要的鏡**，不要重新建模。

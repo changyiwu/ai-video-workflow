@@ -1,6 +1,6 @@
 """自審五遍（讀 make_film.py 寫的 out/post/edl.json）。make_film.py 的 review 階段會自動呼叫，也可以單獨跑：
-  C:\\AI\\H3\\venv\\Scripts\\python.exe review.py out\\cut\\film_1080p.mp4          第 1／3／4／5 遍
-  C:\\AI\\Voice\\venv\\Scripts\\python.exe review.py out\\cut\\film_1080p.mp4 --asr  第 2 遍（成片聽寫）
+  "%PY_H3%" review.py out\\cut\\film_1080p.mp4             第 1／3／4／5 遍
+  "%PY_VOICE%" review.py out\\cut\\film_1080p.mp4 --asr    第 2 遍（成片聽寫）
 結果在 out/review/：<片名>_pass1.jpg（逐鏡 4 格）、_pass5_cuts.jpg（切點前後）、_review.json、_asr.json。
 判讀標準見 docs/04_自審清單.md；數字只是輔助，最後一定要人看成片。"""
 import difflib

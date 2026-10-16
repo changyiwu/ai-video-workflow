@@ -1,6 +1,7 @@
-"""全本地示範片：從零做出一支約 20 秒、4 鏡的小短片，證明安裝好的工作流可以完整跑通。不需要任何外部素材。
-H3 venv 執行（ComfyUI 要先開：call configs\\profile.cmd → <repo>\\tools\\start_comfy.cmd）：
-  C:\\AI\\H3\\venv\\Scripts\\python.exe pipeline\\demo_local\\run_demo.py [stage ...]
+"""全本地示範片（安裝驗證用）：從零做出一支約 20 秒、4 鏡的小短片，證明安裝好的工作流可以完整跑通。不需要任何外部素材。
+生圖固定用本機 Qwen（驗證本機安裝）；做片請用 tools/new_film.py 建的 films/<片名>/make_film.py。
+H3 venv 執行（同一個 cmd 視窗先 call <repo>\\configs\\profile.cmd → <repo>\\tools\\start_comfy.cmd）：
+  "%PY_H3%" pipeline\\demo_local\\run_demo.py [stage ...]
 stage：chars → frames → voices → h3 → music → cut（不給就全部依序跑；已完成的檔案會跳過，可續跑）
 輸出 pipeline/demo_local/out/：角色定妝照、首幀、配音、H3 片段、配樂、cut/demo_1080p.mp4、timing.json
 
@@ -38,7 +39,8 @@ PYBV = os.environ.get("PY_BREEZYVOICE", str(AI_ROOT / "BreezyVoice" / "venv" / "
 VOICE_ENGINE = os.environ.get("VOICE_ENGINE", "voxcpm2")   # voxcpm2（預設）｜breezyvoice
 SEP = str(Path(PYV).parent / "audio-separator.exe")
 HOST = os.environ.get("COMFY_HOST", "http://127.0.0.1:8188")
-FONT = "C:/Windows/Fonts/msjhbd.ttc"
+sys.path.insert(0, str(HERE.parents[1] / "tools"))
+from fonts import SUB_FONT_NAME  # noqa: E402  (Windows 微軟正黑體／Linux 用 Noto CJK)
 TIMING = OUT / "timing.json"
 timing = json.loads(TIMING.read_text(encoding="utf-8")) if TIMING.exists() else {}
 
@@ -274,7 +276,7 @@ def cut():
     (OUT / "cut" / "subs.srt").write_text(srt, encoding="utf-8")
     run(["ffmpeg", "-y", "-loglevel", "error", "-i", "cut/joined.mp4", "-i", str(inst), "-filter_complex",
          f"[1:a]volume=0.18,afade=t=out:st={t - 2:.2f}:d=2[m];[0:a][m]amix=inputs=2:duration=first:normalize=0,loudnorm=I=-16:TP=-1.5[a];"
-         f"[0:v]subtitles=cut/subs.srt:force_style='FontName=Microsoft JhengHei,FontSize=22,Outline=2'[v]",
+         f"[0:v]subtitles=cut/subs.srt:force_style='FontName={SUB_FONT_NAME},FontSize=22,Outline=2'[v]",
          "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-crf", "18", "-c:a", "aac", "-b:a", "192k", "cut/demo_1080p.mp4"])
     print("[done]", OUT / "cut" / "demo_1080p.mp4", f"{t:.1f}s", flush=True)
 

@@ -88,7 +88,7 @@
 
 其他元件（VoxCPM2、Breeze、faster-whisper、BS-RoFormer、MiniMax Music 3、Image 2.5）顯存都在 12GB 以內，照完整版用。
 
-**一定要遵守：一次只跑一件 GPU 工作**（配音、生圖、H3、放大不要同時），`run_queue.sh` 已經會等 GPU 空出來才開工。
+**一定要遵守：一次只跑一件 GPU 工作**（配音、生圖、H3、放大不要同時），`make_film.py` 各階段依序跑，配音、分離配樂人聲前會先叫 ComfyUI 釋放顯存；不要在它跑的時候另外開生圖或 H3。
 
 ## 預估耗時（未實測）
 
