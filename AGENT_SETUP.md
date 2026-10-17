@@ -69,7 +69,7 @@ mkdir C:\AI\Voice
    版本照 `setup\env\requirements_h3_venv.txt`。安裝前先告訴使用者會改動 Desktop 的環境。Desktop 的 `.venv` 是 Python 3.13，上面七個都有 3.13 版（2026-10-17 實裝）。
    已知：Desktop 自帶的 `huggingface_hub`（2026-10-17 是 1.30.0）比清單鎖的 1.32.0 舊，`import diffusers` 會報 `cannot import name 'httpx'`。本專案的工具與 FlashVSR 節點都沒有直接 import diffusers，所以先不處理；不要為了它自己升級 Desktop 的 `huggingface_hub`，真的遇到相關錯誤再跟使用者確認。
 2. **自訂節點**：只需要 FlashVSR（照 `setup\custom_nodes.txt` 的 commit clone 到 `%COMFY_DIR%\custom_nodes\ComfyUI-FlashVSR_Ultra_Fast`）。RTX VSR 直接用 `nvidia-vfx` 套件，不用裝節點。
-3. **模型**：Desktop 範本下載過的大多能直接用（H3 主模型、NVFP4 文字編碼器、Qwen-Image 2.1、Qwen-Image-Edit int8、Music 3），第 3 節只要補 DMAD 與 FlashVSR。`profile.cmd` 會把檔名對到 Desktop 的版本（`H3_CLIP`、`QWEN_EDIT_UNET`、`MUSIC3_DIT`）。DMAD 會放進共用的 `ComfyUI-Shared\models\loras`；FlashVSR 則放在 **Desktop 安裝資料夾**的 `%COMFY_DIR%\models\FlashVSR-v1.1`（節點用 `folder_paths.models_dir` 找，位置是對的，不在共用資料夾）。
+3. **模型**：Desktop 範本下載過的大多能直接用（H3 主模型、NVFP4 文字編碼器、Qwen-Image 2.1、Qwen-Image-Edit int8、Music 3），第 3 節只要補 DMAD 與 FlashVSR。`profile.cmd` 會把檔名對到 Desktop 的版本（`H3_CLIP`；`QWEN_EDIT_UNET`、`MUSIC3_DIT` 要 Desktop 版的檔案存在才換，否則用本 repo 清單下載的版本）。Desktop 沒跑過某個範本（例如沒有 Music 3、Qwen-Image），第 3 節就把對應的清單一起跑。DMAD 會放進共用的 `ComfyUI-Shared\models\loras`；FlashVSR 則放在 **Desktop 安裝資料夾**的 `%COMFY_DIR%\models\FlashVSR-v1.1`（節點用 `folder_paths.models_dir` 找，位置是對的，不在共用資料夾）。
 
 確認：`"%PY_H3%" -c "import torch, nvvfx, gguf;print(torch.__version__, torch.cuda.is_available())"` → `True`。
 
@@ -149,7 +149,7 @@ for %f in (downloads.json downloads_uncensored.json downloads_dmad.json download
 cd <repo>\setup
 foreach ($f in 'downloads.json','downloads_uncensored.json','downloads_dmad.json','downloads_qwen_image.json','downloads_qwen_image_edit.json','downloads_music3.json','downloads_voxcpm2.json','downloads_breeze_tts2.json','downloads_breezyvoice.json','downloads_flashvsr.json') { C:\AI\H3\venv\Scripts\python.exe download.py $f }
 ```
-**用 Comfy Desktop 時**：先 `call <repo>\configs\profile.cmd`（它設的 `COMFY_MODELS_DIR`、`COMFY_DIR` 讓 `download.py` 把模型放進 Desktop 的資料夾），用 `"%PY_H3%"` 代替上面的 `C:\AI\H3\venv\Scripts\python.exe`，**只跑 `downloads_dmad.json`、`downloads_flashvsr.json`、`downloads_voxcpm2.json`**（其他 Desktop 已經有，或改用 Desktop 的版本；要用選用配音引擎再加 Breeze 兩份）。
+**用 Comfy Desktop 時**：先 `call <repo>\configs\profile.cmd`（它設的 `COMFY_MODELS_DIR`、`COMFY_DIR` 讓 `download.py` 把模型放進 Desktop 的資料夾），用 `"%PY_H3%"` 代替上面的 `C:\AI\H3\venv\Scripts\python.exe`，**只跑 `downloads_dmad.json`、`downloads_flashvsr.json`、`downloads_voxcpm2.json`**（其他 Desktop 已經有，或改用 Desktop 的版本；要用選用配音引擎再加 Breeze 兩份）。Desktop 的共用資料夾裡沒有 Music 3、Qwen-Image 2.1 就再加 `downloads_music3.json`、`downloads_qwen_image.json`（`smoke_test.py` 兩個都要用）；要做換角重製的骨架鏡再加 `downloads_funcontrol.json`。
 
 每份清單跑完會印 `downloaded N, already present M, failed K`，全部成功才印 `ALL DOWNLOADS VERIFIED`（有失敗時結束碼非 0，重跑會從斷點續傳、已驗證的檔案自動跳過）。大檔用 SHA-256 驗證，小設定檔用 Hugging Face 公布的 git 雜湊驗證。
 

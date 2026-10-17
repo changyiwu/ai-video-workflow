@@ -18,8 +18,9 @@ if exist "%DESKTOP_COMFY%\.venv\Scripts\python.exe" (
   set "PY_H3=%DESKTOP_COMFY%\.venv\Scripts\python.exe"
   set "COMFY_MODELS_DIR=%LOCALAPPDATA%\Comfy-Desktop\ComfyUI-Shared\models"
   set H3_CLIP=qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors
-  set QWEN_EDIT_UNET=qwen_image_edit_2511_int8_convrot.safetensors
-  set MUSIC3_DIT=minimax_music3_dit_fp16.safetensors
+  rem Desktop template files win only if they exist; otherwise keep the files downloaded with setup\downloads_*.json
+  if exist "%LOCALAPPDATA%\Comfy-Desktop\ComfyUI-Shared\models\diffusion_models\qwen_image_edit_2511_int8_convrot.safetensors" set QWEN_EDIT_UNET=qwen_image_edit_2511_int8_convrot.safetensors
+  if exist "%LOCALAPPDATA%\Comfy-Desktop\ComfyUI-Shared\models\diffusion_models\minimax_music3_dit_fp16.safetensors" set MUSIC3_DIT=minimax_music3_dit_fp16.safetensors
   echo [profile] Comfy Desktop: %DESKTOP_COMFY%
 )
 if not defined PY_H3 set PY_H3=C:\AI\H3\venv\Scripts\python.exe
