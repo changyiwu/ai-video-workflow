@@ -1,13 +1,13 @@
 """Local voice generation and speech synthesis (TTS) via VoxCPM2 and Edge-TTS.
 
 Engines:
-  voxcpm2   OpenBMB VoxCPM2 on NVIDIA RTX 5090 CUDA (48 kHz high-fidelity, voice cloning)
+  voxcpm2   OpenBMB VoxCPM2 on NVIDIA CUDA (48 kHz high-fidelity, voice cloning)
   edge      Microsoft Edge TTS (fast, zero GPU memory, broadcast neural voices)
 
-Examples:
-  & "C:\\AI\\Voice\\venv\\Scripts\\python.exe" <repo>\\tools\\gen_voice.py --text "大家好，今天進行語音生成測試。"
-  & "C:\\AI\\Voice\\venv\\Scripts\\python.exe" <repo>\\tools\\gen_voice.py --text "測試" --ref "C:\\path\\sample.wav" --out "out.wav"
-  & "C:\\AI\\Voice\\venv\\Scripts\\python.exe" <repo>\\tools\\gen_voice.py --engine edge --text "微軟雲端語音測試" --voice zh-TW-HsiaoChenNeural
+Examples (cmd, after call <repo>\\configs\\profile.cmd):
+  "%PY_VOICE%" <repo>\\tools\\gen_voice.py --text "大家好，今天進行語音生成測試。"
+  "%PY_VOICE%" <repo>\\tools\\gen_voice.py --text "測試" --ref "C:\\path\\sample.wav" --out "out.wav"
+  "%PY_VOICE%" <repo>\\tools\\gen_voice.py --engine edge --text "微軟雲端語音測試" --voice zh-TW-HsiaoChenNeural
 """
 import argparse
 import json

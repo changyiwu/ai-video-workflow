@@ -1,8 +1,8 @@
 """中文配音發音審核（聲調）— 2026-10-04 建立。使用者要求：發音由 agent 先審過，不要每次靠使用者聽。
 只比對 ASR 文字會漏掉「字對但聲調錯／腔調怪」；這支工具逐字檢查聲調走向。
 
-用法（Voice venv）：
-  C:\\AI\\Voice\\venv\\Scripts\\python.exe <repo>\\tools\\pron_check.py <wav> "台詞" [--json out.json] [--plot out.png]
+用法（Voice venv；同一個 cmd 視窗先 call <repo>\\configs\\profile.cmd）：
+  "%PY_VOICE%" <repo>\\tools\\pron_check.py <wav> "台詞" [--json out.json] [--plot out.png]
   也可 import：from pron_check import check; r = check(wav, text)  → dict(score, bad, unsure, chars=[...])
 
 流程：

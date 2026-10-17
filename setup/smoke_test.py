@@ -1,6 +1,6 @@
 """安裝完成後的自我驗證：每個本地模型各跑一個小工作，不需要任何外部素材（聲音、圖片都自己生）。
 用 H3 venv 執行（ComfyUI 要先啟動：call configs\\profile.cmd → tools\\start_comfy.cmd）：
-  C:\\AI\\H3\\venv\\Scripts\\python.exe setup\\smoke_test.py [--quick]
+  "%PY_H3%" setup\\smoke_test.py [--quick]
 完整版 12 步；--quick 跳過 FlashVSR（11 步）。有裝 Breeze TTS 2＋BreezyVoice（選用）會多驗 3 步。結果寫 setup\\smoke_out\\report.json，並印出跟 docs\\hardware.md 對照用的時間。
 流程：VoxCPM2 設計聲音 → VoxCPM2 用它念台詞＋自動挑選 →（選用：Breeze 設計聲音 → BreezyVoice 念＋挑選）→ faster-whisper 聽寫 → 聲調比對 →
 Qwen-Image 2.1 生首幀 → Qwen 附參考圖 → MiniMax Music 3 → BS-RoFormer 分離 → H3（DMAD 4 步，首幀＋配音當固定音軌）→ RTX VSR → FlashVSR"""

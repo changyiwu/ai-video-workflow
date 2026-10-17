@@ -2,10 +2,10 @@
 
 Prereqs:
   * ComfyUI running on http://127.0.0.1:8188  (see tools/start_comfy.ps1)
-  * YuE2 checkpoint in ComfyUI/models/checkpoints (see scripts/local_yue2/download_yue2.py)
+  * YuE2 checkpoint in ComfyUI/models/checkpoints (optional song model, CC BY-NC 4.0; not in setup/downloads_*.json, download it yourself)
 
-Examples:
-  & "C:\\AI\\H3\\venv\\Scripts\\python.exe" tools/gen_music.py --style "K-pop, female vocal" --lyrics-file song.txt --seconds 240 --mode abc
+Examples (cmd, after call <repo>\\configs\\profile.cmd):
+  "%PY_H3%" tools/gen_music.py --style "K-pop, female vocal" --lyrics-file song.txt --seconds 240 --mode abc
   ... --style-file style.txt --lyrics-file lyrics.txt --seed 42 --prefix audio/YuE2/mysong
 
 Outputs go to ComfyUI/output/<prefix>_00001.flac (48 kHz stereo). The script prints the path.

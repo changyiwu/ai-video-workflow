@@ -20,7 +20,7 @@ python setup\detect_hardware.py
 | 16GB | 32GB | `shanshiba-workflow-16gvram-32gram` |
 | 12GB 以下、記憶體不到 32GB、沒有 NVIDIA 顯卡、Mac | — | **`shanshiba-workflow-colab`**：H3 送 Google Colab 跑（要 Google AI 方案或 Colab 運算單元），見 `cloud/README.md` |
 
-如果推薦的不是 16GB VRAM＋64GB RAM 版，**停下來告訴使用者**，請他改用上游對應的 repo。四份的流程一樣，差在 `docs/hardware.md` 和 `configs/profile.cmd`；每一份都有 `cloud/`，所以本機版的人也可以把 H3 送到 Colab 加速。
+如果推薦的不是 16GB VRAM＋64GB RAM 版，**停下來告訴使用者**，請他改用上游對應的 repo。上游四份之間只差在 `docs/hardware.md` 和 `configs/profile.cmd`，但本分支的流程已經跟上游不同（生圖預設 OpenAI、配音預設 VoxCPM2、做片用 `ai-film` 技能，見 [NOTICE.md](NOTICE.md)），改用上游 repo 就照該 repo 的說明做。每一份都有 `cloud/`，所以本機版的人也可以把 H3 送到 Colab 加速。
 
 > **用 Colab 時（cloud/）**：本手冊第 1–3 節只需要做你本機要跑的部分（例如只裝語音環境），Colab 上的環境由 `python cloud/colab_h3.py start` 自動裝好（**預設完整安裝，同第一份完整版**；只要 H3 時加 `--h3-only` 比較快）；本機什麼都跑不動就只要裝 Colab CLI，然後 `start`。**登入 `colab usage` 一定要讓使用者自己在終端機操作**（瀏覽器授權、貼授權碼），agent 不要經手授權碼。先告訴使用者 Colab 的 G4 機房在美國／歐盟、H3 授權排除這些地區，由使用者決定是否使用（`cloud/README.md` 開頭）。
 
@@ -66,13 +66,14 @@ mkdir C:\AI\Voice
    call <repo>\configs\profile.cmd
    uv pip install --python "%PY_H3%" --no-deps nvidia-vfx==0.2.0.0 gguf==0.19.0 accelerate==1.15.0 triton-windows==3.8.0.post28 numba==0.67.0 llvmlite==0.49.0 "diffusers @ https://github.com/huggingface/diffusers/archive/e0abab83b5df05de9e7abd788643c1a7c1e42e28.zip" --extra-index-url https://pypi.nvidia.com --index-strategy unsafe-best-match
    ```
-   版本照 `setup\env\requirements_h3_venv.txt`。安裝前先告訴使用者會改動 Desktop 的環境。
+   版本照 `setup\env\requirements_h3_venv.txt`。安裝前先告訴使用者會改動 Desktop 的環境。Desktop 的 `.venv` 是 Python 3.13，上面七個都有 3.13 版（2026-10-17 實裝）。
+   已知：Desktop 自帶的 `huggingface_hub`（2026-10-17 是 1.30.0）比清單鎖的 1.32.0 舊，`import diffusers` 會報 `cannot import name 'httpx'`。本專案的工具與 FlashVSR 節點都沒有直接 import diffusers，所以先不處理；不要為了它自己升級 Desktop 的 `huggingface_hub`，真的遇到相關錯誤再跟使用者確認。
 2. **自訂節點**：只需要 FlashVSR（照 `setup\custom_nodes.txt` 的 commit clone 到 `%COMFY_DIR%\custom_nodes\ComfyUI-FlashVSR_Ultra_Fast`）。RTX VSR 直接用 `nvidia-vfx` 套件，不用裝節點。
-3. **模型**：Desktop 範本下載過的大多能直接用（H3 主模型、NVFP4 文字編碼器、Qwen-Image 2.1、Qwen-Image-Edit int8、Music 3），第 3 節只要補 DMAD 與 FlashVSR。`profile.cmd` 會把檔名對到 Desktop 的版本（`H3_CLIP`、`QWEN_EDIT_UNET`、`MUSIC3_DIT`）。
+3. **模型**：Desktop 範本下載過的大多能直接用（H3 主模型、NVFP4 文字編碼器、Qwen-Image 2.1、Qwen-Image-Edit int8、Music 3），第 3 節只要補 DMAD 與 FlashVSR。`profile.cmd` 會把檔名對到 Desktop 的版本（`H3_CLIP`、`QWEN_EDIT_UNET`、`MUSIC3_DIT`）。DMAD 會放進共用的 `ComfyUI-Shared\models\loras`；FlashVSR 則放在 **Desktop 安裝資料夾**的 `%COMFY_DIR%\models\FlashVSR-v1.1`（節點用 `folder_paths.models_dir` 找，位置是對的，不在共用資料夾）。
 
 確認：`"%PY_H3%" -c "import torch, nvvfx, gguf;print(torch.__version__, torch.cuda.is_available())"` → `True`。
 
-⚠️ **Desktop 會自動更新 ComfyUI**（有時連 `.venv` 一起換）。更新後先重跑一次 `smoke_test.py`；套件或節點不見了就重做上面 1、2。
+⚠️ **Desktop 會自動更新 ComfyUI**（有時連 `.venv` 一起換）。更新後先重跑一次 `smoke_test.py`；套件、節點或 `%COMFY_DIR%\models\FlashVSR-v1.1` 不見了，就重做上面 1、2，再重跑 `downloads_flashvsr.json`（已驗證的檔案會自動跳過）。
 
 ### 2a′.（沒有 Comfy Desktop 時）自己安裝 C:\AI\H3
 
@@ -150,8 +151,8 @@ foreach ($f in 'downloads.json','downloads_uncensored.json','downloads_dmad.json
 | `downloads.json` | H3 主模型（剪枝 int8）、官方 NVFP4 文字編碼器、影音 VAE | 約 41GB |
 | `downloads_uncensored.json` | H3 文字編碼器 int8（**本工作流實際使用的那顆**） | 24.6GB |
 | `downloads_dmad.json` | DMAD 4 步 LoRA（下載後要轉檔，見下） | 2.6GB |
-| `downloads_qwen_image.json` | Qwen-Image 2.1 int8＋文字編碼器＋VAE（角色定妝照、LoRA 首幀） | 16.1GB |
-| `downloads_qwen_image_edit.json` | Qwen-Image-Edit 2511 fp8＋文字編碼器＋VAE（**預設的首幀做法**） | 28.1GB |
+| `downloads_qwen_image.json` | Qwen-Image 2.1 int8＋文字編碼器＋VAE（本機備選：單張定妝照、LoRA 首幀；`smoke_test`、`run_demo` 也用） | 16.1GB |
+| `downloads_qwen_image_edit.json` | Qwen-Image-Edit 2511 fp8＋文字編碼器＋VAE（**本機備選的首幀做法**；預設是 OpenAI 生圖，不用下載） | 28.1GB |
 | `downloads_music3.json` | MiniMax Music 3 | 11.1GB |
 | `downloads_voxcpm2.json` | VoxCPM2 主權重（**預設配音引擎**） | 4.6GB（另需同 repo 的 config／tokenizer 小檔，見下） |
 | `downloads_breeze_tts2.json` | 選用：Breeze TTS 2（含 tokenizer、audio_tokenizer；`VOICE_ENGINE=breezyvoice` 時設計參考音） | 7.1GB |

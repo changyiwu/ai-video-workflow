@@ -11,7 +11,7 @@
 ## 目標與路線圖
 - [x] 階段一：複製上游 repo、移除原作者個人資訊、加上來源標示、專案初始化
 - [ ] 階段二：照 `AGENT_SETUP.md` 檢查硬體（`python setup/detect_hardware.py`）、安裝環境與下載模型
-  - [ ] 桌機 Comfy Desktop 補齊（`AGENT_SETUP.md` §2a）：補裝 7 個套件、FlashVSR 節點、下載 DMAD／FlashVSR
+  - [x] 桌機 Comfy Desktop 補齊（`AGENT_SETUP.md` §2a）：補裝 7 個套件、FlashVSR 節點、下載 DMAD／FlashVSR
   - [ ] 建 `%AI_ROOT%\Voice` 語音環境並下載 VoxCPM2
   - [x] 設定 OpenAI 金鑰，生一張圖驗證 Image 2.5 模型 ID
   - [ ] 實測多格定妝（`make_film.py chars frames`）：轉面圖四格同一人、首幀不照抄格子版面、臉夠像（不像先試 `IMG25_REF_SCALE=1`），結果寫進 `docs/07` §0

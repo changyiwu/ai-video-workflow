@@ -3,9 +3,9 @@
 Takes an existing clip + a reference picture of the NEW character and asks H3 to produce an edited version of the clip:
 same scene / camera / timing / action, the person replaced by the new character.  Official task type: `[video editing + audio reuse]`
 (github.com/MiniMax-AI/MiniMax-H3/skills/h3-prompt-writing/references/ref-en.txt, sec. 2.3 / 3 / 4).
-Only use characters/faces you own or have permission for (project characters, San-shi-ba himself); no public figures or other people's likeness.
+Only use characters/faces you own or have permission for (your own project characters, or yourself); no public figures or other people's likeness.
 
-Usage:  C:\\AI\\H3\\venv\\Scripts\\python.exe <repo>\\tools\\h3_edit.py edit.json --out <dir> [--dry-run]
+Usage (after `call <repo>\\configs\\profile.cmd`):  "%PY_H3%" <repo>\\tools\\h3_edit.py edit.json --out <dir> [--dry-run]
 edit.json:
 {
   "source_video": "C:/.../clip.mp4",        # clip to edit (<Video 1>); duration/frames/audio are taken from it

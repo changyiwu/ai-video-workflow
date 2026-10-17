@@ -1,8 +1,8 @@
 """VoxCPM2（OpenBMB，Apache-2.0）批次生成：模型只載一次。2026-10-14 起本專案的預設配音引擎（角色聲音設計＋台詞都用它）。
 挑選沿用 breezyvoice_pick.py（ASR 必須全對＋對照 edge-tts 台灣國語參考音的腔調分數，候選檔名格式相同）。
 
-執行（Voice venv）：
-  C:\\AI\\Voice\\venv\\Scripts\\python.exe <repo>\\tools\\voxcpm_batch.py jobs.json
+執行（Voice venv；同一個 cmd 視窗先 call <repo>\\configs\\profile.cmd）：
+  "%PY_VOICE%" <repo>\\tools\\voxcpm_batch.py jobs.json
 
 jobs.json（相對路徑以 jobs.json 所在資料夾為準）：
 {"out_dir": "voice", "seeds": 8,

@@ -195,7 +195,7 @@ def char_refs(k):
 
 @stage("chars")
 def chars():
-    """角色定妝（docs/07 §1）。不滿意就在 seeds 加 char_<角色> 換 seed、刪檔重跑。
+    """角色定妝（docs/07 §0；千問備選 §1）。不滿意就在 seeds 加 char_<角色> 換 seed、刪檔重跑。
     預設（Image 2.5 或 Codex）：先生轉面圖 <角色>_turn.png（純文字，角色的基準），再附它生表情表 <角色>_expr.png（同一張臉）。
     IMAGE_BACKEND=local（千問備選）：單張、灰底、正面半身 <角色>.png。"""
     for k, c in CHARS.items():

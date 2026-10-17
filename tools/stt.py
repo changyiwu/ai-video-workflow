@@ -5,8 +5,8 @@ Fallback (2026-10-14): when faster-whisper / ctranslate2 cannot be imported (e.g
 load_asr() switches to openai-whisper (pure PyTorch; slower; downloads its own large-v3 .pt to models/whisper/openai on first use).
 Force a backend with ASR_BACKEND=faster|openai. breezyvoice_pick.py and review.py use load_asr() too.
 
-Usage:
-  & "C:\\AI\\Voice\\venv\\Scripts\\python.exe" <repo>\\tools\\stt.py --audio in.wav --outdir out [--model large-v3] [--language zh|auto]
+Usage (cmd, after call <repo>\\configs\\profile.cmd):
+  "%PY_VOICE%" <repo>\\tools\\stt.py --audio in.wav --outdir out [--model large-v3] [--language zh|auto]
 
 Writes <outdir>/transcript.txt, transcript.srt and transcript.json.
 """
@@ -124,7 +124,7 @@ def main() -> int:
     try:
         model = load_asr(a.model, device=a.device, compute_type=a.compute_type, local_files_only=True)
     except ImportError:
-        print("Neither faster-whisper nor openai-whisper found. Run with C:\\AI\\Voice\\venv\\Scripts\\python.exe", file=sys.stderr)
+        print("Neither faster-whisper nor openai-whisper found. Run with the Voice venv (%PY_VOICE%, default C:\\AI\\Voice\\venv\\Scripts\\python.exe)", file=sys.stderr)
         return 3
 
     segments, info = model.transcribe(

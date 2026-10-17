@@ -35,8 +35,8 @@ to Image 2.5; listing every room object makes a cluttered image. cfg stays 1 (of
   qwen-edit      Qwen-Image-Edit 2511 (official fp8mixed)      steps 20, cfg 4
   qwen-edit-unc  Qwen-Image-Edit 2511 (uncensored v1.1)        steps 16, cfg 1
 
-Examples:
-  & "C:\\AI\\H3\\venv\\Scripts\\python.exe" tools/gen_image.py --prompt "a red fox, cinematic" --width 1024 --height 1024
+Examples (cmd, after call <repo>\\configs\\profile.cmd):
+  "%PY_H3%" tools/gen_image.py --prompt "a red fox, cinematic" --width 1024 --height 1024
   ... --model qwen21-unc --prompt "..."
   ... --model krea2 --prompt "a sci-fi street market at night"
   ... --model qwen-edit --ref base.png --ref shirt.png --prompt "put the shirt from <image2> on <image1>"
