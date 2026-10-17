@@ -74,6 +74,7 @@ setup/spark_check.py、setup/env/arm64/   RTX Spark 相容性檢查與 ARM64 套
 
 ### 兩台硬體
 - 桌機：RTX 5060 Ti 16GB＋64GB RAM，用 `configs\profile.cmd`。筆電：RTX Spark（Windows on Arm、64GB 統一記憶體），用 `configs\profile_rtxspark.cmd`。
+- 第二台桌機 PC-YI-FY 與桌機同規格（RTX 5060 Ti 16GB＋64GB RAM、Comfy Desktop），也用 `configs\profile.cmd`。
 - 第三台 NB-YI（Ryzen 9 8940HX＋RTX 5060 Laptop，x64）沒有 profile：要在那台跑本機模型，先跑 `setup/detect_hardware.py` 再決定用哪份設定。
 - 改 `setup/env/requirements_*.txt` 後要跑 `python setup/spark_check.py --wheels --emit` 重產 ARM64 清單，並看 diff 有沒有不合理的版本跳動。
 - 判斷套件有沒有 ARM64 版不要只看 PyPI：NVIDIA 的套件（如 `nvidia-vfx`）在 PyPI 只放 wheel-stub 空殼，真正的 wheel 在 pypi.nvidia.com；也要核對 wheel 的 Python 版本（cpXY／abi3）。
@@ -119,4 +120,5 @@ setup/spark_check.py、setup/env/arm64/   RTX Spark 相容性檢查與 ARM64 套
 - 修改共用檔案前先讀最新內容，避免覆蓋其他 Agent 的變更
 - 所有回應與文件使用繁體中文
 - 修改前先確認計畫，優先保留原有資料結構
+- agent 要寫一次性的批次腳本時改寫 PowerShell（`.ps1`，用 `pwsh -File` 跑），不要用 Write 寫 `.cmd`：寫出來是 LF＋UTF-8，路徑有中文時 cmd 會把整行讀壞。
 - Windows 上 agent 用 Bash（Git Bash）改檔時，凡是字串裡有反斜線，一律先用 Write 把 Python 修改腳本寫成檔案再執行，不要用 heredoc 或 `python -c`（反斜線會被吃掉或變成控制字元，寫出壞掉的路徑）
