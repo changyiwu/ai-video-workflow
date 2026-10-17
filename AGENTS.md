@@ -14,7 +14,7 @@
   - [x] 桌機 Comfy Desktop 補齊（`AGENT_SETUP.md` §2a）：補裝 7 個套件、FlashVSR 節點、下載 DMAD／FlashVSR
   - [x] 建 `%AI_ROOT%\Voice` 語音環境並下載 VoxCPM2
   - [x] 設定 OpenAI 金鑰，生一張圖驗證 Image 2.5 模型 ID
-  - [ ] 實測多格定妝（`make_film.py chars frames`）：轉面圖四格同一人、首幀不照抄格子版面、臉夠像（不像先試 `IMG25_REF_SCALE=1`），結果寫進 `docs/07` §0
+  - [x] 實測多格定妝（`make_film.py chars frames`）：轉面圖四格同一人、首幀不照抄格子版面、臉夠像（不像先試 `IMG25_REF_SCALE=1`），結果寫進 `docs/07` §0
 - [ ] 階段三：跑 `setup/smoke_test.py` 與 `pipeline/demo_local/run_demo.py` 驗證
   - [x] 桌機 `smoke_test.py` 12 步全部 OK（秒數見 `docs/hardware.md`）
   - [x] 桌機 `run_demo.py`（約 27 分鐘，成片待人工看過）
