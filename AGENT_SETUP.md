@@ -32,10 +32,10 @@ python setup\detect_hardware.py
 |---|---|---|
 | Windows | 11 | `winver` |
 | NVIDIA 驅動 | 610.88（要支援 CUDA 13.0） | `nvidia-smi` 右上角 CUDA Version ≥ 13.0 |
-| Python | 3.12（3.12.10–3.12.14 都可）；選用的 BreezyVoice 另需 3.10（用 uv 安裝即可） | `py -3.12 --version` |
+| Python | 3.12（3.12.10–3.12.14 都可）；選用的 BreezyVoice 另需 3.10（用 uv 安裝即可）。系統沒有 3.12 時不用另外裝，`uv python install 3.12`，建 venv 時改用 `uv venv --python 3.12`（見 2b） | `py -3.12 --version` |
 | uv | 任意（裝套件用；選用的 BreezyVoice 環境也靠它裝 Python 3.10：`pip install uv`） | `uv --version` |
 | Git | 任意 | `git --version` |
-| ffmpeg／ffprobe | 9.0.1 full build，要在 PATH | `ffmpeg -version` |
+| ffmpeg／ffprobe | 9.0.1 full build，要在 PATH（2026-10-17 桌機用 8.1.1 full build 跑 `smoke_test.py` 也全部通過） | `ffmpeg -version` |
 | 硬碟 | C 槽至少 250GB 可用（必要模型約 150GB），NVMe SSD | `detect_hardware.py` |
 | 分頁檔 | Windows 預設「系統管理」即可，不要設成固定的小數字 | 系統 → 進階系統設定 → 效能 → 虛擬記憶體（**這是系統設定，要請使用者自己確認或改**） |
 
@@ -95,6 +95,13 @@ copy <repo>\setup\extra_model_paths.yaml C:\AI\H3\ComfyUI-0.36.0\extra_model_pat
 py -3.12 -m venv C:\AI\Voice\venv
 uv pip install --python C:\AI\Voice\venv\Scripts\python.exe --no-deps -r <repo>\setup\env\requirements_voice_venv.txt --extra-index-url https://download.pytorch.org/whl/cu130 --index-strategy unsafe-best-match
 ```
+`py -0p` 沒列出 3.12（例如只有 Comfy Desktop 帶的 3.13）時，第一行改成下面兩行，不要拿 3.13 建（清單是照 3.12 鎖的）：
+```
+uv python install 3.12
+uv venv --python 3.12 C:\AI\Voice\venv
+```
+（`uv python install` 若警告 `python3.12.exe` 已存在、不是 uv 管的，不影響，照樣往下做。2026-10-17 桌機實裝：146 個套件約 3 分鐘。）
+
 確認：`C:\AI\Voice\venv\Scripts\python.exe -c "import voxcpm, faster_whisper, audio_separator, stable_whisper, edge_tts;print('ok')"` → `ok`
 
 ### 2c.（選用）Breeze TTS 2 環境 C:\AI\BreezeTTS（`VOICE_ENGINE=breezyvoice` 時設計新角色的參考音）
@@ -163,6 +170,7 @@ foreach ($f in 'downloads.json','downloads_uncensored.json','downloads_dmad.json
 另外四個會自動下載的：
 - VoxCPM2 小檔：`C:\AI\Voice\venv\Scripts\python.exe -c "from huggingface_hub import snapshot_download as s; s('openbmb/VoxCPM2', revision='32279effe8c19989596f05d353d1447f51d9e915', local_dir=r'C:\AI\Voice\models\VoxCPM2')"`
 - faster-whisper large-v3：`C:\AI\Voice\venv\Scripts\python.exe -c "from faster_whisper import WhisperModel; WhisperModel('large-v3', device='cpu', download_root='C:/AI/Voice/models/whisper')"`
+  - ⚠️ 先在同一個視窗 `set HF_HUB_DISABLE_SYMLINKS=1`。Windows 沒開「開發人員模式」時不能建符號連結，Hugging Face 快取會報 `OSError: [WinError 1314] 用戶端沒有這項特殊權限`；設了之後改成直接放檔案，已下載的部分會沿用。印出 float16 轉 float32 的警告是因為這裡用 CPU 載入，正常。
 - g2pW 注音模型（選用）：第一次跑 BreezyVoice 時自動下載（見 2d）。
 - BS-RoFormer：第一次跑 `audio-separator` 時自動下載到 `C:\AI\Voice\models\separator`（`smoke_test.py` 會觸發）。
 
@@ -189,6 +197,7 @@ call <repo>\configs\profile.cmd
 `smoke_test.py` 會自己設計一個聲音、生一張首幀，跑完 VoxCPM2（設計聲音）→ VoxCPM2（念台詞）→ 自動挑選 →（有裝才跑：Breeze 設計 → BreezyVoice 念＋挑選）→ faster-whisper → 聲調比對 → Qwen-Image 2.1 → Music 3 → BS-RoFormer → H3 → RTX VSR → FlashVSR，最後印出每一步 OK／FAIL 和秒數。
 - 全部 OK，且每步時間在 `docs/hardware.md` 列的範圍內（真實顯卡比 5090 慢是正常的），就算安裝完成。完整版 12 步；`--quick` 跳過 FlashVSR，11 步；有裝選用的 Breeze＋BreezyVoice 會多 3 步。
 - 2026-10-07 全新安裝實測（上游，當時預設 BreezyVoice、smoke test 為 14 步；另一個 agent 只看本 repo、在清空的 `C:\AI` 從零安裝，RTX 5090）：完整版 14 步全部 OK，共 500 秒；第一次跑 BreezyVoice 會先下載 g2pW 注音模型，那一步多約 45 秒。
+- 2026-10-17 本分支桌機實測（RTX 5060 Ti 16GB＋64GB RAM，Comfy Desktop，`--reserve-vram 1.5`，沒裝選用的 Breeze／BreezyVoice）：12 步全部 OK，共約 1205 秒（20 分鐘），各步秒數見 `docs/hardware.md`〈真實 16GB 卡實測〉。
 - 打開 `setup\smoke_out\h3\clip.mp4` 看：畫面清楚、嘴型有跟著台詞動。
 
 ## 5. 跑全本地示範片
