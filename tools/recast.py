@@ -3,6 +3,8 @@
 每支片一份 recast.json（放片子資料夾；裡面的相對路徑以片子資料夾為準；範例 tools/examples/recast.json）。
 在片子資料夾執行（或加 --film <片子資料夾>）：
   python ../../tools/recast.py first A B1         首幀：原片格補成 16:9 → Image 2.5 換角（會花 API 費用）
+  python ../../tools/recast.py close-mouth B2 --box 555 335 670 425
+                                                  有發聲的鏡：首幀改成閉嘴（遮罩只開放嘴部）→ out/first/B2_closed.png
   python ../../tools/recast.py check              首幀對照圖：原片｜首幀｜首幀＋骨架 → out/first/_check.jpg
   python ../../tools/recast.py voice --seeds 6    新台詞候選：VoxCPM2「只給參考音」與「接續」兩種模式 × N 個 seed，逐條聽寫（自動改用 PY_VOICE）
   python ../../tools/recast.py track cont_s1 [--word-end 0.48]
@@ -184,6 +186,118 @@ def cmd_first(film, a):
     print("下一步：python ../../tools/recast.py check，看首幀跟骨架有沒有對齊")
 
 
+def paste_mouth(src_png, gen_png, box, dst_png):
+    """把 gen 的嘴部對齊後貼回 src，嘴巴以外跟 src 逐像素相同。
+    Image 2.5 即使給遮罩也會整張重畫：顏色變飽和、角色大小與位置偏掉，H3 照首幀生成整鏡就會跟著變（狗狗版 B2_t4）。
+    對齊：比對嘴巴周圍一圈（不含嘴），搜尋縮放 0.85–1.15 與位移，先 1/4 解析度粗找再全解析度細修；顏色再照那一圈校正到 src。"""
+    import numpy as np
+    from PIL import Image, ImageDraw, ImageFilter
+    src = Image.open(src_png).convert("RGB")
+    gen = Image.open(gen_png).convert("RGB").resize(src.size, Image.LANCZOS)
+    W, H = src.size
+    x0, y0, x1, y1 = box
+    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    M = 110  # 比對範圍：嘴部外擴的像素
+    rx0, ry0, rx1, ry1 = max(0, x0 - M), max(0, y0 - M), min(W, x1 + M), min(H, y1 + M)
+    hole = Image.new("L", (W, H), 0)
+    ImageDraw.Draw(hole).ellipse((x0 - 12, y0 - 12, x1 + 12, y1 + 12), fill=255)
+    ring = (np.asarray(hole, dtype=np.float32)[ry0:ry1, rx0:rx1] == 0)
+
+    def warp(img, s, dx, dy, k=1):  # 以嘴部中心縮放 s 倍再平移 (dx, dy)；k = 圖已縮小幾倍
+        c, d = cx / k, cy / k
+        return img.transform(img.size, Image.AFFINE, (1 / s, 0, c - (c + dx / k) / s, 0, 1 / s, d - (d + dy / k) / s), Image.BILINEAR)
+
+    def gray(img, k=1):
+        g = np.asarray(img.convert("L"), dtype=np.float32)
+        return g[ry0 // k:ry1 // k, rx0 // k:rx1 // k]
+
+    def ncc(a, b, m):
+        a, b = a[m], b[m]
+        a, b = a - a.mean(), b - b.mean()
+        return float((a * b).sum() / (np.sqrt((a * a).sum() * (b * b).sum()) + 1e-6))
+
+    k = 4
+    small = lambda im: im.resize((W // k, H // k), Image.BILINEAR)
+    gen_k = small(gen).convert("L")
+    gs = gray(small(src), k)
+    mk = np.asarray(Image.fromarray(ring.astype(np.uint8) * 255).resize((gs.shape[1], gs.shape[0]))) > 127
+    best = (-2, 1.0, 0, 0)
+    for s in np.arange(0.85, 1.151, 0.01):
+        for dy in range(-48, 49, k):
+            for dx in range(-48, 49, k):
+                v = ncc(gs, gray(warp(gen_k, s, dx, dy, k), k), mk)
+                if v > best[0]:
+                    best = (v, s, dx, dy)
+    _, s0, dx0, dy0 = best
+    best = (-2, s0, dx0, dy0)
+    gs, gen_l = gray(src), gen.convert("L")
+    for s in np.arange(s0 - 0.01, s0 + 0.0101, 0.005):
+        for dy in range(dy0 - 4, dy0 + 5):
+            for dx in range(dx0 - 4, dx0 + 5):
+                v = ncc(gs, gray(warp(gen_l, s, dx, dy)), ring)
+                if v > best[0]:
+                    best = (v, s, dx, dy)
+    v, s, dx, dy = best
+    al = np.asarray(warp(gen, s, dx, dy), dtype=np.float32)
+    sa = np.asarray(src, dtype=np.float32)
+    # 顏色：嘴部外一圈，每個色版的平均與標準差照 src 校正
+    band = Image.new("L", (W, H), 0)
+    ImageDraw.Draw(band).ellipse((x0 - 40, y0 - 40, x1 + 40, y1 + 40), fill=255)
+    ImageDraw.Draw(band).ellipse((x0, y0, x1, y1), fill=0)
+    bm = np.asarray(band) > 0
+    for c in range(3):
+        g, t = al[..., c][bm], sa[..., c][bm]
+        al[..., c] = (al[..., c] - g.mean()) * (t.std() / (g.std() + 1e-6)) + t.mean()
+    feather = Image.new("L", (W, H), 0)
+    ImageDraw.Draw(feather).ellipse((x0, y0, x1, y1), fill=255)
+    m = np.asarray(feather.filter(ImageFilter.GaussianBlur(8)), dtype=np.float32)[..., None] / 255
+    out = sa * (1 - m) + np.clip(al, 0, 255) * m
+    Image.fromarray(out.round().astype(np.uint8)).save(dst_png)
+    print(f"[paste] 對齊 NCC={v:.3f} 縮放={s:.3f} 位移=({dx},{dy}) -> {dst_png}")
+    if v < 0.6:
+        print("  ⚠️ 對齊分數偏低：嘴部附近可能被大幅重畫，請放大檢查")
+
+
+def cmd_close_mouth(film, a):
+    """首幀改成閉嘴（發聲鏡的首幀張著嘴，H3 就整鏡維持張嘴，嘴型不跟聲音動）。
+    Image 2.5 遮罩編輯只取嘴部，對齊後貼回原首幀（paste_mouth），嘴巴以外不變。
+    --reuse：不重生，直接用上次的 out/first/<id>_closed_raw.png 重新貼。"""
+    raw = film.p(f"out/first/{a.id}_closed_raw.png")
+    src = film.p(f"out/first/{a.id}.png")
+    dst = film.p(f"out/first/{a.id}_closed.png")
+    if a.reuse:
+        if not raw.exists():
+            sys.exit(f"沒有 {raw}")
+        paste_mouth(src, raw, a.box, dst)
+        return
+    sys.path.insert(0, str(TOOLS))
+    import img25
+    from PIL import Image, ImageDraw
+    W, H = film.size
+    e = film.cfg["edit"]
+    key = film.cfg["char"]
+    it = e.get("char", "the character")
+    mask = film.p(f"out/first/_src/{a.id}_mouth_mask.png")
+    mask.parent.mkdir(parents=True, exist_ok=True)
+    m = Image.new("RGBA", (W, H), (0, 0, 0, 255))
+    ImageDraw.Draw(m).ellipse(tuple(a.box), fill=(0, 0, 0, 0))  # 透明 = 可以重畫
+    m.save(mask)
+    prompt = (f"Image 1 is a video frame. Inside the masked area only, close {it}'s mouth: lips closed, no tongue visible, a calm "
+              "closed-mouth expression like the closed-mouth faces in Image 2. THE OUTPUT MUST BE PIXEL-ALIGNED WITH IMAGE 1: same framing, "
+              f"same zoom, no reframing, no zooming out, {it} stays exactly the same size and in exactly the same place, head at the same "
+              "height. Change nothing outside the mouth: same pose, limbs, motion blur, fur, background, lighting and image quality.")
+    stem = film.p("out/first/_test") / f"{a.id}_closed_{int(time.time())}"
+    stem.parent.mkdir(parents=True, exist_ok=True)
+    files = img25.edit(prompt, [src, film.p(e.get("expr", f"out/chars/{key}_expr.png"))], stem, size=f"{W}x{H}", mask=mask)
+    log_f = film.p("out/image_backends.json")
+    log = json.loads(log_f.read_text(encoding="utf-8")) if log_f.exists() else {}
+    log["img25"] = log.get("img25", 0) + 1
+    log_f.write_text(json.dumps(log), encoding="utf-8")
+    raw.write_bytes(files[0].read_bytes())
+    paste_mouth(src, raw, a.box, dst)
+    print(f"在 recast.json 那一鏡寫 \"first\": \"{a.id}_closed\"；先跑 check 看有沒有對齊骨架")
+
+
 def cmd_check(film, a):
     import tempfile
     from PIL import Image, ImageChops
@@ -193,10 +307,11 @@ def cmd_check(film, a):
     p0 = film.cfg["pose"]["start"]
     rows = []
     with tempfile.TemporaryDirectory() as td:
-        for fid, f in film.cfg["firsts"].items():
-            gen = film.p(f"out/first/{fid}.png")
+        items = [(fid, f, film.p(f"out/first/{v}.png")) for fid, f in film.cfg["firsts"].items() for v in (fid, f"{fid}_closed")]
+        for fid, f, gen in items:
             if not gen.exists():
-                print("[skip] 沒有首幀", fid)
+                if not gen.stem.endswith("_closed"):
+                    print("[skip] 沒有首幀", fid)
                 continue
             pad = film.p(f"out/first/_src/{fid}_pad.png")
             if not pad.exists():
@@ -521,6 +636,9 @@ def main():
     ap.add_argument("--film", default=".", help="片子資料夾（有 recast.json），預設目前資料夾")
     sp = ap.add_subparsers(dest="cmd", required=True)
     p = sp.add_parser("first"); p.add_argument("ids", nargs="*")
+    p = sp.add_parser("close-mouth"); p.add_argument("id"); p.add_argument("--box", type=int, nargs=4, required=True,
+                                                                          metavar=("X0", "Y0", "X1", "Y1"), help="嘴部橢圓範圍（首幀像素座標）")
+    p.add_argument("--reuse", action="store_true", help="不重生，用上次的 <id>_closed_raw.png 重新對齊貼回")
     sp.add_parser("check")
     p = sp.add_parser("voice"); p.add_argument("--seeds", type=int, default=6); p.add_argument("--inside", action="store_true", help=argparse.SUPPRESS)
     p = sp.add_parser("track"); p.add_argument("cand"); p.add_argument("--word-end", type=float)
@@ -536,7 +654,7 @@ def main():
         argv = argv[i:i + 2] + argv[:i] + argv[i + 2:]
     a = ap.parse_args(argv)
     film = Film(a.film)
-    {"first": cmd_first, "check": cmd_check, "voice": cmd_voice, "track": cmd_track, "prep": cmd_prep, "run": cmd_run,
+    {"first": cmd_first, "close-mouth": cmd_close_mouth, "check": cmd_check, "voice": cmd_voice, "track": cmd_track, "prep": cmd_prep, "run": cmd_run,
      "finish": cmd_finish}[a.cmd](film, a)
 
 
