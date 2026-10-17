@@ -70,7 +70,7 @@ pipeline/demo_local/        全本地示範片（4 鏡，安裝驗證用，不�
 setup/                      安裝：模型下載清單（鎖定版本＋逐檔雜湊）、套件清單、smoke_test、硬體偵測
 cloud/                      ⭐ 本機跑不動時：H3（或整套流程）送到 Google Colab G4 跑（colab_h3.py；見 cloud/README.md）
 sfx/                        58 個 Freesound CC0 音效（腳步、翻頁、門、球、歡呼…）
-templates/                  片尾範本、咒印法陣素材、AGENTS_TEMPLATE.md 做片入口範本
+templates/                  片尾範本、咒印法陣素材、AGENTS_TEMPLATE.md 做片入口範本、發布資訊範本.md
 skills/                     agent 技能原始檔：ai-film 做片全流程（裝法見 skills/README.md）
 configs/profile.cmd         這個硬體版本的環境變數
 ```

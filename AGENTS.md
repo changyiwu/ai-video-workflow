@@ -35,7 +35,7 @@ pipeline/                      template_local（新片範本）、demo_local（�
 setup/                         模型下載清單、套件清單、smoke_test、硬體偵測、16GB 模擬測試
 cloud/                         H3 送 Google Colab 跑
 sfx/                           Freesound CC0 音效
-templates/                     片尾範本、法陣素材、AGENTS_TEMPLATE.md（做片入口範本）
+templates/                     片尾範本、法陣素材、AGENTS_TEMPLATE.md（做片入口範本）、發布資訊範本.md（YouTube／FB／IG 說明與 hashtag）
 skills/                        技能原始檔：ai-film（做片全流程：開新片、訪談、編劇、預演、製作、自審；說「同步技能」裝成全域）
 configs/profile.cmd            桌機（16GB VRAM＋64GB RAM）環境變數
 configs/profile_rtxspark.cmd   RTX Spark 筆電（Windows on Arm＋64GB 統一記憶體）環境變數
