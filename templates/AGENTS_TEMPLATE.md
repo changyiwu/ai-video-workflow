@@ -41,6 +41,8 @@ films/
 - 定妝：預設 OpenAI 生圖（Image 2.5 API 優先、Codex CLI 次之）生轉面圖＋表情表兩張，首幀兩張都附；失敗就停下，不自動改用千問。千問備選要整支片設 `IMAGE_BACKEND=local`，改用單張半身照。
 - 首幀：`gen_image.py --model qwen-edit --ref <定妝>`。預設送 OpenAI 生圖（Image 2.5 或 Codex，`--model` 這時不作用）；`IMAGE_BACKEND=local` 時 `--model qwen-edit` 讓它用 Qwen-Image-Edit 2511，而不是會把參考圖照抄成正面姿勢的 Qwen-Image 2.1。**每一鏡提示詞都照抄角色完整外觀描述**；做法見 `../docs/07_角色與首幀.md`。
 - 影片：本機 H3，只給首幀；需要時加尾幀。`"draft": true`（DMAD 4 步）是定稿。
+- 片尾：預設不加（`ending.enabled: false`）；使用者要才打開。沒片尾時，AI 生成標示寫在貼文。
+- 照參考影片換主角：照 `../docs/08_換角重製.md`。
 - 配音：角色參考音定了就不換；台詞一律 `<repo>\tools\make_voxcpm.cmd jobs.json`（VoxCPM2，每句 8 候選自動挑；`make_film.py` 內建），念不準的字改同音字（要標注音 `連假[:ㄐㄧㄚ4]` 就改用選用的 `VOICE_ENGINE=breezyvoice`），`needs_review` 的句子請人聽。
 - 配樂：MiniMax Music 3 純器樂。
 - 放大：近景 RTX VSR、全景 FlashVSR（RTX Spark 筆電見 `../docs/hardware_rtxspark.md`）。

@@ -15,7 +15,7 @@
 |---|---|---|
 | 1 | `"%PY_H3%" make_film.py chars masters frames` | **關卡 1**：看 `out/first/_sheet.jpg`——臉、服裝一致，沒有多手多腳，背景沒有字，窗戶方向對 |
 | 2 | `make_film.py voices h3` | **關卡 2**：看 `out/review/clips_<鏡>.jpg`——沒有換臉、多出人、鏡頭漂移、左右換位 |
-| 3 | `make_film.py amb edl music ending cut review`（`film.json` 沒有 `ending` 時片尾自動跳過） | **關卡 3**：自審（`review.md`）後，人一定要看完整的 `out/cut/film_1080p.mp4` |
+| 3 | `make_film.py amb edl music ending cut review`（片尾預設不做：`ending.enabled` 為 true 或設 `ENDING=1` 才做） | **關卡 3**：自審（`review.md`）後，人一定要看完整的 `out/cut/film_1080p.mp4` |
 
 - **每個關卡都停下來給使用者看**，等使用者說再往下。使用者說「我去睡了」＝授權自動做完並自審，早上交成片＋自審報告。
 - 最難的一鏡先單獨跑（`set ONLY=<鏡號>`），過了再整批。

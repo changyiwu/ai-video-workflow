@@ -458,7 +458,8 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     prompt = build_prompt(spec)
     (out / "prompt.txt").write_text(prompt, encoding="utf-8")
-    shutil.copy2(spec_path, out / "shot.json")
+    if (out / "shot.json").resolve() != spec_path.resolve():  # --out may be the spec's own folder
+        shutil.copy2(spec_path, out / "shot.json")
     E, W = lint(prompt, spec["duration"])
     if spec["duration"] > 12:
         W.append(f"duration {spec['duration']}s > 12 s: in this project 15 s clips drifted / self-cut; keep shots <= 12 s")

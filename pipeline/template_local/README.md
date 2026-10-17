@@ -2,7 +2,7 @@
 
 一個設定檔 `film.json` 寫完整支片（角色、場景、每一鏡、台詞、配樂、片尾），`make_film.py` 從角色定妝照一路做到成片和自審。生圖預設用 OpenAI 生圖（Image 2.5 API 金鑰優先、沒有金鑰才用 Codex CLI，失敗就停下，要用本機 Qwen 得整支片設 `IMAGE_BACKEND=local`），角色定妝是轉面圖＋表情表（千問備選為單張半身）；配音預設用 VoxCPM2（`set VOICE_ENGINE=breezyvoice` 改用 Breeze TTS 2＋BreezyVoice）；其餘全部本機模型。片尾名單會依實際用到的生圖後端自動寫（記在 `out/image_backends.json`）。
 
-範例 `film.json` 是〈被狗吃掉的作業〉：7 鏡、正片約 28 秒＋片尾 9.5 秒，開新片時整份換成自己的劇本。
+範例 `film.json` 是〈被狗吃掉的作業〉：7 鏡、正片約 28 秒（片尾選用、預設不加；打開時再加 9.5 秒），開新片時整份換成自己的劇本。
 
 ## 用法
 
@@ -45,7 +45,7 @@
 | `seeds` | 想換的 seed：`char_<角色>`、`master_<名稱>`、`frame_<鏡>`、`h3_<鏡>`、`voice_<角色>` |
 | `music` | `caption`（純器樂描述，寫明 Vocal: NONE）、`seeds`（抽幾首，挑人聲殘留最少的） |
 | `mix` | `say_lead`（台詞比畫面提前幾秒，預設 0.2）、`default_tail`、`music_under_lines`（台詞期間配樂音量，0.15–0.30）、`music_bed_rms`、`target_lufs` |
-| `ending` | 片尾：`closeups`（拿哪幾鏡的首幀當特寫）、`cards`（每張卡最多 3 行工具）、`card_dur`、`title_dur`；不要片尾就刪掉這個欄位 |
+| `ending` | 片尾（選用，預設不加）：`enabled`（預設 false；改 true，或設環境變數 `ENDING=1`，才做片尾並接進成片）、`closeups`（拿哪幾鏡的首幀當特寫）、`cards`（每張卡最多 3 行工具）、`card_dur`、`title_dur` |
 
 每一鏡（`shots[]`）：
 

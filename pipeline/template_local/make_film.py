@@ -445,9 +445,15 @@ def amb():
 
 
 # ------------------------------------------------------------------------------------------------ 剪接、配樂、片尾、成片
+def ending_on():
+    """片尾是選用、預設不加（2026-10-17）：film.json 的 ending.enabled 為 true，或設 ENDING=1，才做片尾、接進成片。"""
+    e = CFG.get("ending")
+    return bool(e) and (e.get("enabled", False) or os.environ.get("ENDING") == "1")
+
+
 def ending_secs():
     e = CFG.get("ending")
-    return len(e["cards"]) * e.get("card_dur", 3.3) + e.get("title_dur", 7.5) if e else 0.0
+    return len(e["cards"]) * e.get("card_dur", 3.3) + e.get("title_dur", 7.5) if ending_on() else 0.0
 
 
 @stage("edl")
@@ -513,7 +519,7 @@ def music():
 def ending():
     """片尾：特寫靜幀＋AI 工具名單＋片名（templates/ending）。MiniMax Music3 授權要求標示、公開內容要標示 AI 生成。"""
     e = CFG.get("ending")
-    if not e:
+    if not ending_on():
         return
     from PIL import Image
     ed = OUT / "ending"; (ed / "frames").mkdir(parents=True, exist_ok=True)
@@ -564,7 +570,7 @@ def cut():
         run(["ffmpeg", "-y", "-loglevel", "error", "-ss", f"{r['src_in']:.3f}", "-i", v, "-frames:v", str(round(r["dur"] * FPS)), "-an",
              "-vf", "scale=1920:1080:flags=lanczos,fps=24,format=yuv420p", "-c:v", "libx264", "-crf", "14", "-preset", "medium", p])
         parts.append(p)
-    if CFG.get("ending"):
+    if ending_on():
         parts.append(OUT / "ending" / "ending.mp4")
     (post / "list.txt").write_text("".join(f"file '{p.as_posix()}'\n" for p in parts), encoding="utf-8")
     run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", post / "list.txt", "-c", "copy", post / "video.mp4"])

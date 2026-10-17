@@ -55,6 +55,7 @@ docs/
   05_agent協作與知識庫.md   讓 AI agent 長期接手的做法
   06_安裝.md                環境、模型、資料夾慣例
   07_角色與首幀.md          角色定妝與首幀：預設 OpenAI 生圖、本機 Qwen 備選（兩種做法）
+  08_換角重製.md            照參考影片換主角：骨架控制、仿原聲換詞、字卡後製（不走 make_film.py 的 h3）
   hardware.md               ⭐ 你這個硬體版本：模型組合、啟動參數、實測數據、風險
 tools/                      全域工具（各腳本直接用，不用複製）
   h3_shot.py ⭐             分鏡 JSON → 官方格式提示詞 → 格式檢查 → H3 生成
@@ -93,7 +94,7 @@ configs/profile.cmd         這個硬體版本的環境變數
 | 6 | H3 每鏡（DMAD 4 步、只給首幀、台詞當固定音軌；看得到臉又沒台詞的鏡給靜音） | `h3_shot.py`（spec 加 `"draft": true`） | `docs/03` §4、`tools/examples/` | `h3/<鏡>/clip.mp4` | ✅ 抽格看：換臉、多人、鏡頭漂移 |
 | 7 | 配樂（純器樂、多抽幾個 seed，挑人聲殘留最少的） | `gen_music3.py` → `audio-separator` | `docs/02` §8 | `music/*.flac` | |
 | 8 | 放大、剪接（台詞提前 0.2 秒）、配樂壓低（台詞期間 15–30%）、響度、字幕 | `upscale_vsr.py`、ffmpeg | `docs/02` §9、§10（**`alimiter` 要 `level=false`**） | `cut/<片名>_1080p.mp4` | |
-| 9 | （選用）片尾（工具名單＋AI 生成標示；不做就刪 `film.json` 的 `ending`，改在貼文標示） | `templates/ending/render_ending.py` | `templates/ending/README.md`、`docs/02` §12 | `ending.mp4` | |
+| 9 | （選用，預設不加）片尾（工具名單＋AI 生成標示；要加就把 `film.json` 的 `ending.enabled` 改成 true 或設 `ENDING=1`；沒片尾時在貼文標示） | `templates/ending/render_ending.py` | `templates/ending/README.md`、`docs/02` §12 | `ending.mp4` | |
 | 10 | 自審五遍（抽格、ASR、雜訊、黑畫面與響度、切點） | `pipeline/template_local/review.py`（呼叫 `noise_scan.py`、`stt.py`） | `docs/04_自審清單.md` | `review/` | ✅ 最後一定給人看成片 |
 
 **最快的做法：`python tools/new_film.py <片名>` 從 [`pipeline/template_local/`](pipeline/template_local/README.md) 建好 `films/<片名>/`，只改 `film.json`**，`make_film.py` 會把上面 2–10 步全部做完（已附一支 7 鏡範例片的設定，從零重跑驗證過）。`pipeline/demo_local/` 是 4 鏡的最小安裝驗證。

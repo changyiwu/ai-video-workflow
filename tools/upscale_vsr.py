@@ -64,15 +64,17 @@ with av.open(str(src)) as inp, av.open(str(silent), 'w') as out:
 # Re-mux encoded video and original AAC packets; no speech resynthesis.
 with av.open(str(silent)) as vin, av.open(str(src)) as ain, av.open(str(dest),'w') as out:
     vs=out.add_stream_from_template(vin.streams.video[0])
-    aus=out.add_stream_from_template(ain.streams.audio[0])
+    pairs=[(vin,vin.streams.video[0],vs)]
+    if ain.streams.audio:  # silent source (e.g. a pose-controlled cut whose soundtrack is muxed later): video only, 2026-10-17
+        pairs.append((ain,ain.streams.audio[0],out.add_stream_from_template(ain.streams.audio[0])))
     packets=[]
-    for source,instream,target in [(vin,vin.streams.video[0],vs),(ain,ain.streams.audio[0],aus)]:
+    for source,instream,target in pairs:
         for p in source.demux(instream):
             if p.dts is not None:
                 t=float(p.dts*p.time_base)
                 p.stream=target
                 packets.append((t,p))
     for _,p in sorted(packets,key=lambda item:item[0]): out.mux(p)
-report={'engine':'NVIDIA RTX VSR','quality':args.quality,'source':str(src),'output':str(dest),'width':1920,'height':1080,'frames':count,'fps':24,'elapsed_seconds':time.perf_counter()-start,'torch_peak_allocated_GiB':torch.cuda.max_memory_allocated()/1024**3,'audio':'original AAC packets copied','checks':checks}
+report={'engine':'NVIDIA RTX VSR','quality':args.quality,'source':str(src),'output':str(dest),'width':1920,'height':1080,'frames':count,'fps':24,'elapsed_seconds':time.perf_counter()-start,'torch_peak_allocated_GiB':torch.cuda.max_memory_allocated()/1024**3,'audio':'original AAC packets copied' if len(pairs)>1 else 'none (silent source)','checks':checks}
 (folder/'vsr_result.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
 print(json.dumps(report,ensure_ascii=False),flush=True)

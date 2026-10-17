@@ -20,7 +20,11 @@
   - [x] 桌機 `run_demo.py`（約 27 分鐘，成片待人工看過）
   - [ ] VoxCPM2 預設配音流程（`voxcpm_batch.py`＋挑音）實機驗證：台灣腔、聽寫通過率、速度
 - [ ] 階段三之二：RTX Spark 筆電上機驗證（照 `docs/hardware_rtxspark.md`「第一次上機」，結果回填該文件）
-- [ ] 階段四：建立第一個角色（`films/角色/`），用 `ai-film` 技能（`tools/new_film.py`）做第一支片
+- [x] 階段四：建立第一個角色（`films/角色/`），用 `ai-film` 技能（`tools/new_film.py`）做第一支片
+  - [x] 角色「狗狗」（`films/角色/狗狗/`）＋第一支片〈狗熊哆嗦毛_換角〉狗狗版（換角重製，`docs/08`）
+- [ ] 階段五：換角重製工具化與其他版本
+  - [ ] 把首幀換角、各鏡 spec／骨架切段、剪接收尾的一次性腳本整理成 `tools/`（見 `docs/08`〈還沒有的工具〉）
+  - [ ] 〈狗熊哆嗦毛〉台灣黑熊、貓貓版（「台灣黑熊」比「狗熊」多兩字，開頭鏡要拉長）
 
 ## 資料夾結構
 ```
@@ -28,7 +32,7 @@ README.md / AGENT_SETUP.md     專案說明、給 agent 的安裝手冊
 NOTICE.md                      來源與作者、本分支修改清單（必須保留）
 LICENSE / LICENSE-docs.md      MIT（程式）／CC BY-NC 4.0（文件素材）
 THIRD_PARTY_NOTICES.md         第三方模型與工具授權
-docs/                          總覽、端到端流程、規則與踩坑、自審清單、安裝、硬體說明
+docs/                          總覽、端到端流程、規則與踩坑、自審清單、安裝、角色與首幀、換角重製、硬體說明
 tools/                         全域工具（各腳本直接用這裡，不再複製到 C:\AI\tools）
 films/                         自己的片與角色資產（.gitignore，不進 repo；規則見 films/AGENTS.md）
 pipeline/                      template_local（新片範本）、demo_local（安裝驗證）
@@ -69,12 +73,15 @@ setup/spark_check.py、setup/env/arm64/   RTX Spark 相容性檢查與 ARM64 套
 
 ### 兩台硬體
 - 桌機：RTX 5060 Ti 16GB＋64GB RAM，用 `configs\profile.cmd`。筆電：RTX Spark（Windows on Arm、64GB 統一記憶體），用 `configs\profile_rtxspark.cmd`。
+- 第三台 NB-YI（Ryzen 9 8940HX＋RTX 5060 Laptop，x64）沒有 profile：要在那台跑本機模型，先跑 `setup/detect_hardware.py` 再決定用哪份設定。
 - 改 `setup/env/requirements_*.txt` 後要跑 `python setup/spark_check.py --wheels --emit` 重產 ARM64 清單，並看 diff 有沒有不合理的版本跳動。
 - 判斷套件有沒有 ARM64 版不要只看 PyPI：NVIDIA 的套件（如 `nvidia-vfx`）在 PyPI 只放 wheel-stub 空殼，真正的 wheel 在 pypi.nvidia.com；也要核對 wheel 的 Python 版本（cpXY／abi3）。
 
 ### 做片
 - 自己的片一律放 `films/<片名>/`，用 `tools/new_film.py <片名>`（`ai-film` 技能）從 `pipeline/template_local/` 建立，不要手動複製；`repo_dir` 維持 `../..`；`films/` 已列入 `.gitignore`，只走雲端硬碟、沒有 GitHub 備份。
 - 頻道與角色的做片規則在 `films/AGENTS.md`（`films/CLAUDE.md` 橋接），角色資產在 `films/角色/`；不要把這些寫進本檔或 `pipeline/`。
+- 照參考影片換主角（保留動作、背景、聲音）照 `docs/08_換角重製.md`：每鏡用 `tools/h3_shot.py`＋`control`，`make_film.py` 不會把 `control` 傳給 H3。
+- 片尾是選用、預設不加：`film.json` 的 `ending.enabled` 為 true（或設 `ENDING=1`）才做片尾、接進成片。
 - `films/AGENTS.md` 是從 `templates/AGENTS_TEMPLATE.md` 改寫的獨立檔：改了範本裡的通用規則，要手動同步過去。
 - `skills/` 是技能原始檔，agent 不會直接從這裡載入；改完要說「同步技能」重裝全域副本。技能腳本要找 repo 的東西時放在 `tools/`，不要放進技能資料夾（全域副本不在 repo 裡）。
 
