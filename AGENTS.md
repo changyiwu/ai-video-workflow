@@ -23,7 +23,8 @@
 - [x] 階段四：建立第一個角色（`films/角色/`），用 `ai-film` 技能（`tools/new_film.py`）做第一支片
   - [x] 角色「狗狗」（`films/角色/狗狗/`）＋第一支片〈狗熊哆嗦毛_換角〉狗狗版（換角重製，`docs/08`）
 - [ ] 階段五：換角重製工具化與其他版本
-  - [ ] 把首幀換角、各鏡 spec／骨架切段、剪接收尾的一次性腳本整理成 `tools/`（見 `docs/08`〈還沒有的工具〉）
+  - [x] 把首幀換角、各鏡 spec／骨架切段、剪接收尾的一次性腳本整理成 `tools/recast.py`（片子資料夾放 `recast.json`）
+  - [ ] 舞蹈鏡嘴型：狗狗一直張嘴笑、不跟著發聲開合（`docs/08`〈已知問題〉）
   - [ ] 〈狗熊哆嗦毛〉台灣黑熊、貓貓版（「台灣黑熊」比「狗熊」多兩字，開頭鏡要拉長）
 
 ## 資料夾結構
@@ -80,7 +81,7 @@ setup/spark_check.py、setup/env/arm64/   RTX Spark 相容性檢查與 ARM64 套
 ### 做片
 - 自己的片一律放 `films/<片名>/`，用 `tools/new_film.py <片名>`（`ai-film` 技能）從 `pipeline/template_local/` 建立，不要手動複製；`repo_dir` 維持 `../..`；`films/` 已列入 `.gitignore`，只走雲端硬碟、沒有 GitHub 備份。
 - 頻道與角色的做片規則在 `films/AGENTS.md`（`films/CLAUDE.md` 橋接），角色資產在 `films/角色/`；不要把這些寫進本檔或 `pipeline/`。
-- 照參考影片換主角（保留動作、背景、聲音）照 `docs/08_換角重製.md`：每鏡用 `tools/h3_shot.py`＋`control`，`make_film.py` 不會把 `control` 傳給 H3。
+- 照參考影片換主角（保留動作、背景、聲音）照 `docs/08_換角重製.md`：片子資料夾寫 `recast.json`，用 `tools/recast.py`（首幀、配音、各鏡 spec、H3、剪接）；不要走 `make_film.py` 的 h3 階段（它不會把 `control` 傳給 H3）。
 - 片尾是選用、預設不加：`film.json` 的 `ending.enabled` 為 true（或設 `ENDING=1`）才做片尾、接進成片。
 - `films/AGENTS.md` 是從 `templates/AGENTS_TEMPLATE.md` 改寫的獨立檔：改了範本裡的通用規則，要手動同步過去。
 - `skills/` 是技能原始檔，agent 不會直接從這裡載入；改完要說「同步技能」重裝全域副本。技能腳本要找 repo 的東西時放在 `tools/`，不要放進技能資料夾（全域副本不在 repo 裡）。

@@ -26,6 +26,7 @@ Shot spec (JSON; relative paths resolve against the JSON file's folder):
                                     # {"key": "sky", "desc": "a deep, echoing off-screen male voice", "voice_only": true}
                                     #   = voice with no body (Heaven): no <Subject> label, speaks as "<desc> (S2)"
                                     # "in_first_frame": false = subject not visible in <Picture 1>
+                                    # "name": "the dog" = how [Shot 1] first names the subject (default: desc up to the first comma)
     {"key": "ahe", "desc": "Ahe, a mischievous 12-year-old Taiwanese boy (messy spiky black hair, white school shirt, brown shorts)",
      "voice": "a bright, unbroken 12-year-old boy's voice with a playful tone and a soft Taiwanese accent",
      "identity_image": null}         # optional extra identity picture (NOT recommended in multi-person shots: extra people appear)
@@ -37,7 +38,11 @@ Shot spec (JSON; relative paths resolve against the JSON file's folder):
      "action": "Ahe looks up at the teacher with a small grateful smile.",
      "dialogue": [{"subject": "ahe", "line": "謝謝你讓我自己做。", "lang": "Chinese", "offscreen": false,
                    "after": "He closes his lips and keeps smiling."}],
-     "at": null},                    # later shots: cut time in seconds, strictly increasing and < duration
+     "vocals": [{"subject": "ahe", "start": 0.2, "end": 2.1, "sound": "a fast rhythmic chant of short nonsense syllables"}],
+                                     # optional: wordless sounds in a fixed soundtrack (shouts, chants, humming) that the lips
+                                     # must follow; times are seconds in this clip. Without it a fixed track with no dialogue is
+                                     # described as room tone and H3 keeps the mouth still.
+     "at": null},                  # later shots: cut time in seconds, strictly increasing and < duration
   ],
   "soundscape": "Quiet empty-classroom room tone with the faint rustle of a cloth.",   # NO dialogue here
   "music": "N/A"
@@ -99,8 +104,10 @@ def build_prompt(spec):
     # speaker IDs in order of first vocal event
     sid = {}
     for sh in shots:
-        for d in sh.get("dialogue", []):
+        for d in sh.get("dialogue", []) + sh.get("vocals", []):
             sid.setdefault(d["subject"], len(sid) + 1)
+    has_lines = any(sh.get("dialogue") for sh in shots)
+    has_vocals = any(sh.get("vocals") for sh in shots)
 
     def lab(key):
         if key in vo:  # official: a speaker with no defined subject = stable voice description + (Sx)
@@ -124,8 +131,9 @@ def build_prompt(spec):
     if voice_ref:
         L.append(f"<Audio 1> is the voice-timbre reference for {lab(voice_ref['subject'])}.")
     if fixed:
+        content = [c for c, on in (("the spoken lines", has_lines), ("the characters' wordless vocal sounds", has_vocals)) if on]
         L.append("<Audio 1> is the complete, exactly timed soundtrack of the target video"
-                 + (", containing the spoken lines" if sid else ", containing only quiet room tone") + ".")
+                 + (", containing " + " and ".join(content) if content else ", containing only quiet room tone") + ".")
 
     tasks = []
     if first or last:
@@ -143,7 +151,10 @@ def build_prompt(spec):
             + (", beginning from <Picture 1>" if first else "") + (" and ending on the supplied last-frame image" if last else "") + ".")
     for key in sid:
         n_lines = sum(1 for sh in shots for d in sh.get("dialogue", []) if d["subject"] == key)
-        summ += (f" {_cap(lab(key))} speaks {n_lines} short line{'s' if n_lines > 1 else ''}"
+        n_voc = sum(1 for sh in shots for v in sh.get("vocals", []) if v["subject"] == key)
+        what = " and ".join(([f"speaks {n_lines} short line{'s' if n_lines > 1 else ''}"] if n_lines else [])
+                            + ([f"makes {n_voc} wordless vocal sound{'s' if n_voc > 1 else ''} with a visibly moving mouth"] if n_voc else []))
+        summ += (f" {_cap(lab(key))} {what}"
                  + (" with the voice timbre referenced from <Audio 1>" if voice_ref and voice_ref["subject"] == key else "")
                  + (" exactly as in <Audio 1>" if fixed else "") + ".")
     L += ["", "summary:", summ, "", "retention_analysis:"]
@@ -166,7 +177,7 @@ def build_prompt(spec):
             head += " The shot begins from <Picture 1>."
         parts = [head]
         if i == 1:  # first appearance: label every subject once
-            parts.append(" ".join(f"{_cap(s['desc'].split(',')[0].split(' (')[0])} is {lab(s['key'])}." for s in subs))
+            parts.append(" ".join(f"{_cap(s.get('name') or s['desc'].split(',')[0].split(' (')[0])} is {lab(s['key'])}." for s in subs))
         if sh.get("camera"):
             parts.append(sh["camera"])
         if i == 1 and cam:
@@ -184,6 +195,9 @@ def build_prompt(spec):
                 parts.append(f"{_cap(lab(d['subject']))} says{voice}, <d>[{d.get('lang', 'Chinese')}] {line}</d>")
                 if d.get("after"):
                     parts.append(d["after"])
+        for v in sh.get("vocals", []):
+            parts.append(f"From {ts(v['start'])} to {ts(v['end'])}, {lab(v['subject'])} makes {v['sound']} exactly as in <Audio 1>:"
+                         " its mouth visibly opens and closes on every syllable, then it closes its mouth when the sound stops.")
         if i == n_shots and last:
             parts.append("The shot ends on the supplied last-frame image.")
         D.append(" ".join(parts))

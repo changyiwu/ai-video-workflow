@@ -54,7 +54,7 @@ description: 用 ai-video-workflow repo（本機 MiniMax H3）做 16:9、1–3 �
 | 把鏡表填進 `film.json`、寫 `frame`／`action` | `references/film-json.md` |
 | 跑 `make_film.py`、重拍某幾鏡、換配樂 | `references/production.md` |
 | 自審、選鏡、交片 | `references/review.md` |
-| 照參考影片換主角（保留動作、背景、聲音，只換人或換台詞的詞） | `<repo>/docs/08_換角重製.md`（不寫劇本；每鏡 `h3_shot.py`＋骨架控制） |
+| 照參考影片換主角（保留動作、背景、聲音，只換人或換台詞的詞） | `<repo>/docs/08_換角重製.md`（不寫劇本；片子資料夾寫 `recast.json`，用 `tools/recast.py`） |
 
 ## 開新片
 

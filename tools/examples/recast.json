@@ -1,0 +1,63 @@
+{
+ "_comment": "換角重製設定（tools/recast.py）：原片 0–16 秒的人換成狗狗。時間軸 = 24 fps 格數。",
+ "source": "素材/原片_0-16s.mp4",
+ "source_audio": "素材/原片_0-16s.wav",
+ "char": "dog",
+ "size": [1344, 768],
+ "pose": {"file": "素材/pose/pose_dance.mp4", "start": 2.833},
+ "track": "素材/voice/track_dog.wav",
+ "line": {"ref": "素材/voice/ref_狗熊哆嗦毛.wav", "ref_text": "狗熊哆嗦毛", "text": "狗狗哆嗦毛",
+          "start": 0.96, "end": 2.04, "word_end": 1.51},
+ "edit": {
+  "frame": "a frame from a television dance-instruction video",
+  "person": "the man",
+  "char": "the dog",
+  "noun": "dog",
+  "same": "same dog: same face, golden-orange fur, chubby fluffy body",
+  "backdrop": "the same pale cyan-blue stage backdrop panels and the same floor"
+ },
+ "firsts": {
+  "A": {"time": 1.0, "pose": "Medium close-up from the chest up with exactly the man's framing: the dog's head and chest fill the frame the same way his do, looking straight into the camera, mouth slightly open as if starting to speak, friendly expression."},
+  "B1": {"time": 2.9, "pose": "Wide shot of the stage: the dog stands still on its hind legs at the center of the stage exactly where the man stands, facing the camera, front legs hanging relaxed at its sides like his arms, mouth closed with a gentle smile."},
+  "B2": {"time": 11.93, "pose": "Closer shot from about the knees up, exactly the man's framing: the dog is in the same energetic dance pose as the man - both front legs raised high above its head with the paws together, hind legs bent in a low crouch, body leaning slightly, mouth open as if shouting a beat; slight motion blur on the raised paws like in the original."},
+  "B3": {"time": 14.1, "pose": "Wide shot of the stage: the dog is in the same dance pose as the man - a wide lunge with one hind leg stepping out to the side, knees bent, both front legs raised up above its head with the paws together, mouth open as if shouting a beat."}
+ },
+ "h3": {
+  "style": "a frame-accurate recreation of a television dance-instruction video filmed with a broadcast video camera: flat, bright, even frontal studio lighting, realistic natural colors, slightly soft video sharpness, real dog fur",
+  "setting": "a theatre stage with a pale cyan-blue backdrop of tall vertical panels and a glossy grey-blue dance floor",
+  "soundscape": "The dog's rhythmic vocal shouts and soft footsteps on a wooden stage in a large quiet theatre.",
+  "music": "N/A",
+  "seed": 20261017,
+  "min_dur": 5.1,
+  "subject": {"key": "dog",
+              "desc": "a chubby, very fluffy golden-orange Samoyed-type dog with a round smiling face, small black eyes and small upright ears, a real dog's body standing up on its hind legs and dancing like a person, no clothes",
+              "voice": "a lively middle-aged man's rhythmic vocal shouts"},
+  "constraints": ["Exactly one dog and no people anywhere in the frame for the whole clip.",
+                  "The dog keeps its golden-orange fluffy fur, round face and dog proportions in every frame; it never turns into a person.",
+                  "No text, captions or logos appear on screen."]
+ },
+ "shots": [
+  {"id": "A", "frames": [0, 68], "first": "A", "control": false, "draft": true,
+   "voice": "a bright, lively middle-aged man's voice", "soundscape": "Quiet television studio room tone.",
+   "camera": "The camera holds a static medium close-up on a tripod, framing the dog's head and chest.",
+   "action": "The dog stands facing the camera with a friendly face. At 00:00.960 it says the line straight into the camera, its mouth moving in sync with each syllable, then closes its mouth and keeps smiling.",
+   "dialogue": [{"subject": "dog", "line": "狗狗哆嗦毛", "lang": "Chinese", "after": "Right after the line it closes its mouth and keeps smiling at the camera."}]},
+  {"id": "B1a", "frames": [68, 156], "first": "B1",
+   "camera": "The camera holds a static wide shot of the whole stage on a tripod.",
+   "action": "The dog stands still on its hind legs at the center of the stage facing the camera, front legs relaxed, following the body pose exactly, calm and ready to start dancing. Its mouth stays closed except when a vocal sound is heard."},
+  {"id": "B1b", "frames": [156, 286], "first": "after:B1a",
+   "camera": "The camera holds a static wide shot of the whole stage on a tripod.",
+   "action": "The dog starts dancing on its hind legs, following the dance movements exactly: quick sidesteps and sliding steps across the stage, front legs swinging out wide and up. Its mouth opens and closes in sync with each rhythmic vocal shout in the soundtrack and stays closed during silence."},
+  {"id": "B2", "frames": [286, 338], "first": "B2", "seed": 2026101702,
+   "camera": "The camera holds a static medium shot on a tripod, framing the dog from about the knees up.",
+   "action": "The dog dances energetically, following the dance movements exactly: both front legs swing high above its head with the paws together, then sweep down and out while its hind legs stay bent in a low crouch. Its mouth opens and closes in sync with each rhythmic vocal shout in the soundtrack, and stays closed during silence."},
+  {"id": "B3", "frames": [338, 384], "first": "B3",
+   "camera": "The camera holds a static wide shot of the whole stage on a tripod.",
+   "action": "The dog finishes the dance following the movements exactly: from a wide lunge with both front legs raised above its head it opens its front legs wide, then brings its feet together and stands still on its hind legs facing the camera. Its mouth opens and closes in sync with each vocal shout and stays closed during silence."}
+ ],
+ "finish": {
+  "fade_in": 1.0,
+  "caption": {"text": "狗狗哆嗦毛", "from": 1.2, "x": 0, "y": 632, "bar_w": 560, "bar_h": 84, "text_x": 88, "size": 50,
+              "bar_color": [232, 92, 30], "color": [255, 232, 20], "font": "C:/Windows/Fonts/msjhbd.ttc"}
+ }
+}
