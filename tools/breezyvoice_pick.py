@@ -94,7 +94,7 @@ def main():
             if not ref.exists() or ref.stat().st_mtime < tw.stat().st_mtime:
                 subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(tw), str(ref)], check=True)
         elif not ref.exists():
-            subprocess.run(["edge-tts", "--voice", j.get("edge_voice", "zh-TW-YunJheNeural"), "--text", plain, "--write-media", str(ref)], check=True)
+            subprocess.run([sys.executable, "-m", "edge_tts", "--voice", j.get("edge_voice", "zh-TW-YunJheNeural"), "--text", plain, "--write-media", str(ref)], check=True)
         rd = dur(ref)
         rows = []
         for c in cands:

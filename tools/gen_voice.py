@@ -56,19 +56,14 @@ def generate_voxcpm2(text: str, ref_wav: str | None, out_path: Path, cfg: float,
 
 def generate_edge(text: str, voice: str, out_path: Path):
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    edge_exe = shutil_which("edge-tts") or "edge-tts"
-    cmd = [edge_exe, "--text", text, "--write-media", str(out_path)]
+    # Run the edge_tts of THIS interpreter (Voice venv); a bare "edge-tts" on PATH can be an older global install
+    cmd = [sys.executable, "-m", "edge_tts", "--text", text, "--write-media", str(out_path)]
     if voice:
         cmd.extend(["--voice", voice])
     res = subprocess.run(cmd, capture_output=True, text=True)
     if res.returncode != 0:
         raise RuntimeError(f"edge-tts failed: {res.stderr}")
     return out_path
-
-
-def shutil_which(cmd):
-    import shutil
-    return shutil.which(cmd)
 
 
 def main():

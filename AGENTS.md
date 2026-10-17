@@ -17,7 +17,7 @@
   - [ ] 實測多格定妝（`make_film.py chars frames`）：轉面圖四格同一人、首幀不照抄格子版面、臉夠像（不像先試 `IMG25_REF_SCALE=1`），結果寫進 `docs/07` §0
 - [ ] 階段三：跑 `setup/smoke_test.py` 與 `pipeline/demo_local/run_demo.py` 驗證
   - [x] 桌機 `smoke_test.py` 12 步全部 OK（秒數見 `docs/hardware.md`）
-  - [ ] 桌機 `run_demo.py`
+  - [x] 桌機 `run_demo.py`（約 27 分鐘，成片待人工看過）
   - [ ] VoxCPM2 預設配音流程（`voxcpm_batch.py`＋挑音）實機驗證：台灣腔、聽寫通過率、速度
 - [ ] 階段三之二：RTX Spark 筆電上機驗證（照 `docs/hardware_rtxspark.md`「第一次上機」，結果回填該文件）
 - [ ] 階段四：建立第一個角色（`films/角色/`），用 `ai-film` 技能（`tools/new_film.py`）做第一支片
@@ -59,6 +59,7 @@ setup/spark_check.py、setup/env/arm64/   RTX Spark 相容性檢查與 ARM64 套
 - 挑音兩個引擎共用 `breezyvoice_pick.py`；VoxCPM2 不支援注音標記，念錯的字改同音字。
 - 語音環境照 `AGENT_SETUP.md` §2b 自建（位置用 `AI_ROOT`／`PY_VOICE` 設定），不要拿其他專案的 venv 共用（例如 `voxcpm2-voice-cloner`）。
 - 聽寫（ASR）一律經 `tools/stt.py` 的 `load_asr()`，不要直接 import `faster_whisper`：Windows on Arm 沒有 ctranslate2，靠它自動改用 openai-whisper。
+- 工具要呼叫 venv 裡套件的命令列（例如 edge-tts）時，一律用 `[sys.executable, "-m", <模組>]`，不要靠 PATH 找執行檔：PATH 上可能是系統 Python 的舊版。
 - 工具一律直接跑 repo 的 `tools/`（入口腳本預設就找它，`make_*.cmd` 用自己所在的資料夾），不要再複製到 `C:\AI\tools`；要改位置才設 `AI_TOOLS`。新寫的腳本找工具也要用相對 repo 的路徑，不要寫死 `C:\AI\tools`。
 
 ### ComfyUI

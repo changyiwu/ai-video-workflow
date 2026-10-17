@@ -27,7 +27,7 @@ Cython==3.3.0
 decorator==5.3.1
 diffq-fixed==0.2.4
 diffusers @ https://github.com/huggingface/diffusers/archive/e0abab83b5df05de9e7abd788643c1a7c1e42e28.zip#sha256=bb44ae1cb3b11405d44b24a88f31ea8eef7fb72bd7c3ce5a7fceadf08ada558b
-edge-tts==7.2.8
+edge-tts==7.3.1
 einops==0.8.2
 et_xmlfile==2.0.0
 faster-whisper==1.2.1
