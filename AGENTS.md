@@ -31,7 +31,7 @@
   - [x] `make_film.py` 範本支援旁白（`narrator`＋`vo`）、後製插入鏡（`insert`）、疊字（`overlay`）、每鏡 `setting`／`soundscape`、統一人聲響度（`mix.voice_lufs`）
   - [x] 角色「埃拉托賽尼」＋〈埃拉托賽尼的篩子〉（1.5 分鐘課堂引起動機）成片 99 秒
   - [x] 〈埃拉托賽尼的篩子〉人聲音量確認，存為範本 `film.json` 的預設混音
-  - [ ] 〈埃拉托賽尼的篩子〉交片：寫發布資訊（`templates/發布資訊範本.md`）
+  - [x] 〈埃拉托賽尼的篩子〉發布資訊（YouTube＋Facebook，`films/數學家故事/埃拉托賽尼的篩子/發布資訊.md`）
   - [x] `pron_check.py` 的「不」「一」一律記本調、變調交給 `sur`（「不是」「不適」不再判成不同聲調）
   - [x] 配樂維持 14 段，乾淨的都不夠長時交叉淡入自動接長（多寫段數會讓 Music 3 唱歌）
   - [x] `.gitattributes` 讓 `*.cmd`／`*.bat` 簽出成 CRLF
