@@ -63,6 +63,7 @@
 | `frame` | 首幀描述：景別、角色在哪、做什麼、表情、窗戶在畫面哪一邊 |
 | `action` | H3 的動作描述（沒台詞的鏡頭寫明 He does not speak） |
 | `extra_constraints` | 這一鏡額外的限制 |
+| `setting`、`soundscape` | 這一鏡的 H3 場景與環境音描述（選填，不寫就用 `h3.setting`、`h3.soundscape`）：換到別的地點的鏡頭才需要 |
 | `amb`、`amb_seed` | `true`＝這鏡需要動作音效（翻書包、腳步）：另拍一支 H3 原生音效版，聽寫確認沒有人聲才取它的音軌；有人聲就換 `amb_seed` 或改用 `sfx/` 的音效 |
 | `cut_in` | 剪掉鏡頭開頭幾秒（H3 常晚開口） |
 | `cut_out` | `"full"`＝用到鏡尾；不寫＝台詞結束＋`tail` 秒 |
