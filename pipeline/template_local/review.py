@@ -77,7 +77,9 @@ sys.path.insert(0, TOOLS)
 import noise_scan  # noqa: E402
 noisy = []
 for r in SH:
-    c = OUT / "h3" / r["id"] / "clip.mp4"
+    if r.get("insert"):                              # 後製插入鏡不是生成的，不會有生成雜訊
+        continue
+    c = Path(r.get("src") or OUT / "h3" / r["id"] / "clip.mp4")
     d = noise_scan.dur(str(c)); fs = [f for f in (noise_scan.frame(str(c), d * q) for q in (0.35, 0.6, 0.85)) if f]
     s = max(noise_scan.hf(f) for f in fs) if fs else -1; f0 = noise_scan.frame(str(c), 0.02); s0 = noise_scan.hf(f0) if f0 else 0
     ratio = s / s0 if s0 else 0
@@ -88,7 +90,9 @@ out["pass3_noise"] = noisy
 p = subprocess.run(["ffmpeg", "-i", str(cut), "-vf", "blackdetect=d=0.2:pix_th=0.08,freezedetect=n=0.002:d=0.8", "-af", "ebur128=peak=true", "-f", "null", "-"],
                    capture_output=True, text=True, encoding="utf-8", errors="replace")
 out["pass4_black"] = [l.split("black_start:")[1].split()[0] for l in p.stderr.splitlines() if "black_start" in l]
-out["pass4_freeze"] = [l.split("freeze_start:")[1].split()[0] for l in p.stderr.splitlines() if "freeze_start" in l]
+freeze = [l.split("freeze_start:")[1].split()[0] for l in p.stderr.splitlines() if "freeze_start" in l]
+_still = [(r["start"], r["start"] + r["dur"]) for r in SH if r.get("insert")]   # 後製插入鏡本來就有靜止畫面（停留讓人看），不算定格
+out["pass4_freeze"] = [x for x in freeze if not any(a - 0.05 <= float(x) <= b for a, b in _still)]
 summ = p.stderr[p.stderr.rfind("Summary:"):]; m = re.search(r"I:\s*(-?[\d.]+) LUFS", summ); pk = re.search(r"Peak:\s*(-?[\d.]+) dBFS", summ)
 out["pass4_loudness_LUFS"] = float(m.group(1)) if m else None; out["pass4_true_peak_dBFS"] = float(pk.group(1)) if pk else None
 out["pass4_loudness_ok"] = bool(m and pk and -16.5 <= float(m.group(1)) <= -14.5 and float(pk.group(1)) <= -1.0)

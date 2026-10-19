@@ -2,7 +2,8 @@
 用 tools/new_film.py <類型> <片名> 建成 films/<類型>/<片名>/ 再跑；生圖預設 OpenAI（IMAGE_BACKEND=local 改本機 Qwen），其餘都是本機模型。
 H3 venv 執行（同一個 cmd 視窗先 call <repo>\\configs\\profile.cmd → <repo>\\tools\\start_comfy.cmd）：
   "%PY_H3%" make_film.py [stage ...] [--film 別的設定.json]
-stage（不給＝全部依序）：chars masters frames voices h3 amb edl music ending cut review
+stage（不給＝全部依序）：chars masters frames voices inserts h3 amb edl music ending cut review
+旁白、後製插入鏡、疊字（narrator、shot 的 vo／insert／overlay）見本資料夾的 README.md。
 每一步的輸出都在 out/，已存在的檔案會跳過，所以可以中斷後續跑、或刪掉某個檔重做：
   - 重生某一鏡首幀：刪 out/first/<鏡>.png，在 film.json 的 seeds 加 "frame_<鏡>": 新 seed，再跑 frames
   - 重拍某一鏡 H3：刪 out/h3/<鏡>/clip.mp4（或加 "h3_<鏡>": 新 seed），再跑 h3（環境變數 ONLY="S2 S5" 只跑指定鏡）
@@ -90,7 +91,21 @@ def render_h3(dirs):
         for d in dirs:
             run([PYH3, T / "h3_shot.py", d / "spec.json", "--out", d])
 CHARS, SHOTS = CFG["chars"], CFG["shots"]
-LINES = [(s["id"], s["line"]) for s in SHOTS if s.get("line")]      # (鏡, {who, text, tts?, at})
+# 會發聲的人：角色＋旁白（narrator，只有聲音：不生定妝、不進 H3，代號固定 "vo"）
+VOICES = dict(CHARS)
+if CFG.get("narrator"):
+    if "vo" in CHARS:
+        sys.exit('chars 不能有代號 "vo"（保留給旁白 narrator）')
+    VOICES["vo"] = CFG["narrator"]
+LINES = []                                                           # (鏡, {who, text, tts?, at, kind})；kind＝line（角色台詞）｜vo（旁白）
+for _s in SHOTS:
+    if _s.get("line"):
+        LINES.append((_s["id"], {**_s["line"], "kind": "line"}))
+    if _s.get("vo"):
+        if "vo" not in VOICES:
+            sys.exit(f"{_s['id']} 有旁白 vo，但 film.json 沒有 narrator")
+        LINES.append((_s["id"], {**_s["vo"], "who": "vo", "kind": "vo"}))
+INSERTS = {s["id"] for s in SHOTS if s.get("insert")}               # 後製插入鏡：不生首幀、不走 H3，inserts 階段直接做 1080p 影片
 MIX = CFG.get("mix", {})
 TIMING = OUT / "timing.json"
 timing = json.loads(TIMING.read_text(encoding="utf-8")) if TIMING.exists() else {}
@@ -181,8 +196,17 @@ def stage(name):
     return deco
 
 
-def line_index(sid):
-    return next(i for i, (s, _) in enumerate(LINES) if s == sid)
+def line_index(sid, kind="line"):
+    return next(i for i, (s, ln) in enumerate(LINES) if s == sid and ln["kind"] == kind)
+
+
+def shot_lines(s):
+    """這一鏡的聲音：[(LINES 的索引, 台詞或旁白)]，角色台詞在前。"""
+    return [(i, ln) for i, (sid, ln) in enumerate(LINES) if sid == s["id"]]
+
+
+def insert_file(s):
+    return OUT / "insert" / f"{s['id']}.mp4"
 
 
 # ------------------------------------------------------------------------------------------------ 圖
@@ -252,7 +276,7 @@ def frames():
     Qwen-Image-Edit 附「角色單張半身＋場景裁切」。每鏡都照抄角色完整外觀描述，否則會掉眼鏡、換髮型。"""
     for s in SHOTS:
         dst = OUT / "first" / f"{s['id']}.png"
-        if dst.exists():
+        if dst.exists() or s["id"] in INSERTS:
             continue
         refs, keep = [], []
         for k in s["refs"]:
@@ -276,7 +300,7 @@ def frames():
             cmd += ["--ref", OUT / "masters" / f"crop_{s['id']}.png"]
         gen_img(cmd)
         newest(OUT / "first").rename(dst)
-    sheet([OUT / "first" / f"{s['id']}.png" for s in SHOTS], OUT / "first" / "_sheet.jpg")
+    sheet([OUT / "first" / f"{s['id']}.png" for s in SHOTS if s["id"] not in INSERTS], OUT / "first" / "_sheet.jpg")
     print("→ 人工檢查 out/first/_sheet.jpg：臉、服裝、多手多腳、背景有沒有字、窗戶方向", flush=True)
 
 
@@ -297,6 +321,7 @@ def sheet(files, dst, cols=3):
 @stage("voices")
 def voices():
     """設計角色聲音（一次）→ edge-tts 台灣國語答案卷 → 每句 8 候選 → 自動挑（聽寫拼音聲調全對＋腔調分數，已去頭尾靜音）。
+    角色台詞（line）和旁白（vo）走同一套；旁白的聲音設計在 film.json 的 narrator。
     VOICE_ENGINE=voxcpm2（預設）：VoxCPM2 設計＋念；breezyvoice：Breeze TTS 2 設計＋BreezyVoice 念（台灣腔較準，但官方以 Linux 為準）。"""
     if VOICE_ENGINE not in ("voxcpm2", "breezyvoice"):
         sys.exit(f"VOICE_ENGINE 只能是 voxcpm2 或 breezyvoice（現在是 {VOICE_ENGINE}）")
@@ -308,20 +333,20 @@ def voices():
     mark.write_text(VOICE_ENGINE, encoding="utf-8")
     vox = VOICE_ENGINE == "voxcpm2"
     key = "control" if vox else "instruction"       # 聲音描述：VoxCPM2 叫 control、Breeze 叫 instruction
-    jobs = [dict(name=f"ref_{k}", text=c["voice_sample"], seed=seed("voice_" + k, 7), **{key: c["voice_design"]}) for k, c in CHARS.items()]
+    jobs = [dict(name=f"ref_{k}", text=c["voice_sample"], seed=seed("voice_" + k, 7), **{key: c["voice_design"]}) for k, c in VOICES.items()]
     for i, (sid, ln) in enumerate(LINES):          # 答案卷：只拿來比腔調，不進成片
         w = vd / f"tw_{i}.wav"
         if w.exists():
             continue
         mp3 = vd / f"tw_{i}.mp3"
-        r = run([PYV, T / "gen_voice.py", "--engine", "edge", "--text", ln["text"], "--voice", CHARS[ln["who"]].get("edge_voice", "zh-TW-YunJheNeural"),
+        r = run([PYV, T / "gen_voice.py", "--engine", "edge", "--text", ln["text"], "--voice", VOICES[ln["who"]].get("edge_voice", "zh-TW-YunJheNeural"),
                  "--out", mp3], check=False)
         if r.returncode == 0 and mp3.exists():
             run(["ffmpeg", "-y", "-loglevel", "error", "-i", mp3, "-ar", "48000", "-ac", "1", w])
         else:                                        # 沒網路：改用設計出來的播報聲音產生答案卷（可靠度較低）
             jobs.append(dict(name=f"tw_{i}", text=ln["text"], seed=11,
                              **{key: "A clear, neutral standard Taiwanese Mandarin news-reading voice, calm, precise tones."}))
-    bv = [dict(name=f"line{i}", text=ln.get("tts", ln["text"]), ref_audio=f"voice/ref_{ln['who']}.wav", ref_text=CHARS[ln["who"]]["voice_sample"],
+    bv = [dict(name=f"line{i}", text=ln.get("tts", ln["text"]), ref_audio=f"voice/ref_{ln['who']}.wav", ref_text=VOICES[ln["who"]]["voice_sample"],
                tw_ref=f"voice/tw_{i}.wav", seeds=8) for i, (sid, ln) in enumerate(LINES)]
     (OUT / "bv.json").write_text(json.dumps(dict(out_dir="voice/bv", jobs=bv), ensure_ascii=False, indent=1), encoding="utf-8")
     if vox:
@@ -352,10 +377,11 @@ def voices():
 
 # ------------------------------------------------------------------------------------------------ H3
 def shot_secs(s, picks):
+    """鏡長：至少 dur，有台詞或旁白就延長到「開口時間＋長度＋0.8 秒」；H3 鏡再湊成 H3 的格數。"""
     d = s["dur"]
-    if s.get("line"):
-        d = max(d, s["line"]["at"] + dur(picks[str(line_index(s["id"]))]["file"]) + 0.8)
-    return frames_for(d) / FPS
+    for i, ln in shot_lines(s):
+        d = max(d, ln["at"] + dur(picks[str(i)]["file"]) + 0.8)
+    return d if s["id"] in INSERTS else frames_for(d) / FPS
 
 
 def h3_spec(s, secs, dialogue):
@@ -369,11 +395,12 @@ def h3_spec(s, secs, dialogue):
 
 @stage("h3")
 def h3():
-    """每鏡 H3（DMAD 4 步、只給首幀）。看得到臉的鏡頭一律給固定音軌：有台詞放配音，沒台詞放靜音（否則角色會自己嘟囔）。"""
+    """每鏡 H3（DMAD 4 步、只給首幀）。看得到臉的鏡頭一律給固定音軌：有台詞放配音，沒台詞放靜音（否則角色會自己嘟囔）。
+    旁白（vo）不放進引導音軌：畫面裡的人不能跟著旁白動嘴。後製插入鏡跳過（inserts 階段做）。"""
     picks = json.loads((OUT / "voice_picks.json").read_text(encoding="utf-8")) if LINES else {}
     only = os.environ.get("ONLY", "").split(); todo = []
     for s in SHOTS:
-        if only and s["id"] not in only:
+        if (only and s["id"] not in only) or s["id"] in INSERTS:
             continue
         od = OUT / "h3" / s["id"]
         if (od / "clip.mp4").exists():
@@ -381,7 +408,7 @@ def h3():
         od.mkdir(parents=True, exist_ok=True)
         secs = shot_secs(s, picks); buf = bytearray(int(secs * SR) * 2); dlg = []
         if s.get("line"):
-            ln = s["line"]; f = picks[str(line_index(s["id"]))]["file"]
+            ln = s["line"]; f = picks[str(line_index(s["id"], "line"))]["file"]
             pcm = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", f, "-ar", str(SR), "-ac", "1", "-f", "s16le", "-"], capture_output=True).stdout
             st = int(ln["at"] * SR) * 2; seg = pcm[: len(buf) - st]; buf[st:st + len(seg)] = seg
             dlg = [dict(subject=ln["who"], line=ln["text"], lang="Chinese", after="Right after the line the speaker's lips close and stay closed.")]
@@ -394,11 +421,40 @@ def h3():
     sheet_clips()
 
 
+@stage("inserts")
+def inserts():
+    """後製插入鏡（shot 有 insert）：不走首幀與 H3，直接做 1920×1080、24fps、無聲的影片 out/insert/<鏡>.mp4。
+    insert 二選一：{"image": "圖.png"}＝靜態圖撐滿鏡長；{"script": "inserts/x.py", "args": [...]}＝用 PY_H3 跑片子資料夾裡的腳本，
+    腳本會收到 args 之後再加 --out <mp4> --dur <秒> --fps 24 --size 1920x1080。鏡長＝dur，有旁白就延長到念完＋0.8 秒。
+    改了腳本或參數：刪 out/insert/<鏡>.mp4 再跑 inserts。"""
+    picks = json.loads((OUT / "voice_picks.json").read_text(encoding="utf-8")) if LINES else {}
+    (OUT / "insert").mkdir(exist_ok=True)
+    for s in SHOTS:
+        if s["id"] not in INSERTS or insert_file(s).exists():
+            continue
+        ins, secs, dst = s["insert"], shot_secs(s, picks), insert_file(s)
+        if ins.get("image"):
+            run(["ffmpeg", "-y", "-loglevel", "error", "-loop", "1", "-i", HERE / ins["image"], "-t", f"{secs:.3f}", "-r", str(FPS),
+                 "-vf", "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,format=yuv420p",
+                 "-c:v", "libx264", "-crf", "14", dst])
+        elif ins.get("script"):
+            run([PYH3, HERE / ins["script"], *ins.get("args", []), "--out", dst, "--dur", f"{secs:.3f}", "--fps", FPS, "--size", "1920x1080"], cwd=HERE)
+        else:
+            sys.exit(f"{s['id']} 的 insert 要有 image 或 script")
+        print(f"insert {s['id']}: {secs:.2f} 秒", flush=True)
+    sheet_clips()
+
+
+def clip_of(s):
+    """這一鏡的原始影片：後製插入鏡是 out/insert/<鏡>.mp4，其他是 H3 的 out/h3/<鏡>/clip.mp4。"""
+    return insert_file(s) if s["id"] in INSERTS else OUT / "h3" / s["id"] / "clip.mp4"
+
+
 def sheet_clips():
     from PIL import Image
     rv = OUT / "review"; rv.mkdir(exist_ok=True)
     for s in SHOTS:
-        c = OUT / "h3" / s["id"] / "clip.mp4"
+        c = clip_of(s)
         if not c.exists():
             continue
         d = dur(c); tiles = []
@@ -420,7 +476,7 @@ def amb():
     res = {}; todo = []
     picks = json.loads((OUT / "voice_picks.json").read_text(encoding="utf-8")) if LINES else {}
     for s in SHOTS:
-        if not s.get("amb"):
+        if not s.get("amb") or s["id"] in INSERTS:
             continue
         od = OUT / "h3" / f"{s['id']}_amb"; od.mkdir(parents=True, exist_ok=True)
         if not (od / "clip.mp4").exists():
@@ -430,7 +486,7 @@ def amb():
             todo.append(od)
     render_h3(todo)
     for s in SHOTS:
-        if not s.get("amb"):
+        if not s.get("amb") or s["id"] in INSERTS:
             continue
         od = OUT / "h3" / f"{s['id']}_amb"
         run([PYV, T / "stt.py", "--audio", od / "clip.mp4", "--outdir", od / "stt"], check=False)
@@ -459,20 +515,24 @@ def ending_secs():
 @stage("edl")
 def edl():
     """時間軸：依配音長度與 cut_in／cut_out／tail 算每鏡在成片中的位置，寫 out/post/edl.json（cut、review 都讀它）。
-    cut_in＝裁掉鏡頭開頭幾秒（H3 常晚開口）；cut_out＝"full" 用到鏡尾，不寫＝台詞結束＋tail 秒（反應停頓）。"""
+    cut_in＝裁掉鏡頭開頭幾秒（H3 常晚開口）；cut_out＝"full" 用到鏡尾，不寫＝最後一句台詞或旁白結束＋tail 秒（反應停頓）。
+    後製插入鏡預設用到鏡尾（鏡長已經含旁白念完後的停留）。"""
     picks = json.loads((OUT / "voice_picks.json").read_text(encoding="utf-8")) if LINES else {}
     amb_files = json.loads((OUT / "post" / "amb.json").read_text(encoding="utf-8")) if (OUT / "post" / "amb.json").exists() else {}
     lead = MIX.get("say_lead", 0.2); t, rows = 0.0, []
     for s in SHOTS:
-        cd = dur(OUT / "h3" / s["id"] / "clip.mp4"); a = float(s.get("cut_in", 0.0)); b = s.get("cut_out"); lines = []
-        if s.get("line"):
-            i = line_index(s["id"]); ln = s["line"]; d = dur(picks[str(i)]["file"])
-            lines.append(dict(id=f"line{i}", who=ln["who"], text=ln["text"], file=picks[str(i)]["file"],
+        ins = s["id"] in INSERTS
+        cd = dur(clip_of(s)); a = float(s.get("cut_in", 0.0)); b = s.get("cut_out", "full" if ins else None); lines = []; end = None
+        for i, ln in shot_lines(s):
+            d = dur(picks[str(i)]["file"])
+            lines.append(dict(id=f"line{i}", who=ln["who"], kind=ln["kind"], text=ln["text"], file=picks[str(i)]["file"],
                               film_start=round(t + ln["at"] - a - lead, 3), film_end=round(t + ln["at"] - a - lead + d, 3)))
-            if b is None:
-                b = ln["at"] + d + s.get("tail", MIX.get("default_tail", 0.55))
+            end = max(end or 0, ln["at"] + d)
+        if b is None and end is not None:
+            b = end + s.get("tail", MIX.get("default_tail", 0.55))
         b = cd if b in (None, "full") else min(float(b), cd)
-        rows.append(dict(id=s["id"], start=round(t, 3), dur=round(b - a, 3), src_in=a, src_out=round(b, 3), lines=lines, amb=amb_files.get(s["id"])))
+        rows.append(dict(id=s["id"], start=round(t, 3), dur=round(b - a, 3), src_in=a, src_out=round(b, 3), lines=lines, amb=amb_files.get(s["id"]),
+                         src=str(clip_of(s)), insert=ins, overlay=s.get("overlay", [])))
         t += b - a
     e = dict(shots=rows, story_end=round(t, 3), total=round(t + ending_secs(), 3))
     (OUT / "post").mkdir(exist_ok=True)
@@ -547,6 +607,27 @@ def ass_time(t):
     return f"{int(t // 3600)}:{int(t % 3600 // 60):02d}:{t % 60:05.2f}"
 
 
+def overlay_pngs(r, od):
+    """這一鏡的後製疊字（shot 的 overlay）：每項畫成一張 1920×1080 透明 PNG，回傳 [(png, 開始秒, 結束秒)]（秒數以這一鏡在成片裡的開頭為 0）。
+    overlay 每項：text（必填，可用 \\n 換行）、start（預設 0）、end（預設鏡尾）、pos（center｜top｜bottom｜top-left｜top-right｜bottom-left｜bottom-right，
+    預設 center）、size（字級，預設 72）、color（預設白）、font（kai 標楷｜jh｜jhbd 粗黑，預設 jhbd）。字一律後製，不交給生成模型畫。"""
+    from PIL import Image, ImageDraw, ImageFont
+    res = []
+    for j, o in enumerate(r.get("overlay") or []):
+        im = Image.new("RGBA", (1920, 1080), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+        size = int(o.get("size", 72)); f = ImageFont.truetype(font(o.get("font", "jhbd")), size); sw = max(2, size // 14)
+        x0, y0, x1, y1 = d.multiline_textbbox((0, 0), o["text"], font=f, spacing=size // 3, stroke_width=sw, align="center")
+        w, h = x1 - x0, y1 - y0; pos = o.get("pos", "center"); m = 80
+        x = {"left": m, "right": 1920 - m - w}.get(pos.split("-")[-1], (1920 - w) // 2)
+        y = m if pos.startswith("top") else (1080 - m - h if pos.startswith("bottom") else (1080 - h) // 2)
+        d.multiline_text((x - x0, y - y0), o["text"], font=f, fill=o.get("color", "#FFFFFF"), spacing=size // 3, stroke_width=sw,
+                         stroke_fill=(0, 0, 0, 200), align="center")
+        od.mkdir(parents=True, exist_ok=True); png = od / f"{r['id']}_{j}.png"; im.save(png)
+        a = float(o.get("start", 0)); b = r["dur"] if o.get("end") is None else float(o["end"])
+        res.append((png, a, min(b, r["dur"])))
+    return res
+
+
 @stage("cut")
 def cut():
     """RTX VSR 放大 → 依 edl 剪接 → 混音（台詞提前 say_lead 秒、配樂台詞期間壓低）→ 響度 → 1080p 燒字幕 → 手機版。"""
@@ -554,10 +635,10 @@ def cut():
     e = json.loads((OUT / "post" / "edl.json").read_text(encoding="utf-8")); post = OUT / "post"
     vsr = post / "vsr"; vsr.mkdir(exist_ok=True); seg = post / "seg"; seg.mkdir(exist_ok=True); parts = []
     for r in e["shots"]:
-        src = OUT / "h3" / r["id"] / "clip.mp4"; v = vsr / f"{r['id']}.mp4"
+        src = Path(r.get("src") or OUT / "h3" / r["id"] / "clip.mp4"); v = vsr / f"{r['id']}.mp4"
         if v.exists() and v.stat().st_mtime < src.stat().st_mtime:
             v.unlink()                               # 重拍過：重新放大（upscale_vsr.py 不覆寫舊檔）
-        if UPSCALE == "lanczos":                     # Linux／Colab 沒有 RTX VSR：直接用下面 ffmpeg 的 lanczos 放大
+        if r.get("insert") or UPSCALE == "lanczos":  # 後製插入鏡本來就是 1080p；Linux／Colab 沒有 RTX VSR：直接用下面 ffmpeg 的 lanczos 放大
             v = src
         elif UPSCALE == "flashvsr":
             fv = vsr / r["id"]
@@ -567,8 +648,13 @@ def cut():
         elif not v.exists():
             run([PYH3, T / "upscale_vsr.py", "--source", src, "--output", v])
         p = seg / f"{r['id']}.mp4"
-        run(["ffmpeg", "-y", "-loglevel", "error", "-ss", f"{r['src_in']:.3f}", "-i", v, "-frames:v", str(round(r["dur"] * FPS)), "-an",
-             "-vf", "scale=1920:1080:flags=lanczos,fps=24,format=yuv420p", "-c:v", "libx264", "-crf", "14", "-preset", "medium", p])
+        ovs = overlay_pngs(r, post / "overlay")
+        vf = "[0:v]scale=1920:1080:flags=lanczos,fps=24[b0]" + "".join(
+            f";[b{j}][{j + 1}:v]overlay=0:0:enable='between(t,{a_:.3f},{b_:.3f})'[b{j + 1}]" for j, (_, a_, b_) in enumerate(ovs))
+        vf += f";[b{len(ovs)}]format=yuv420p[vout]"
+        run(["ffmpeg", "-y", "-loglevel", "error", "-ss", f"{r['src_in']:.3f}", "-i", v, *[x for png, _, _ in ovs for x in ("-i", png)],
+             "-frames:v", str(round(r["dur"] * FPS)), "-an", "-filter_complex", vf, "-map", "[vout]",
+             "-c:v", "libx264", "-crf", "14", "-preset", "medium", p])
         parts.append(p)
     if ending_on():
         parts.append(OUT / "ending" / "ending.mp4")
@@ -608,7 +694,7 @@ def cut():
     hdr = ("[Script Info]\nScriptType: v4.00+\nPlayResX: 1920\nPlayResY: 1080\n\n[V4+ Styles]\n"
            "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, "
            "Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n")
-    for k, c in CHARS.items():
+    for k, c in VOICES.items():
         hdr += f"Style: {k},{SUB_FONT_NAME},58,{c.get('sub_color', '&H00FFFFFF')},&H000000FF,&H00101010,&H80000000,-1,0,0,0,100,100,1,0,1,4,1,2,60,60,70,1\n"
     ev = "\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
     caps = sorted([(l, r) for r in e["shots"] for l in r["lines"]], key=lambda x: x[0]["film_start"])
@@ -617,7 +703,9 @@ def cut():
         if i + 1 < len(caps):
             b = min(b, caps[i + 1][0]["film_start"] - 0.1)
         b = min(b, r["start"] + r["dur"] - 0.04)
-        ev += f"Dialogue: 0,{ass_time(a)},{ass_time(b)},{l['who']},,0,0,0,,{CHARS[l['who']]['name']}：{l['text']}\n"
+        v = VOICES[l["who"]]                         # 旁白預設不加「名字：」（narrator.sub_prefix 設 true 才加）
+        name = f"{v['name']}：" if v.get("sub_prefix", l["who"] != "vo") else ""
+        ev += f"Dialogue: 0,{ass_time(a)},{ass_time(b)},{l['who']},,0,0,0,,{name}{l['text']}\n"
     (post / "subs.ass").write_text(hdr + ev, encoding="utf-8")
     (OUT / "cut").mkdir(exist_ok=True)
     run(["ffmpeg", "-y", "-loglevel", "error", "-i", "post/video.mp4", "-i", "post/mix.wav", "-vf", "subtitles=post/subs.ass", "-map", "0:v", "-map", "1:a",
@@ -637,7 +725,8 @@ def review():
     print("→ 看 out/review/：film_1080p_pass1.jpg、pass5_cuts.jpg、review.json、asr.json；最後一定要人看成片", flush=True)
 
 
-STAGES = dict(chars=chars, masters=masters, frames=frames, voices=voices, h3=h3, amb=amb, edl=edl, music=music, ending=ending, cut=cut, review=review)
+STAGES = dict(chars=chars, masters=masters, frames=frames, voices=voices, inserts=inserts, h3=h3, amb=amb, edl=edl, music=music, ending=ending, cut=cut,
+              review=review)
 
 if __name__ == "__main__":
     names = [a for i, a in enumerate(ARGS) if a in STAGES]

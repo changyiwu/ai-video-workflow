@@ -51,7 +51,7 @@ python cloud/colab_h3.py stop                      # 用完一定要關
 python cloud/colab_h3.py start                     # 預設＝完整安裝：語音三環境、ComfyUI（H3、Qwen、Music 3、FlashVSR）、中文字型（舊名 full-setup 也可以）
 python cloud/colab_h3.py smoke                     # 跑 setup/smoke_test.py，結果下載到 setup/smoke_out_colab/
 python cloud/colab_h3.py film pipeline/template_local chars masters frames   # 在雲端跑 make_film.py 指定階段，out/ 同步回本機
-python cloud/colab_h3.py film pipeline/template_local voices h3 amb edl music ending cut review
+python cloud/colab_h3.py film pipeline/template_local voices inserts h3 amb edl music ending cut review
 python cloud/colab_h3.py stop
 ```
 - **2026-10-10 新 agent 實測（只看本 repo、從零）**：`full-setup` **約 10.5 分鐘**（VM 端 540 秒；10 份模型清單約 8 分鐘）→ `smoke` 約 13 分鐘 → 範本片〈被狗吃掉的作業〉分三段 `film` 共約 28 分鐘，成片 38.5 秒 1080p、−15.9 LUFS，自審全過；G4 開機到關機約 54 分鐘、**約 8 個運算單元**。Colab 硬碟約 236GB，裝完剩約 40–80GB。

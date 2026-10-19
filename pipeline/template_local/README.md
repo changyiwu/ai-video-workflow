@@ -17,11 +17,11 @@
    "%PY_H3%" make_film.py chars masters frames
    ```
 4. **人工關卡 1**：看 `out/first/_sheet.jpg`。臉、服裝要一致，不能多手多腳，背景不能有字，窗戶方向要對。不滿意的鏡：刪 `out/first/<鏡>.png`，在 `film.json` 的 `seeds` 加 `"frame_<鏡>": 新數字`，或改該鏡的 `frame` 描述，再跑 `frames`。
-5. `make_film.py voices h3`
+5. `make_film.py voices inserts h3`（`inserts` 只在有後製插入鏡時才有事做）
    - 有句子 8 個候選都念錯時程式會停下來：在該句加 `"tts"`，把念錯的字換成同音字（VoxCPM2 不支援注音）。用 BreezyVoice 時可以直接標注音，例如 `"tts": "老師，連假[:ㄐㄧㄚ4]要去哪？"`。刪掉 `out/voice/bv` 再跑 `voices`。
    - 換配音引擎要刪掉整個 `out/voice` 再跑（`out/voice/engine.txt` 記著上次用哪個，不一致會擋下來）。
    - 單字喊叫這類 ASR 本來就聽不準的句子，人聽過沒問題就用 `set ALLOW_REVIEW=1` 繼續。
-6. **人工關卡 2**：看 `out/review/clips_<鏡>.jpg`（每鏡 6 格），檢查有沒有換臉、多出人、鏡頭漂移。不滿意就刪 `out/h3/<鏡>/clip.mp4`，在 `seeds` 加 `"h3_<鏡>": 新數字`，再跑 `set ONLY=S3 S5` → `make_film.py h3`。
+6. **人工關卡 2**：看 `out/review/clips_<鏡>.jpg`（每鏡 6 格），檢查有沒有換臉、多出人、鏡頭漂移。不滿意就刪 `out/h3/<鏡>/clip.mp4`，在 `seeds` 加 `"h3_<鏡>": 新數字`，再跑 `set ONLY=S3 S5` → `make_film.py h3`。後製插入鏡也會出 `clips_<鏡>.jpg`；要改就刪 `out/insert/<鏡>.mp4` 再跑 `inserts`。
 7. `make_film.py amb edl music ending cut review`
 8. **人工關卡 3**：看 `out/review/` 的自審結果，最後**一定要人看完整的** `out/cut/film_1080p.mp4`。
    - 只改剪接（`cut_in`、`tail`）：跑 `edl cut review`。
@@ -40,6 +40,7 @@
 | `frame_suffix` | 每張首幀結尾（不要字、不要浮水印…） |
 | `h3` | H3 共用設定：`style`、`setting`、`soundscape`（不寫台詞）、`camera`、`constraints`（每鏡都加的限制） |
 | `chars.<代號>` | `name`（字幕顯示）、`look`（**完整外觀描述**，每張首幀都會照抄）、`voice_design`（設計聲音的描述，VoxCPM2／Breeze 共用）、`voice_sample`（設計聲音時念的句子；用 BreezyVoice 時也是參考逐字稿）、`h3_voice`、`edge_voice`（挑音用的台灣國語答案卷聲音）、`sub_color`（字幕顏色，ASS 格式 `&H00BBGGRR`） |
+| `narrator` | 旁白（選填，只有聲音）：`name`、`voice_design`、`voice_sample`、`edge_voice`、`sub_color`，跟角色同一套欄位但**不要 `look`、`h3_voice`**——不生定妝、不進 H3。代號固定是 `vo`（`chars` 不能再用這個代號）。字幕預設不加「名字：」，要加就設 `"sub_prefix": true` |
 | `masters.<名稱>` | 場景母版（空景）提示詞。同一個場景的鏡頭都裁同一張母版，空間才一致 |
 | `shots[]` | 每一鏡，見下表 |
 | `seeds` | 想換的 seed：`char_<角色>`、`master_<名稱>`、`frame_<鏡>`、`h3_<鏡>`、`voice_<角色>` |
@@ -56,6 +57,9 @@
 | `scene` | `[母版名稱, [x0, y0, x1, y1]]`：從母版裁哪一塊當場景參考（0–1 比例） |
 | `dur` | 秒數（4–12）。有台詞時會自動延長到「開口時間＋台詞長度＋0.8 秒」 |
 | `line` | `{"who", "text", "at"}`：誰說、字幕文字、第幾秒開口；`"tts"`（選填）是送給配音引擎的寫法（VoxCPM2 用同音字；BreezyVoice 可加注音）。沒台詞寫 `null`（H3 會收到靜音音軌，角色不會自己嘟囔） |
+| `vo` | `{"text", "at", "tts"?}`：這一鏡的旁白（要先有 `narrator`）。配音、挑音、混音、字幕都跟 `line` 同一套，但**不放進 H3 的引導音軌**，畫面裡的人不會跟著動嘴（`action` 照樣寫他不說話）。同一鏡可以同時有 `line` 和 `vo`，時間不要重疊（自審第 5 遍會抓） |
+| `insert` | 後製插入鏡（字卡、圖表動畫）：不生首幀、不走 H3 和放大，`inserts` 階段直接做 1080p 影片 `out/insert/<鏡>.mp4`。`{"image": "圖.png"}`＝靜態圖；`{"script": "inserts/x.py", "args": [...]}`＝用 `PY_H3` 跑片子資料夾裡的腳本，它會收到 `args` 再加 `--out <mp4> --dur <秒> --fps 24 --size 1920x1080`。這種鏡不用寫 `refs`、`scene`、`frame`、`action`；鏡長＝`dur`，有旁白就延長到念完＋0.8 秒，預設整段用完（`cut_out` 預設 `"full"`） |
+| `overlay` | 後製疊字（片名、標示、說明），每項 `{"text", "start", "end", "pos", "size", "color", "font"}`：秒數從這一鏡在成片裡的開頭算（`end` 不寫＝到鏡尾），`pos` 是 `center`／`top`／`bottom`／`top-left`／`top-right`／`bottom-left`／`bottom-right`，`font` 是 `kai`（標楷）／`jh`／`jhbd`（預設）。畫面上要讀的字一律用這個後製，不交給生成模型 |
 | `frame` | 首幀描述：景別、角色在哪、做什麼、表情、窗戶在畫面哪一邊 |
 | `action` | H3 的動作描述（沒台詞的鏡頭寫明 He does not speak） |
 | `extra_constraints` | 這一鏡額外的限制 |
@@ -66,7 +70,7 @@
 
 ## 輸出（`out/`）
 
-`chars/` 定妝（`<角色>_turn.png`、`<角色>_expr.png`；千問備選為 `<角色>.png`）、`masters/` 場景母版與每鏡裁切、`first/` 首幀與 `_sheet.jpg`、`voice/` 角色參考音、答案卷與 `bv/`（候選、`picks.json`、選中的台詞）、`h3/<鏡>/` 每鏡 spec、提示詞與 clip、`music/`、`ending/`、`post/`（`edl.json` 時間軸、放大片段、混音、字幕）、`cut/film_1080p.mp4` 成片＋手機版、`review/` 自審、`timing.json` 各階段時間。
+`chars/` 定妝（`<角色>_turn.png`、`<角色>_expr.png`；千問備選為 `<角色>.png`）、`masters/` 場景母版與每鏡裁切、`first/` 首幀與 `_sheet.jpg`、`voice/` 角色參考音、答案卷與 `bv/`（候選、`picks.json`、選中的台詞）、`h3/<鏡>/` 每鏡 spec、提示詞與 clip、`insert/` 後製插入鏡、`music/`、`ending/`、`post/`（`edl.json` 時間軸、放大片段、混音、字幕）、`cut/film_1080p.mp4` 成片＋手機版、`review/` 自審、`timing.json` 各階段時間。
 
 ## 耗時參考
 
