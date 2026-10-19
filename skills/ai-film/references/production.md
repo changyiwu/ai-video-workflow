@@ -11,7 +11,7 @@
 
 ## 三段、三個人工關卡
 
-| 段 | 指令（在 `films/<片名>/`） | 關卡 |
+| 段 | 指令（在 `films/<類型>/<片名>/`） | 關卡 |
 |---|---|---|
 | 1 | `"%PY_H3%" make_film.py chars masters frames` | **關卡 1**：看 `out/first/_sheet.jpg`——臉、服裝一致，沒有多手多腳，背景沒有字，窗戶方向對 |
 | 2 | `make_film.py voices h3` | **關卡 2**：看 `out/review/clips_<鏡>.jpg`——沒有換臉、多出人、鏡頭漂移、左右換位 |

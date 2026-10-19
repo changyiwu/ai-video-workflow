@@ -22,8 +22,11 @@ from PIL import Image, ImageDraw, ImageFont
 cut = Path(sys.argv[1]).resolve(); stem = cut.stem
 OUT = cut.parent.parent; RV = OUT / "review"; RV.mkdir(exist_ok=True)
 E = json.loads((OUT / "post" / "edl.json").read_text(encoding="utf-8")); SH = E["shots"]
-TOOLS = __import__("os").environ.get("AI_TOOLS", str(Path(__file__).resolve().parents[2] / "tools"))     # 預設直接用 repo 的 tools/
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
+HERE = Path(__file__).resolve().parent
+_cfg = HERE / "film.json"   # repo 位置跟 make_film.py 一樣看 film.json 的 repo_dir（films/<類型>/<片名>/ 是 ../../..）
+REPO = (HERE / (json.loads(_cfg.read_text(encoding="utf-8")).get("repo_dir", "../..") if _cfg.exists() else "../..")).resolve()
+TOOLS = __import__("os").environ.get("AI_TOOLS", str(REPO / "tools"))     # 預設直接用 repo 的 tools/
+sys.path.insert(0, str(REPO / "tools"))
 from fonts import font as _font  # noqa: E402  (Windows 字型；Linux 用 Noto CJK)
 font = ImageFont.truetype(_font("jh"), 20)
 out = {}

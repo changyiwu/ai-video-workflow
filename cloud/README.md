@@ -56,7 +56,7 @@ python cloud/colab_h3.py stop
 ```
 - **2026-10-10 新 agent 實測（只看本 repo、從零）**：`full-setup` **約 10.5 分鐘**（VM 端 540 秒；10 份模型清單約 8 分鐘）→ `smoke` 約 13 分鐘 → 範本片〈被狗吃掉的作業〉分三段 `film` 共約 28 分鐘，成片 38.5 秒 1080p、−15.9 LUFS，自審全過；G4 開機到關機約 54 分鐘、**約 8 個運算單元**。Colab 硬碟約 236GB，裝完剩約 40–80GB。
 - 全雲端模式只有 1 個 ComfyUI，還要跟 Qwen、Music 3 輪流換模型，所以 H3 每鏡約 70 秒（smoke 第一支冷載入 230 秒），比「只有 H3 上雲端」的 42 秒慢。**`film` 現在跑到 h3／amb 時會自動改成 2 個 ComfyUI 錯開跑（`cloud/vm/parallel_h3.py`，`H3_PARALLEL=2`），跑完恢復 1 個**；長片才看得出差別。
-- 範本可以直接跑 `pipeline/template_local`；做自己的片時用 `tools/new_film.py <片名>` 建成 `films/<片名>/`，再 `film films/<片名> …`（資料夾一定要在 repo 裡面）。
+- 範本可以直接跑 `pipeline/template_local`；做自己的片時用 `tools/new_film.py <類型> <片名>` 建成 `films/<類型>/<片名>/`，再 `film films/<類型>/<片名> …`（資料夾一定要在 repo 裡面）。
 - 每個人工關卡（首幀、H3 接觸表、成片）之間，`film` 會把 `out/` 下載回來給你看；改了要重做的檔案刪掉，再跑下一段，`film` 會把整個片子資料夾重新上傳，從斷點接著做。
 - **本機設的 `ONLY`（只重做某幾鏡）、`ALLOW_REVIEW`、`UPSCALE` 會自動帶到 VM**；其他設定用 `--env KEY=VALUE`（例：`film pipeline/template_local h3 --env ONLY=S3`）。
 - **VM 被收回（閒置約 20 分鐘）或你 `stop` 之後**：重新 `full-setup`（約 10 分鐘、約 1.5 單元），再 `film` 同一個資料夾就會從斷點接著做。

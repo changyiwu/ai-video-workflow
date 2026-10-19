@@ -25,7 +25,7 @@ description: 用 ai-video-workflow repo（本機 MiniMax H3）做 16:9、1–3 �
 
 ## 全片流程
 
-| # | 階段 | 讀 | 產出（都在 `films/<片名>/`） | 人工 |
+| # | 階段 | 讀 | 產出（都在 `films/<類型>/<片名>/`） | 人工 |
 |---|---|---|---|---|
 | 0 | 角色（只做一次，各片共用） | `<repo>/docs/07_角色與首幀.md`、`films/角色/README.md` | `films/角色/<角色>/` 轉面圖、表情表、`README.md`、參考音 | ✅ 定裝 |
 | 1 | 開新片 | 本檔〈開新片〉 | 資料夾、`film.json`、`劇本.md`、`製作紀錄.md` | |
@@ -38,7 +38,7 @@ description: 用 ai-video-workflow repo（本機 MiniMax H3）做 16:9、1–3 �
 
 **什麼時候要做預演（第 4 步）**：多人同框、座位或左右位置容易跑掉、要運鏡、同一場景很多機位。單人、固定鏡頭的短片可以跳過。
 
-**做第 5 步之後的任何事之前**，先讀 `films/AGENTS.md`（頻道規則）、`<repo>/docs/03_規則與踩坑.md`。
+**做第 5 步之後的任何事之前**，先讀 `films/AGENTS.md`（頻道規則）、`films/<類型>/AGENTS.md`（類型規則）、`<repo>/docs/03_規則與踩坑.md`。
 
 ## 判斷任務 → 只讀需要的檔
 
@@ -58,13 +58,14 @@ description: 用 ai-video-workflow repo（本機 MiniMax H3）做 16:9、1–3 �
 
 ## 開新片
 
-1. 確認片名（使用者沒給就問）。片名就是資料夾名稱，可用中文，不能含 `< > : " / \ | ? *`，也不能叫「角色」。
-2. 在 `<repo>` 執行（Windows 先 `set PYTHONUTF8=1`，或用 `<repo>\tools\new_film.cmd <片名>`）：
+1. 確認類型和片名（使用者沒給就問；類型先看 `films/` 底下已有哪些，例如數學家故事、換角重製、原創短劇、測試）。兩者都是資料夾名稱，可用中文，不能含 `< > : " / \ | ? *`，也不能叫「角色」。
+2. 在 `<repo>` 執行（Windows 先 `set PYTHONUTF8=1`，或用 `<repo>\tools\new_film.cmd <類型> <片名>`）：
    ```
-   python <repo>/tools/new_film.py <片名>
+   python <repo>/tools/new_film.py <類型> <片名>
    ```
    - 同名的片已存在會直接停下來，不覆蓋：換片名，或問使用者要不要接著做那支。
    - `films/AGENTS.md` 不存在時腳本會從 `templates/AGENTS_TEMPLATE.md` 建一份；提醒使用者把頻道名稱、主角等佔位改掉。
+   - 類型資料夾是新的時，腳本會建好 `films/<類型>/AGENTS.md`＋`CLAUDE.md`；提醒使用者寫上這類片的規則（類型打錯字也會被建成新類型，看腳本列出的既有類型核對）。
 3. 回報建立了哪些檔，提醒 `film.json` 裡還是範例片〈被狗吃掉的作業〉的角色、場景、鏡表。然後進第 2 步需求訪談。
 - 不要手動複製 `pipeline/template_local/`（會帶到 `out/`、`__pycache__`）；自己的片一律放 `films/`（不進公開 repo）。
 
@@ -94,4 +95,4 @@ description: 用 ai-video-workflow repo（本機 MiniMax H3）做 16:9、1–3 �
 - **創作任務**：必要假設 → 指定的創作成果 →（完整一支才附）鏡表。
 - **審閱任務**：依影響程度排序的診斷、對應段落的證據、可執行的修改方向；只有能說明修正或使用者要求時才給改寫。
 - **製作任務**：每個階段做完回報產出與下一步；到人工關卡就停，等使用者說再往下。
-- 收工前在該片 `製作紀錄.md` 補一段；退件理由整理成一條規則寫進 `films/AGENTS.md`（agent 記憶每台電腦各一份、不會同步，不能只寫那裡）。
+- 收工前在該片 `製作紀錄.md` 補一段；退件理由整理成一條規則寫進 `films/AGENTS.md`（只屬於某類影片的寫進 `films/<類型>/AGENTS.md`；agent 記憶每台電腦各一份、不會同步，不能只寫那裡）。

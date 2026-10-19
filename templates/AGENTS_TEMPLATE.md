@@ -1,8 +1,8 @@
 # <頻道名稱>：做片規則
 
-> 做片入口範本：`tools/new_film.py` 在 `films/AGENTS.md` 不存在時把本檔複製過去（並建一行 `@AGENTS.md` 的 `CLAUDE.md` 橋接），再改成自己的頻道規則。Codex、opencode 直接讀 `AGENTS.md`；Claude Code 讀 `films/` 底下的檔案時透過 `CLAUDE.md` 自動載入。
+> 做片入口範本：`tools/new_film.py` 在 `films/AGENTS.md` 不存在時把本檔複製過去（並建一行 `@AGENTS.md` 的 `CLAUDE.md` 橋接），再改成自己的頻道規則。各類型資料夾的 `<類型>/AGENTS.md` 由 `new_film.py` 第一次建該類型時產生，只放那類影片的規則。Codex、opencode 直接讀 `AGENTS.md`；Claude Code 讀 `films/` 底下的檔案時透過 `CLAUDE.md` 自動載入。
 > 本資料夾已列入 repo 的 `.gitignore`：只走雲端硬碟同步，**沒有 GitHub 備份**。
-> 本檔只放長期有效的規則；每支片的進度與教訓寫在 `<片名>/製作紀錄.md`，退件理由整理成規則寫進本檔（不要只寫 agent 記憶：記憶每台電腦各一份、不會同步，見 `docs/05`）。
+> 本檔只放長期有效的規則；每支片的進度與教訓寫在 `<類型>/<片名>/製作紀錄.md`；退件理由整理成規則，所有片都適用的寫進本檔、只屬於某類影片的寫進 `<類型>/AGENTS.md`（不要只寫 agent 記憶：記憶每台電腦各一份、不會同步，見 `docs/05`）。
 
 ## 專案簡介
 
@@ -13,12 +13,14 @@
 ```
 films/
   AGENTS.md、CLAUDE.md   本檔＋橋接
-  角色/<角色>/            轉面圖、表情表、README.md（鎖定的外觀描述）、參考音
-  <片名>/                 用 tools/new_film.py 從 ../pipeline/template_local/ 建立；film.json 的 repo_dir 維持 "../.."
-    劇本.md  製作紀錄.md  film.json  out/
+  角色/<角色>/            轉面圖、表情表、README.md（鎖定的外觀描述）、參考音；各類型共用
+  <類型>/                 影片類型（例：數學家故事、換角重製、原創短劇、測試）
+    AGENTS.md、CLAUDE.md  這個類型專屬的規則＋橋接（new_film.py 第一次建這個類型時自動建立）
+    <片名>/               用 tools/new_film.py 從 ../pipeline/template_local/ 建立；film.json 的 repo_dir 是 "../../.."
+      劇本.md  製作紀錄.md  film.json  out/
 ```
 
-開新片：說「開新片 <片名>」（`ai-film` 技能），或在 repo 根目錄跑 `python tools/new_film.py <片名>`；再改 `film.json`，照 `pipeline/template_local/README.md` 跑 `make_film.py`。
+開新片：說「開新片 <類型> <片名>」（`ai-film` 技能），或在 repo 根目錄跑 `python tools/new_film.py <類型> <片名>`；再改 `film.json`，照 `pipeline/template_local/README.md` 跑 `make_film.py`。
 
 ## 影片規格
 
@@ -55,7 +57,7 @@ films/
 - 交片前自己跑 `review.py` 五遍＋常退件清單，不合格就重拍。
 - 使用者說「我去睡了」＝授權自動做完並自審；早上交成片＋自審報告。
 - 一幕一幕做，做完先給人看；認可過的鏡頭不重拍。
-- 收工前：在該片 `製作紀錄.md` 補一段；退件理由整理成一條規則寫進本檔（`films/AGENTS.md`）。
+- 收工前：在該片 `製作紀錄.md` 補一段；退件理由整理成一條規則寫進本檔（`films/AGENTS.md`）；只屬於某類影片的寫進 `films/<類型>/AGENTS.md`。
 - 金鑰不印出、不寫進專案。
 
 ## 已否決的做法（不要再提）

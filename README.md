@@ -66,7 +66,7 @@ tools/                      全域工具（各腳本直接用，不用複製）
   img25.py                  OpenAI Image 2.5 生圖／編輯（gen_image.py 預設呼叫它）
   pron_check.py／pron_compare.py  中文配音聲調審核
   ...（完整清單見 docs/06_安裝.md）
-pipeline/template_local/    ⭐ 做新片的範本：tools/new_film.py <片名> 複製成 films/<片名>/ → 改 film.json → make_film.py 從角色做到成片＋自審
+pipeline/template_local/    ⭐ 做新片的範本：tools/new_film.py <類型> <片名> 複製成 films/<類型>/<片名>/ → 改 film.json → make_film.py 從角色做到成片＋自審
 pipeline/demo_local/        全本地示範片（4 鏡，安裝驗證用，不需要任何素材）
 setup/                      安裝：模型下載清單（鎖定版本＋逐檔雜湊）、套件清單、smoke_test、硬體偵測
 cloud/                      ⭐ 本機跑不動時：H3（或整套流程）送到 Google Colab G4 跑（colab_h3.py；見 cloud/README.md）
@@ -97,9 +97,9 @@ configs/profile.cmd         這個硬體版本的環境變數
 | 9 | （選用，預設不加）片尾（工具名單＋AI 生成標示；要加就把 `film.json` 的 `ending.enabled` 改成 true 或設 `ENDING=1`；沒片尾時在貼文標示） | `templates/ending/render_ending.py` | `templates/ending/README.md`、`docs/02` §12 | `ending.mp4` | |
 | 10 | 自審五遍（抽格、ASR、雜訊、黑畫面與響度、切點） | `pipeline/template_local/review.py`（呼叫 `noise_scan.py`、`stt.py`） | `docs/04_自審清單.md` | `review/` | ✅ 最後一定給人看成片 |
 
-**最快的做法：`python tools/new_film.py <片名>` 從 [`pipeline/template_local/`](pipeline/template_local/README.md) 建好 `films/<片名>/`，只改 `film.json`**，`make_film.py` 會把上面 2–10 步全部做完（已附一支 7 鏡範例片的設定，從零重跑驗證過）。`pipeline/demo_local/` 是 4 鏡的最小安裝驗證。
+**最快的做法：`python tools/new_film.py <類型> <片名>` 從 [`pipeline/template_local/`](pipeline/template_local/README.md) 建好 `films/<類型>/<片名>/`，只改 `film.json`**，`make_film.py` 會把上面 2–10 步全部做完（已附一支 7 鏡範例片的設定，從零重跑驗證過）。`pipeline/demo_local/` 是 4 鏡的最小安裝驗證。
 
-建議讓 AI agent 來跑：第一次跑 `python tools/new_film.py <片名>` 時，會把 [templates/AGENTS_TEMPLATE.md](templates/AGENTS_TEMPLATE.md) 複製成 `films/AGENTS.md`（做片規則入口），改成自己的頻道規則後，agent 會照規則做、自審、寫紀錄。
+建議讓 AI agent 來跑：第一次跑 `python tools/new_film.py <類型> <片名>` 時，會把 [templates/AGENTS_TEMPLATE.md](templates/AGENTS_TEMPLATE.md) 複製成 `films/AGENTS.md`（做片規則入口），改成自己的頻道規則後，agent 會照規則做、自審、寫紀錄。
 
 ## 5. 最重要的十條經驗
 

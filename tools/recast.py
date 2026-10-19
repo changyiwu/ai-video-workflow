@@ -2,16 +2,16 @@
 
 每支片一份 recast.json（放片子資料夾；裡面的相對路徑以片子資料夾為準；範例 tools/examples/recast.json）。
 在片子資料夾執行（或加 --film <片子資料夾>）：
-  python ../../tools/recast.py first A B1         首幀：原片格補成 16:9 → Image 2.5 換角（會花 API 費用）
-  python ../../tools/recast.py close-mouth B2 --box 555 335 670 425
-                                                  有發聲的鏡：首幀改成閉嘴（遮罩只開放嘴部）→ out/first/B2_closed.png
-  python ../../tools/recast.py check              首幀對照圖：原片｜首幀｜首幀＋骨架 → out/first/_check.jpg
-  python ../../tools/recast.py voice --seeds 6    新台詞候選：VoxCPM2「只給參考音」與「接續」兩種模式 × N 個 seed，逐條聽寫（自動改用 PY_VOICE）
-  python ../../tools/recast.py track cont_s1 [--word-end 0.48]
-                                                  新音軌：整句換（a）；給 --word-end（候選裡新詞結束的秒數）再多做只換詞（b）
-  python ../../tools/recast.py prep [鏡…] [--take t2]   各鏡 shot.json＋骨架切段＋音軌切段＋cut.json（不用 GPU）
-  python ../../tools/recast.py run [鏡…] [--take t2]    逐鏡跑 h3_shot.py（做過的跳過；ComfyUI 沒開會自動在背景啟動）
-  python ../../tools/recast.py finish             剪到時間軸→接起來→淡入→RTX VSR→疊字卡→換新音軌→（ending.enabled 才）接片尾
+  python ../../../tools/recast.py first A B1         首幀：原片格補成 16:9 → Image 2.5 換角（會花 API 費用）
+  python ../../../tools/recast.py close-mouth B2 --box 555 335 670 425
+                                                     有發聲的鏡：首幀改成閉嘴（遮罩只開放嘴部）→ out/first/B2_closed.png
+  python ../../../tools/recast.py check              首幀對照圖：原片｜首幀｜首幀＋骨架 → out/first/_check.jpg
+  python ../../../tools/recast.py voice --seeds 6    新台詞候選：VoxCPM2「只給參考音」與「接續」兩種模式 × N 個 seed，逐條聽寫（自動改用 PY_VOICE）
+  python ../../../tools/recast.py track cont_s1 [--word-end 0.48]
+                                                     新音軌：整句換（a）；給 --word-end（候選裡新詞結束的秒數）再多做只換詞（b）
+  python ../../../tools/recast.py prep [鏡…] [--take t2]   各鏡 shot.json＋骨架切段＋音軌切段＋cut.json（不用 GPU）
+  python ../../../tools/recast.py run [鏡…] [--take t2]    逐鏡跑 h3_shot.py（做過的跳過；ComfyUI 沒開會自動在背景啟動）
+  python ../../../tools/recast.py finish             剪到時間軸→接起來→淡入→RTX VSR→疊字卡→換新音軌→（ending.enabled 才）接片尾
 
 時間軸一律用 24 fps 的格數（原片 30 fps 也換算成 24 fps，成片才會跟原片逐格對齊）。
 短鏡照 docs/03 至少生 h3.min_dur 秒：骨架用最後一格延長、音軌補靜音，finish 再剪回原長度。
@@ -183,7 +183,7 @@ def cmd_first(film, a):
         dst = film.p(f"out/first/{fid}.png")
         dst.write_bytes(files[0].read_bytes())
         print("[ok]", fid, files[0].name, "->", dst)
-    print("下一步：python ../../tools/recast.py check，看首幀跟骨架有沒有對齊")
+    print("下一步：python ../../../tools/recast.py check，看首幀跟骨架有沒有對齊")
 
 
 def paste_mouth(src_png, gen_png, box, dst_png):
@@ -400,7 +400,7 @@ def cmd_voice(film, a):
         rep.append({"file": f.name, "heard": heard, "ok": ok})
         print("[asr]", f.name, heard, "OK" if ok else "✗", flush=True)
     (out / "report.json").write_text(json.dumps(rep, ensure_ascii=False, indent=1), encoding="utf-8")
-    print(f"下一步：聽過後挑一條 → python ../../tools/recast.py track <例如 cont_s1>")
+    print(f"下一步：聽過後挑一條 → python ../../../tools/recast.py track <例如 cont_s1>")
 
 
 def cmd_track(film, a):

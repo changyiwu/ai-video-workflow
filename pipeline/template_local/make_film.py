@@ -1,5 +1,5 @@
 """多鏡短片範本：讀 film.json，從角色定妝一路做到成片＋自審。做新片只改 film.json，這支程式不用改。
-用 tools/new_film.py <片名> 建成 films/<片名>/ 再跑；生圖預設 OpenAI（IMAGE_BACKEND=local 改本機 Qwen），其餘都是本機模型。
+用 tools/new_film.py <類型> <片名> 建成 films/<類型>/<片名>/ 再跑；生圖預設 OpenAI（IMAGE_BACKEND=local 改本機 Qwen），其餘都是本機模型。
 H3 venv 執行（同一個 cmd 視窗先 call <repo>\\configs\\profile.cmd → <repo>\\tools\\start_comfy.cmd）：
   "%PY_H3%" make_film.py [stage ...] [--film 別的設定.json]
 stage（不給＝全部依序）：chars masters frames voices h3 amb edl music ending cut review
