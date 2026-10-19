@@ -1,3 +1,6 @@
 * text=auto eol=lf
 # 2026-10-11：.sh 要在 Colab（Linux）上執行，Windows clone 時不能轉成 CRLF
 *.sh text eol=lf
+# 2026-10-19：cmd 遇到 LF 換行可能讀錯行（尤其含中文時），Windows 批次檔簽出一律 CRLF（repo 裡仍存 LF）
+*.cmd text eol=crlf
+*.bat text eol=crlf

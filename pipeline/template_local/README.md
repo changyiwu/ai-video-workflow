@@ -45,7 +45,7 @@
 | `shots[]` | 每一鏡，見下表 |
 | `seeds` | 想換的 seed：`char_<角色>`、`master_<名稱>`、`frame_<鏡>`、`h3_<鏡>`、`voice_<角色>` |
 | `music` | `caption`（純器樂描述，寫明 Vocal: NONE）、`seeds`（抽幾首，挑人聲殘留最少的） |
-| `mix` | `say_lead`（台詞比畫面提前幾秒，預設 0.2）、`default_tail`、`music_under_lines`（台詞期間配樂音量，0.15–0.30）、`music_bed_rms`、`target_lufs` |
+| `mix` | `say_lead`（台詞比畫面提前幾秒，預設 0.2）、`default_tail`、`music_under_lines`（台詞期間配樂音量，0.15–0.30）、`music_bed_rms`、`target_lufs`、`voice_lufs`（選填：每句台詞、旁白先調到同一個響度再混，例 -20；不同聲音設計出來大小差很多時用，不寫就照原音量。用 LUFS 不用 RMS：同 RMS 的低沉男聲聽起來比較小） |
 | `ending` | 片尾（選用，預設不加）：`enabled`（預設 false；改 true，或設環境變數 `ENDING=1`，才做片尾並接進成片）、`closeups`（拿哪幾鏡的首幀當特寫）、`cards`（每張卡最多 3 行工具）、`card_dur`、`title_dur` |
 
 每一鏡（`shots[]`）：

@@ -19,6 +19,7 @@ import numpy as np
 
 _FA = None
 TW_OVERRIDE = {"垃圾": ["le4", "se4"], "企": ["qi4"], "期": ["qi2"], "危": ["wei2"], "研": ["yan2"], "髮": ["fa4"], "微": ["wei2"],
+               "質": ["zhi2"], "人質": ["ren2", "zhi4"],     # 台灣「質數」念 ㄓˊ（pypinyin 標 zhi4）；只有人質念 ㄓˋ
                "暴露": ["pu4", "lu4"], "液": ["yi4"], "和": None, "頭套": ["tou2", "tao4"], "什麼": ["shen2", "me5"], "東西": ["dong1", "xi5"],
                "時候": ["shi2", "hou4"], "為什麼": ["wei4", "shen2", "me5"], "這裡": ["zhe4", "li3"], "那裡": ["na4", "li3"], "哪裡": ["na3", "li3"],
                "老師": ["lao3", "shi1"], "大叔": ["da4", "shu2"], "叔": ["shu2"]}
@@ -40,6 +41,9 @@ def expected(text):
         while i >= 0:
             py[i:i + len(k)] = v; i = s.find(k, i + 1)
     tones = [int(p[-1]) if p[-1].isdigit() else 5 for p in py]
+    for i, c in enumerate(chars):                       # 「不」「一」一律記本調，變調只由下面的 sur 處理：
+        if c == "不": tones[i] = 4                       # pypinyin 的詞典只對部分詞套變調（不是＝bu2、不適＝bu4），
+        elif c == "一": tones[i] = 1                     # 同一個音會因為 ASR 寫成哪個詞而判成不同聲調
     base = [re.sub(r"\d", "", p).replace("ü", "v") for p in py]
     sur = tones[:]
     for i in range(len(sur) - 2, -1, -1):              # 三三連讀：前字變二聲（不跨標點）

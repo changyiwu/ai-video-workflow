@@ -548,18 +548,21 @@ def load(p):
 
 @stage("music")
 def music():
-    """配樂：Music 3 純器樂多 seed → BS-RoFormer 分離 → 挑人聲殘留最少、長度夠的那首的純器樂軌。"""
+    """配樂：Music 3 純器樂多 seed → BS-RoFormer 分離 → 挑人聲殘留最少、長度夠的那首的純器樂軌。
+    乾淨的（人聲殘留 ≤ MUSIC_CLEAN）都不夠長時，拿最乾淨的那首用交叉淡入接長（extend_music），不靠多寫段數硬拉長。"""
     import numpy as np
     e = json.loads((OUT / "post" / "edl.json").read_text(encoding="utf-8")); secs = int(e["total"] + 4)
     m = CFG["music"]; md = OUT / "music"; md.mkdir(exist_ok=True)
     (md / "cap.txt").write_text(m["caption"], encoding="utf-8")
-    (md / "lyr.txt").write_text("[Intro]\n" + "[Instrumental]\n" * 14 + "[Outro]\n[Instrumental]\n", encoding="utf-8")   # 少於 14 個會太短；加 Verse 會冒人聲
+    # 14 個 [Instrumental]：少於 14 會太短；加 Verse 會冒人聲。實測多寫段數（20 段）也不保證變長（56～103 秒），
+    # 反而開始唱歌（人聲殘留 0.0002 → 0.23～0.91，2026-10-19）→ 段數固定，長度不夠改用 extend_music 接長
+    (md / "lyr.txt").write_text("[Intro]\n" + "[Instrumental]\n" * 14 + "[Outro]\n[Instrumental]\n", encoding="utf-8")
     for sd_ in m.get("seeds", [7, 23, 51]):
         sd = md / f"s{sd_}"; sd.mkdir(exist_ok=True)
         if not list(sd.glob("*.flac")):
             run([PYH3, T / "gen_music3.py", "--caption-file", md / "cap.txt", "--lyrics-file", md / "lyr.txt", "--seconds", secs, "--seed", sd_,
                  "--prefix", f"audio/MM3/film_{sd_}", "--out", sd])
-    free_comfy(); best = None
+    free_comfy(); rows = []
     for sd_ in m.get("seeds", [7, 23, 51]):
         sd = md / f"s{sd_}"; src = next(sd.glob("*.flac"))
         if not list(sd.glob("*Instrumental*.wav")):
@@ -568,11 +571,49 @@ def music():
         voc = load(next(sd.glob("*Vocals*.wav"))); ins = load(next(sd.glob("*Instrumental*.wav")))
         ratio = float(np.sqrt((voc ** 2).mean()) / (np.sqrt((ins ** 2).mean()) + 1e-9)); d = len(ins) / SR
         print(f"music s{sd_}: 人聲殘留 {ratio:.4f}，{d:.1f} 秒", flush=True)
-        if d >= e["total"] and (best is None or ratio < best[0]):
-            best = (ratio, next(sd.glob("*Instrumental*.wav")))
-    if best is None:
-        raise SystemExit("沒有一首配樂夠長：把 music.seeds 換掉再跑 music")
-    (OUT / "post" / "music_pick.json").write_text(json.dumps(dict(file=str(best[1]), vocal_ratio=best[0]), ensure_ascii=False), encoding="utf-8")
+        rows.append((ratio, d, next(sd.glob("*Instrumental*.wav"))))
+    clean = [r for r in rows if r[0] <= MUSIC_CLEAN]
+    long_clean = [r for r in clean if r[1] >= e["total"]]
+    if long_clean:                                   # 乾淨又夠長：挑最乾淨的
+        ratio, d, f = min(long_clean); pick = dict(file=str(f), vocal_ratio=ratio)
+    elif clean:                                      # 乾淨的都不夠長：最乾淨的那首接長
+        ratio, d, f = min(clean)
+        pick = dict(file=str(extend_music(f, e["total"] + 4, OUT / "post" / "music_extended.wav")), vocal_ratio=ratio, extended_from=str(f))
+        print(f"music：乾淨的都不夠長，把 {Path(f).parent.name}（{d:.1f} 秒）交叉淡入接長到 {e['total'] + 4:.0f} 秒，請聽接點", flush=True)
+    else:
+        long_any = [r for r in rows if r[1] >= e["total"]]
+        if not long_any:
+            raise SystemExit("沒有一首配樂夠長：把 music.seeds 換掉再跑 music")
+        ratio, d, f = min(long_any); pick = dict(file=str(f), vocal_ratio=ratio)
+        print(f"music：沒有一首人聲殘留 ≤ {MUSIC_CLEAN}，先用 {Path(f).parent.name}（{ratio:.4f}）；成片要聽有沒有歌聲，或換 music.seeds", flush=True)
+    (OUT / "post" / "music_pick.json").write_text(json.dumps(pick, ensure_ascii=False), encoding="utf-8")
+
+
+MUSIC_CLEAN = 0.01      # 人聲殘留比 ≤ 這個值才算乾淨（14 段的純器樂實測約 0.0002；開始唱歌的是 0.2 以上）
+
+
+def extend_music(src, need_sec, dst, xfade=3.0, loop_from=0.15):
+    """配樂不夠長時接長：先切掉曲尾淡出（不然會「音樂收掉→又開始」），再從曲子 15% 處（跳過前奏）接一次，
+    接點 3 秒交叉淡入（等功率），接到 need_sec 為止。"""
+    import numpy as np
+    x = load(src); n_need = int(need_sec * SR); k = int(xfade * SR); start = int(len(x) * loop_from)
+    w = SR // 2; rms = np.sqrt((x[: len(x) // w * w].reshape(-1, w) ** 2).mean(axis=1))
+    quiet = rms < np.median(rms) * 0.316                         # 比典型音量小 10 dB 以上算安靜
+    end = len(x)                                                  # 曲子最後四分之一裡，第一段連續安靜 ≥ 1 秒的地方就是結尾（停頓、收尾和弦、淡出都切掉）
+    for i in range(int(len(rms) * 0.75), len(rms) - 1):
+        if quiet[i] and quiet[i + 1]:
+            end = i * w; break
+    for i in range(start // w, len(rms) - 4):                     # 接回去的點也要避開安靜段：15% 之後第一段連續 2 秒有聲的地方
+        if not quiet[i:i + 4].any():
+            start = i * w; break
+    out = x[:max(end, start + 2 * k)].copy()
+    while len(out) < n_need:
+        seg = x[start:]
+        t = np.linspace(0, np.pi / 2, k, dtype=np.float32)
+        out = np.concatenate([out[:-k], out[-k:] * np.cos(t) + seg[:k] * np.sin(t), seg[k:]])
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "f32le", "-ar", str(SR), "-ac", "1", "-i", "-", "-c:a", "pcm_f32le", str(dst)],
+                   input=out[:n_need].astype(np.float32).tobytes(), check=True)
+    return dst
 
 
 @stage("ending")
@@ -663,9 +704,16 @@ def cut():
     vtotal = dur(post / "video.mp4"); n = int(vtotal * SR) + SR
     voice = np.zeros(n, np.float32); amb_ = np.zeros(n, np.float32); duck = np.ones(n, np.float32)
     under = MIX.get("music_under_lines", 0.30)
+    vlufs = MIX.get("voice_lufs")                    # 選填：每句（台詞、旁白）先調到同一個響度（LUFS，聽感音量）再混，不同聲音才不會一大一小
     for r in e["shots"]:
         for l in r["lines"]:
-            a = load(l["file"]); s0 = int(l["film_start"] * SR); voice[s0:s0 + len(a)] += a[: n - s0]
+            a = load(l["file"]); s0 = int(l["film_start"] * SR)
+            if vlufs is not None:                    # 用 LUFS 不用 RMS：同 RMS 的低沉男聲聽起來比女聲小
+                m = re.findall(r"I:\s*(-?[\d.]+) LUFS", subprocess.run(["ffmpeg", "-i", l["file"], "-af", "ebur128", "-f", "null", "-"],
+                                                                        capture_output=True, text=True, encoding="utf-8", errors="replace").stderr)
+                if m:
+                    a = a * 10 ** ((float(vlufs) - float(m[-1])) / 20)
+            voice[s0:s0 + len(a)] += a[: n - s0]
             duck[max(0, int((l["film_start"] - 0.25) * SR)):int((l["film_end"] + 0.35) * SR)] = under
         if r.get("amb"):                             # amb 階段確認過沒有人聲的 H3 原生音效
             a = load(r["amb"])[int(r["src_in"] * SR):int(r["src_out"] * SR)]
