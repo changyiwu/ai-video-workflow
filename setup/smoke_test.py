@@ -95,7 +95,7 @@ def main():
         name="line", text=LINE, ref_audio="vox/design.wav", tw_ref="vox/tw.wav")]), ensure_ascii=False), encoding="utf-8")
     line_wav = step("voxcpm_line", [PYV, str(T / "voxcpm_batch.py"), "vox_line.json"], "vox/cand/line_s1.wav") if ref else None
     if line_wav and tw:
-        line_wav = step("voice_pick", [PYV, str(T / "breezyvoice_pick.py"), "vox_line.json"], "vox/line.wav")
+        line_wav = step("voice_pick", [PYV, str(T / "voice_pick.py"), "vox_line.json"], "vox/line.wav")
     # 選用引擎：Breeze TTS 2 設計＋BreezyVoice 念（VOICE_ENGINE=breezyvoice；官方以 Linux 為準），有裝才驗
     if Path(PYB).exists() and Path(PYBV).exists():
         (OUT / "breeze.json").write_text(json.dumps(dict(out_dir="breeze", jobs=[dict(
@@ -106,7 +106,7 @@ def main():
             name="line", text=LINE, ref_audio="breeze/design.wav", ref_text=sample, tw_ref="vox/tw.wav")]), ensure_ascii=False), encoding="utf-8")
         bv = step("breezyvoice", [PYBV, str(T / "breezyvoice_batch.py"), "bv.json"], "bv/cand/line_s1.wav") if bref else None
         if bv and tw:
-            step("breezyvoice_pick", [PYV, str(T / "breezyvoice_pick.py"), "bv.json"], "bv/line.wav")
+            step("breezyvoice_pick", [PYV, str(T / "voice_pick.py"), "bv.json"], "bv/line.wav")
     else:
         print("SKIP breeze/breezyvoice (not installed; optional engine)", flush=True)
     if line_wav:

@@ -8,7 +8,7 @@
 都不合格 → 取聽寫最接近的，標 needs_review（review_reason "asr"）；聽寫對的全都音量音質異常 → 照舊挑，標 needs_review（"sound"）。
 picks.json 每個候選記 lufs、hf_4k、lufs_dev、sound_ok。已挑過的句子不改（H3 可能已照長度拍好），只補量數字；要重挑用 --rerank。
 輸出 <out_dir>/<name>.wav（選中的那支，已去頭尾靜音：保留開頭 80 ms、結尾 150 ms）＋ <out_dir>/picks.json（全部候選分數）。
-用法（同一個 cmd 視窗先 call <repo>\\configs\\profile.cmd）："%PY_VOICE%" <repo>\\tools\\breezyvoice_pick.py jobs.json
+用法（同一個 cmd 視窗先 call <repo>\\configs\\profile.cmd）："%PY_VOICE%" <repo>\\tools\\voice_pick.py jobs.json
 edge-tts 只產生參考音當「答案卷」，不進影片（要連網；微軟介面無公開授權）。job 給 "tw_ref"（自備參考音路徑）就不呼叫 edge-tts。"""
 import difflib
 import json

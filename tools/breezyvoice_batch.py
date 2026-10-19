@@ -1,5 +1,5 @@
 """BreezyVoice（聯發科＋台大，Apache-2.0 可商用台灣國語 TTS）批次生成：模型只載一次，每句抽多個 seed 當候選。2026-10-07 建立。
-挑選用 breezyvoice_pick.py（Voice venv：ASR 必須全對＋對照 edge-tts 台灣國語參考音的腔調分數）。一鍵執行：make_breezyvoice.cmd jobs.json
+挑選用 voice_pick.py（Voice venv：ASR 必須全對＋對照 edge-tts 台灣國語參考音的腔調分數）。一鍵執行：make_breezyvoice.cmd jobs.json
 
 執行（BreezyVoice venv，Python 3.10）：
   set PYTHONUTF8=1

@@ -357,7 +357,7 @@ def voices():
         (OUT / "breeze.json").write_text(json.dumps(dict(out_dir="voice", jobs=jobs), ensure_ascii=False, indent=1), encoding="utf-8")
         run([PYB, T / "breeze_batch.py", "breeze.json"])
         run([PYBV, T / "breezyvoice_batch.py", "bv.json"])
-    run([PYV, T / "breezyvoice_pick.py", "bv.json"])         # 挑選兩個引擎共用（候選檔名格式相同）
+    run([PYV, T / "voice_pick.py", "bv.json"])         # 挑選兩個引擎共用（候選檔名格式相同）
     bp = json.loads((vd / "bv" / "picks.json").read_text(encoding="utf-8"))
     picks, bad, odd = {}, [], []
     for i, (sid, ln) in enumerate(LINES):

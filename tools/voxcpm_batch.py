@@ -1,5 +1,5 @@
 """VoxCPM2（OpenBMB，Apache-2.0）批次生成：模型只載一次。2026-10-14 起本專案的預設配音引擎（角色聲音設計＋台詞都用它）。
-挑選沿用 breezyvoice_pick.py（ASR 必須全對＋對照 edge-tts 台灣國語參考音的腔調分數，候選檔名格式相同）。
+挑選沿用 voice_pick.py（ASR 必須全對＋對照 edge-tts 台灣國語參考音的腔調分數，候選檔名格式相同）。
 
 執行（Voice venv；同一個 cmd 視窗先 call <repo>\\configs\\profile.cmd）：
   "%PY_VOICE%" <repo>\\tools\\voxcpm_batch.py jobs.json
@@ -8,7 +8,7 @@ jobs.json（相對路徑以 jobs.json 所在資料夾為準）：
 {"out_dir": "voice", "seeds": 8,
  "jobs": [{"name": "ref_zhe", "text": "參考音要念的句子", "control": "聲音描述（英文）", "seed": 7},          ← 聲音設計：單一檔 <out_dir>/<name>.wav
           {"name": "line0", "text": "台詞", "ref_audio": "voice/ref_zhe.wav", "seeds": 8 (選填)}]}       ← 台詞：<out_dir>/cand/<name>_s<seed>.wav
-規則：job 有 "seed" → 生一個檔；沒有 → 生 seeds 個候選（給 breezyvoice_pick.py 挑）。有 "ref_audio" 就照它的聲音念（克隆），有 "control" 就照描述設計聲音。
+規則：job 有 "seed" → 生一個檔；沒有 → 生 seeds 個候選（給 voice_pick.py 挑）。有 "ref_audio" 就照它的聲音念（克隆），有 "control" 就照描述設計聲音。
 已存在的檔案跳過；紀錄 <out_dir>/vox_log.jsonl。
 
 送進模型前的文字處理（字幕仍用原文）：

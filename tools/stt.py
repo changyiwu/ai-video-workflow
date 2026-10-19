@@ -3,7 +3,7 @@
 Prereqs: faster-whisper installed in C:/AI/Voice/venv; models cached in C:/AI/Voice/models/whisper.
 Fallback (2026-10-14): when faster-whisper / ctranslate2 cannot be imported (e.g. Windows on Arm, no ARM64 wheel),
 load_asr() switches to openai-whisper (pure PyTorch; slower; downloads its own large-v3 .pt to models/whisper/openai on first use).
-Force a backend with ASR_BACKEND=faster|openai. breezyvoice_pick.py and review.py use load_asr() too.
+Force a backend with ASR_BACKEND=faster|openai. voice_pick.py and review.py use load_asr() too.
 
 Usage (cmd, after call <repo>\\configs\\profile.cmd):
   "%PY_VOICE%" <repo>\\tools\\stt.py --audio in.wav --outdir out [--model large-v3] [--language zh|auto]

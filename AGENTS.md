@@ -35,6 +35,9 @@
   - [x] `pron_check.py` 的「不」「一」一律記本調、變調交給 `sur`（「不是」「不適」不再判成不同聲調）
   - [x] 配樂維持 14 段，乾淨的都不夠長時交叉淡入自動接長（多寫段數會讓 Music 3 唱歌）
   - [x] `.gitattributes` 讓 `*.cmd`／`*.bat` 簽出成 CRLF
+  - [x] 角色「歐幾里得」＋〈歐幾里得的完美數〉（課本 88 頁〈完美數〉，依史料改主角為歐幾里得）成片 100 秒＋發布資訊
+  - [x] 挑音加響度與嘶聲篩選、配音混音前濾波與真峰值把關；`breezyvoice_pick.py` 改名 `voice_pick.py`
+  - [ ] 每鏡配樂倍數（`music_gain`）併進範本：目前只在〈歐幾里得的完美數〉的 `make_film.py`
 
 ## 資料夾結構
 ```
@@ -70,7 +73,7 @@ setup/spark_check.py、setup/env/arm64/   RTX Spark 相容性檢查與 ARM64 套
 
 ### 配音
 - 預設引擎 VoxCPM2（聲音設計＋台詞，`tools/voxcpm_batch.py`）；`VOICE_ENGINE=breezyvoice` 改用 Breeze TTS 2＋BreezyVoice（台灣腔較準、可標注音，但官方以 Linux 為準，RTX Spark 大概率裝不起來）。
-- 挑音兩個引擎共用 `breezyvoice_pick.py`；VoxCPM2 不支援注音標記，念錯的字改同音字。
+- 挑音兩個引擎共用 `voice_pick.py`；VoxCPM2 不支援注音標記，念錯的字改同音字。
 - 語音環境照 `AGENT_SETUP.md` §2b 自建（位置用 `AI_ROOT`／`PY_VOICE` 設定），不要拿其他專案的 venv 共用（例如 `voxcpm2-voice-cloner`）。
 - 聽寫（ASR）一律經 `tools/stt.py` 的 `load_asr()`，不要直接 import `faster_whisper`：Windows on Arm 沒有 ctranslate2，靠它自動改用 openai-whisper。
 - 工具要呼叫 venv 裡套件的命令列（例如 edge-tts）時，一律用 `[sys.executable, "-m", <模組>]`，不要靠 PATH 找執行檔：PATH 上可能是系統 Python 的舊版。
