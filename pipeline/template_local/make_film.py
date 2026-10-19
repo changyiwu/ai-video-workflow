@@ -359,20 +359,28 @@ def voices():
         run([PYBV, T / "breezyvoice_batch.py", "bv.json"])
     run([PYV, T / "breezyvoice_pick.py", "bv.json"])         # 挑選兩個引擎共用（候選檔名格式相同）
     bp = json.loads((vd / "bv" / "picks.json").read_text(encoding="utf-8"))
-    picks, bad = {}, []
+    picks, bad, odd = {}, [], []
     for i, (sid, ln) in enumerate(LINES):
         p = bp[f"line{i}"]; best = next(c for c in p["cands"] if c["file"] == p["pick"])
-        if p["needs_review"]:
+        if p["needs_review"] and p.get("review_reason") == "sound":
+            odd.append(f"{sid}「{ln['text']}」響度差 {best.get('lufs_dev')} dB、4 kHz 以上能量比 {best.get('hf_4k')}")
+        elif p["needs_review"]:
             bad.append(f"{sid}「{ln['text']}」聽成「{best['asr']}」")
         picks[str(i)] = dict(shot=sid, who=ln["who"], text=ln["text"], file=str(vd / "bv" / f"line{i}.wav"), heard=best["asr"],
-                             tw_score=best.get("tw_score"), needs_review=p["needs_review"])
-        print("pick", sid, ln["text"], "→", p["pick"], best["asr"], best.get("tw_score"), flush=True)
+                             tw_score=best.get("tw_score"), lufs=best.get("lufs"), hf_4k=best.get("hf_4k"), needs_review=p["needs_review"])
+        print("pick", sid, ln["text"], "→", p["pick"], best["asr"], best.get("tw_score"), best.get("lufs"), "LUFS", flush=True)
     (OUT / "voice_picks.json").write_text(json.dumps(picks, ensure_ascii=False, indent=1), encoding="utf-8")
+    ls = [p["lufs"] for p in picks.values() if p.get("lufs") is not None]
+    if ls and max(ls) - min(ls) > 6 and MIX.get("voice_lufs") is None:
+        print(f"[warn] 各句原始響度差 {max(ls) - min(ls):.1f} dB（不同角色聲音大小不同）：film.json 的 mix 加 \"voice_lufs\": -20，成片才不會忽大忽小", flush=True)
     if bad and os.environ.get("ALLOW_REVIEW") != "1":
         raise SystemExit("這幾句 8 個候選聽寫都不對：" + "；".join(bad) +
                          ("\n請在 film.json 該句加 \"tts\"，把念錯的字換成同音字（VoxCPM2 不支援注音標記）或換說法，" if vox else
                           "\n請在 film.json 該句加 \"tts\"（念不準的字標注音，例：假[:ㄐㄧㄚ4]）或換說法，") + "刪掉 out/voice/bv 再跑 voices；"
                          "確定只是 ASR 聽錯（例如單字喊叫）就用 ALLOW_REVIEW=1 繼續。")
+    if odd and os.environ.get("ALLOW_REVIEW") != "1":
+        raise SystemExit("這幾句聽寫正確的候選音量或音質全都異常（響度離群或嘶聲）：" + "；".join(odd) +
+                         "\n先聽 out/voice/bv 裡那句：確定可以用就用 ALLOW_REVIEW=1 繼續；不行就在 film.json 該句加 \"tts\" 換說法，刪掉 out/voice/bv 再跑 voices。")
 
 
 # ------------------------------------------------------------------------------------------------ H3
@@ -705,11 +713,16 @@ def cut():
     voice = np.zeros(n, np.float32); amb_ = np.zeros(n, np.float32); duck = np.ones(n, np.float32)
     under = MIX.get("music_under_lines", 0.30)
     vlufs = MIX.get("voice_lufs")                    # 選填：每句（台詞、旁白）先調到同一個響度（LUFS，聽感音量）再混，不同聲音才不會一大一小
+    vclean = post / "voice"; vclean.mkdir(exist_ok=True)
     for r in e["shots"]:
         for l in r["lines"]:
-            a = load(l["file"]); s0 = int(l["film_start"] * SR)
+            # 每句先濾：highpass 去低頻轟聲、lowpass 11 kHz 濾嘶聲、adeclick 削爆破音（爆破音會在取樣點之間衝高真峰值，降 target_lufs 也壓不下來）
+            cl = vclean / f"{l['id']}.wav"
+            run(["ffmpeg", "-y", "-loglevel", "error", "-i", l["file"], "-af", "highpass=f=70,lowpass=f=11000,adeclick", "-ar", str(SR), "-ac", "1",
+                 "-c:a", "pcm_f32le", cl])
+            a = load(cl); s0 = int(l["film_start"] * SR)
             if vlufs is not None:                    # 用 LUFS 不用 RMS：同 RMS 的低沉男聲聽起來比女聲小
-                m = re.findall(r"I:\s*(-?[\d.]+) LUFS", subprocess.run(["ffmpeg", "-i", l["file"], "-af", "ebur128", "-f", "null", "-"],
+                m = re.findall(r"I:\s*(-?[\d.]+) LUFS", subprocess.run(["ffmpeg", "-i", cl, "-af", "ebur128", "-f", "null", "-"],
                                                                         capture_output=True, text=True, encoding="utf-8", errors="replace").stderr)
                 if m:
                     a = a * 10 ** ((float(vlufs) - float(m[-1])) / 20)
@@ -736,17 +749,27 @@ def cut():
     raw = post / "mix_raw.wav"
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "f32le", "-ar", str(SR), "-ac", "1", "-i", "-", "-c:a", "pcm_f32le", str(raw)],
                    input=mix[: int(vtotal * SR)].astype(np.float32).tobytes(), check=True)
-    # 響度：量 → 固定增益 → 限幅（alimiter 一定要 level=false，預設會把峰值拉到 0 dBFS）→ 再量一次、差太多就補一次
-    target = MIX.get("target_lufs", -15.5); gain = 0.0
-    for _ in range(3):
-        r = subprocess.run(["ffmpeg", "-i", str(raw), "-af", f"volume={gain:.2f}dB,alimiter=limit=0.78:level=false:attack=2:release=80,ebur128",
-                            "-f", "null", "-"], capture_output=True, text=True, encoding="utf-8", errors="replace")
-        m = re.findall(r"I:\s*(-?[\d.]+) LUFS", r.stderr); got = float(m[-1]) if m else target
-        if abs(got - target) <= 0.4:
+    # 響度：固定增益 → 4 倍超取樣限幅（近似真峰值限幅；alimiter 一定要 level=false，預設會把峰值拉到 0 dBFS）→ 編成成片用的 AAC 再量
+    # 響度與真峰值（review pass4 量的就是 AAC）：響度差太多調增益、真峰值超過 -1 dBTP 就壓低限幅門檻，最多 8 次
+    target = MIX.get("target_lufs", -15.5); tp_max = -1.2; gain, lim = 0.0, 0.78
+    for _ in range(8):
+        run(["ffmpeg", "-y", "-loglevel", "error", "-i", raw, "-af", f"volume={gain:.2f}dB,aresample={SR * 4},"
+             f"alimiter=limit={lim:.3f}:level=false:attack=2:release=80,aresample={SR}", "-c:a", "pcm_s24le", post / "mix.wav"])
+        run(["ffmpeg", "-y", "-loglevel", "error", "-i", post / "mix.wav", "-c:a", "aac", "-b:a", "256k", post / "mix_check.m4a"])
+        r = subprocess.run(["ffmpeg", "-i", str(post / "mix_check.m4a"), "-af", "ebur128=peak=true", "-f", "null", "-"],
+                           capture_output=True, text=True, encoding="utf-8", errors="replace")
+        summ = r.stderr[r.stderr.rfind("Summary:"):]
+        m = re.search(r"I:\s*(-?[\d.]+) LUFS", summ); pk = re.search(r"Peak:\s*(-?[\d.]+) dBFS", summ)
+        got = float(m.group(1)) if m else target; tp = float(pk.group(1)) if pk else -99
+        print(f"混音 增益 {gain:+.2f} dB、限幅 {lim:.3f} → {got:.1f} LUFS、真峰值 {tp:.1f} dBFS", flush=True)
+        if abs(got - target) <= 0.4 and tp <= tp_max:
             break
-        gain += target - got
-    run(["ffmpeg", "-y", "-loglevel", "error", "-i", raw, "-af", f"volume={gain:.2f}dB,alimiter=limit=0.78:level=false:attack=2:release=80", "-ar", str(SR),
-         post / "mix.wav"])
+        if tp > tp_max:
+            lim = max(0.25, lim * 10 ** ((tp_max - 0.3 - tp) / 20))
+        if abs(got - target) > 0.4:
+            gain += target - got
+    else:
+        print(f"[warn] 混音 8 次還沒同時達標（{got:.1f} LUFS、真峰值 {tp:.1f}）：看 mix.music_bed_rms 是否太大、或某句配音有爆音", flush=True)
     # 字幕（ASS，依說話者上色，放大到 1080p 之後才燒）
     hdr = ("[Script Info]\nScriptType: v4.00+\nPlayResX: 1920\nPlayResY: 1080\n\n[V4+ Styles]\n"
            "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, "
