@@ -718,9 +718,18 @@ def cut():
         if r.get("amb"):                             # amb 階段確認過沒有人聲的 H3 原生音效
             a = load(r["amb"])[int(r["src_in"] * SR):int(r["src_out"] * SR)]
             fade = np.minimum(1, np.minimum(np.arange(len(a)) / (0.15 * SR), (len(a) - np.arange(len(a))) / (0.15 * SR)))
-            s0 = int(r["start"] * SR); amb_[s0:s0 + len(a)] += (a * fade * 0.8)[: n - s0]
+            s0 = int(r["start"] * SR); amb_[s0:s0 + len(a)] += (a * fade * MIX.get("amb_gain", 0.8))[: n - s0]
     k = int(0.12 * SR); duck = np.convolve(duck, np.ones(k) / k, mode="same")
     mus = load(json.loads((post / "music_pick.json").read_text(encoding="utf-8"))["file"])[:n]; mus = np.pad(mus, (0, n - len(mus)))
+    if MIX.get("music_level"):                       # 選填：配樂比自己的典型音量大的地方壓回典型音量（不放大小聲處），兩句之間才不會突然爆出來
+        w = SR // 2; m_ = len(mus) // w * w
+        env = np.sqrt((mus[:m_].reshape(-1, w) ** 2).mean(axis=1)) + 1e-9
+        g = np.minimum(1.0, np.median(env[env > env.max() * 0.01]) / env)
+        k_ = 3; gp = np.pad(g, (k_, k_), mode="edge")
+        g = np.array([gp[i:i + 2 * k_ + 1].min() for i in range(len(g))])   # 先取前後 1.5 秒內最小的增益，短暫的爆音也壓得到
+        g = np.convolve(np.pad(g, (k_, k_), mode="edge"), np.ones(2 * k_ + 1) / (2 * k_ + 1), mode="valid")   # 再平滑 1.5 秒，不會一抽一抽
+        g = np.interp(np.arange(len(mus)), np.arange(len(g)) * w + w / 2, g)
+        mus = mus * g.astype(np.float32)
     mus = mus / (np.sqrt((mus[: int(e["story_end"] * SR)] ** 2).mean()) + 1e-9) * MIX.get("music_bed_rms", 0.035)
     t = np.arange(n) / SR
     mix = voice + amb_ + mus * duck * np.clip((vtotal - t) / 3.0, 0, 1) * np.clip(t / 0.8, 0, 1)
