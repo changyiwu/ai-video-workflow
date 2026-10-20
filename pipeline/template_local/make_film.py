@@ -732,7 +732,13 @@ def cut():
             a = load(r["amb"])[int(r["src_in"] * SR):int(r["src_out"] * SR)]
             fade = np.minimum(1, np.minimum(np.arange(len(a)) / (0.15 * SR), (len(a) - np.arange(len(a))) / (0.15 * SR)))
             s0 = int(r["start"] * SR); amb_[s0:s0 + len(a)] += (a * fade * MIX.get("amb_gain", 0.8))[: n - s0]
+    sg = {s["id"]: s["music_gain"] for s in SHOTS if s.get("music_gain")}   # 選填：某一鏡的配樂倍數（例：結尾只有字卡、沒旁白，配樂要聽得到）
+    for r in e["shots"]:
+        if r.get("id") in sg:
+            a, b = int(r["start"] * SR), int((r["start"] + r["dur"]) * SR); duck[a:b] *= sg[r["id"]]
     k = int(0.12 * SR); duck = np.convolve(duck, np.ones(k) / k, mode="same")
+    if sg:                                           # 倍數變化再多平滑 0.5 秒，不會突然跳大聲
+        k2 = SR // 2; duck = np.convolve(np.pad(duck, (k2, k2), mode="edge"), np.ones(k2) / k2, mode="same")[k2:-k2]
     mus = load(json.loads((post / "music_pick.json").read_text(encoding="utf-8"))["file"])[:n]; mus = np.pad(mus, (0, n - len(mus)))
     if MIX.get("music_level"):                       # 選填：配樂比自己的典型音量大的地方壓回典型音量（不放大小聲處），兩句之間才不會突然爆出來
         w = SR // 2; m_ = len(mus) // w * w
