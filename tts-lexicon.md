@@ -2,10 +2,14 @@
 
 送進 TTS 之前，把「原文」換成 TTS 念得對的「改寫」。只改送進 TTS 的文字，字幕、劇本、`film.json` 的 `text` 照常寫正確用字。
 
-本表是**主表**，兩個專案共用：
+本 repo 用到的地方：VoxCPM2 念台詞、edge-tts 做挑音用的台灣國語答案卷、挑音聽寫比對（都經過 `tools/tts_lexicon.py`）。
 
-- **ai-video-workflow**（本 repo）：VoxCPM2 念台詞、edge-tts 做挑音用的台灣國語答案卷、挑音聽寫比對（`tools/tts_lexicon.py`）
-- **agent-video-specs**：Edge-TTS／Kokoro 旁白（各範本的 `generate_narration.py`，從影片資料夾往上找到同層的 `ai-video-workflow/tts-lexicon.md`）
+## 兩個 repo 各一份
+
+[agent-video-specs](https://github.com/changyiwu/agent-video-specs) 的根目錄也有一份同格式的 `tts-lexicon.md`（Edge-TTS／Kokoro 旁白用）。兩個 repo 都是公開的，**各自單獨下載就完整可用**；兩個放在同一層時，程式會**兩份合併讀取**，同一個原文以本 repo 這份為準。
+
+- **通用條目**（多音字、英文詞，哪個引擎、哪支片都可能念錯）：**兩份都加**，維持一致。本機兩份會合併讀取，漏加一邊時自己出片察覺不到，但只下載另一個 repo 的人就會缺這條。
+- 只跟某個引擎有關的條目（例如只有 VoxCPM2 會念錯）：加在用到那個引擎的 repo，說明欄註明引擎。
 
 ## 規則
 
@@ -15,7 +19,7 @@
 - 改寫盡量用**同音字**或**補字**（奇數 → 基數、十一少一 → 十一少了一），不要換成意思不同、字數差很多的說法：VoxCPM2 挑音會拿改寫後的文字比對聽寫。
 - 內容有 `|` 時寫成 `\|`；要讓前後空白看得出來，可以用反引號包起來（`` `GPT four` ``）。
 - 只對某支片生效的條目，在那支片的資料夾放一份同名的 `tts-lexicon.md`（同樣的表格格式），同一個原文以近的為準。
-- 主表放在別處時設環境變數 `TTS_LEXICON` 指向它。
+- 找表順序（近的覆蓋遠的）：同層 agent-video-specs 的表 → 本 repo 這份（設了環境變數 `TTS_LEXICON` 就改讀它指的表）→ 片子資料夾往上每一層的同名檔。
 - 新增條目後要重生那幾句並實際聽過（改字會改變旁白長度與逐詞時間）。本 repo 已挑好的句子不會自動重挑：刪掉該片 `out/voice/bv` 裡那句的候選再跑 `voices`。
 
 ## 替換表

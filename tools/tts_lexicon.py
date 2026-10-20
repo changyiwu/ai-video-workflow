@@ -1,8 +1,10 @@
 """讀音替換表（tts-lexicon.md）：送進 TTS 前把念錯的詞換成念得對的寫法，字幕照原文。2026-10-20 從 agent-video-specs 移植。
-主表是 repo 根目錄的 tts-lexicon.md，本專案（VoxCPM2、edge-tts 答案卷）與 agent-video-specs（Edge-TTS 旁白）共用；格式寫在主表開頭。
+表在 repo 根目錄的 tts-lexicon.md，格式與規則寫在表的開頭。agent-video-specs 根目錄也有一份同格式的表（兩個 repo 都公開，
+各自單獨下載就能用）；兩個 repo 放在同一層時兩份合併讀取，通用條目兩份都要加。
 
 找表的順序（近的覆蓋遠的，同一個原文以近的為準）：
-  主表：TTS_LEXICON（有設就用它）或 repo 根目錄的 tts-lexicon.md
+  同層 agent-video-specs 的 tts-lexicon.md（有就合併）
+  → 本 repo 的表：TTS_LEXICON（有設就用它）或 repo 根目錄的 tts-lexicon.md
   → 從起點資料夾（例如 films/<類型>/<片名>/out/）往上每一層的 tts-lexicon.md（片子資料夾放一份只對該片生效）。
 本專案套用的地方：voxcpm_batch.py（念台詞前）、gen_voice.py（edge-tts 答案卷、單句生成）、voice_pick.py（聽寫比對的標準）、
 recast.py voice。每段文字只套一次；film.json 的 "tts" 照樣可用，表會再套在它上面。
@@ -15,6 +17,7 @@ from pathlib import Path
 
 NAME = "tts-lexicon.md"
 REPO = Path(__file__).resolve().parents[1]
+SIBLING = REPO.parent / "agent-video-specs" / NAME   # 同層另一個 repo 的同名表，有就合併
 HEAD = ("原文", "改寫")
 
 
@@ -25,7 +28,7 @@ def master():
 
 def lexicon_files(start=None):
     """回傳要讀的表，遠的在前、近的在後"""
-    files = [master()]
+    files = [SIBLING, master()]
     if start:
         s = Path(start).resolve()
         s = s.parent if s.is_file() else s
