@@ -33,9 +33,9 @@ description: 用 media-short-film repo（本機 MiniMax H3）做 16:9、1–3 �
 | 3 | 劇本＋鏡表 | `references/script/workflow.md`（格式 `format.md`、拆鏡 `segmentation.md`） | `劇本.md`（含鏡表） | ✅ 確認劇本 |
 | 4 | 預演（選用） | `references/previs/README.md` | 布置圖、`camera_plan_v<N>.json` | 看布置圖 |
 | 5 | 填 `film.json` | `references/film-json.md` | `film.json` | |
-| 6 | 生成 | `references/production.md` | `out/` | ✅ 關卡 1、2 |
-| 7 | 自審與交付 | `references/review.md` | `out/cut/film_1080p.mp4`、自審報告 | ✅ 關卡 3：完整看成片 |
-| 8 | 定案 | `references/review.md`〈交付與歸檔〉 | `out/cut/<片名>.mp4`、`發布資訊.md` | ✅ 問「可以成片嗎？」，說可以才做 |
+| 6 | 生成 | `references/production.md` | `output/` | ✅ 關卡 1、2 |
+| 7 | 自審與交付 | `references/review.md` | `output/cut/film_1080p.mp4`、自審報告 | ✅ 關卡 3：完整看成片 |
+| 8 | 定案 | `references/review.md`〈交付與歸檔〉 | `output/<片名>.mp4`、`發布資訊.md` | ✅ 問「可以成片嗎？」，說可以才做 |
 
 **什麼時候要做預演（第 4 步）**：多人同框、座位或左右位置容易跑掉、要運鏡、同一場景很多機位。單人、固定鏡頭的短片可以跳過。
 
@@ -68,7 +68,7 @@ description: 用 media-short-film repo（本機 MiniMax H3）做 16:9、1–3 �
    - `films/AGENTS.md` 不存在時腳本會從 `templates/AGENTS_TEMPLATE.md` 建一份；提醒使用者把頻道名稱、主角等佔位改掉。
    - 類型資料夾是新的時，腳本會建好 `films/<類型>/AGENTS.md`＋`CLAUDE.md`；提醒使用者寫上這類片的規則（類型打錯字也會被建成新類型，看腳本列出的既有類型核對）。
 3. 回報建立了哪些檔，提醒 `film.json` 裡還是範例片〈被狗吃掉的作業〉的角色、場景、鏡表。然後進第 2 步需求訪談。
-- 不要手動複製 `pipeline/template_local/`（會帶到 `out/`、`__pycache__`）；自己的片一律放 `films/`（不進公開 repo）。
+- 不要手動複製 `pipeline/template_local/`（會帶到 `output/`、`__pycache__`）；自己的片一律放 `films/`（不進公開 repo）。
 
 ## 共同規則
 

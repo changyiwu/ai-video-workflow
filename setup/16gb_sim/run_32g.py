@@ -73,7 +73,7 @@ class Mon(threading.Thread):
 
 
 def main(prof, target):
-    P = PROFILES[prof]; tag = os.environ.get("RUN_TAG", ""); out_root = HERE / "out" / f"32g_{prof}{tag}"; out_root.mkdir(parents=True, exist_ok=True)
+    P = PROFILES[prof]; tag = os.environ.get("RUN_TAG", ""); out_root = HERE / "output" / f"32g_{prof}{tag}"; out_root.mkdir(parents=True, exist_ok=True)
     resf = HERE / f"results_32g_{prof}{tag}.json"
     _, total = R.smi_used()
     if P.get("vram_hog", True):
@@ -126,7 +126,7 @@ def main(prof, target):
         exec_s, status = R.history_time(meta.get("tag", "")) if meta else (None, "timeout" if timed_out else "no-meta")
         same = None
         if meta.get("ok"):
-            a = HERE / "out" / "A" / shot / "clip.mp4"
+            a = HERE / "output" / "A" / shot / "clip.mp4"
             o = subprocess.run(["ffmpeg", "-i", str(od / "clip.mp4"), "-i", str(a), "-lavfi", "psnr", "-f", "null", "-"], capture_output=True,
                                text=True, encoding="utf-8", errors="replace").stderr or ""
             same = o[o.rfind("average:"):].split()[0] if "average:" in o else None

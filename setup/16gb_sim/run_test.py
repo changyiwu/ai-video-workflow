@@ -80,7 +80,7 @@ def history_time(tag):
 
 
 def main(prof, tag=""):
-    P = PROFILES[prof]; out_root = HERE / "out" / (prof + tag); out_root.mkdir(parents=True, exist_ok=True)
+    P = PROFILES[prof]; out_root = HERE / "output" / (prof + tag); out_root.mkdir(parents=True, exist_ok=True)
     log = open(HERE / f"comfy_{prof}{tag}.log", "w", encoding="utf-8")
     hog = None
     base_used, total = smi_used()

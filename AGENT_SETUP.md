@@ -166,7 +166,7 @@ call <repo>\configs\profile.cmd
 - 全部 OK，且每步時間在 `docs/hardware.md` 列的範圍內（真實顯卡比 5090 慢是正常的），就算安裝完成。完整版 12 步；`--quick` 跳過 FlashVSR，11 步。
 - 2026-10-07 全新安裝實測（上游，當時的配音引擎與 smoke test 步數都跟現在不同；另一個 agent 只看本 repo、在清空的 `C:\AI` 從零安裝，RTX 5090）：全部 OK，共 500 秒。
 - 2026-10-17 本分支桌機實測（RTX 5060 Ti 16GB＋64GB RAM，Comfy Desktop，`--reserve-vram 1.5`）：12 步全部 OK，共約 1205 秒（20 分鐘），各步秒數見 `docs/hardware.md`〈真實 16GB 卡實測〉。
-- 打開 `setup\smoke_out\h3\clip.mp4` 看：畫面清楚、嘴型有跟著台詞動。
+- 打開 `setup\output\h3\clip.mp4` 看：畫面清楚、嘴型有跟著台詞動。
 
 ## 5. 跑全本地示範片
 

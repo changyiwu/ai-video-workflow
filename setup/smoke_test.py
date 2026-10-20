@@ -1,7 +1,7 @@
 """安裝完成後的自我驗證：每個本地模型各跑一個小工作，不需要任何外部素材（聲音、圖片都自己生）。
 用 H3 venv 執行（ComfyUI 要先啟動：call configs\\profile.cmd → tools\\start_comfy.cmd）：
   "%PY_H3%" setup\\smoke_test.py [--quick]
-完整版 12 步；--quick 跳過 FlashVSR（11 步）。結果寫 setup\\smoke_out\\report.json，並印出跟 docs\\hardware.md 對照用的時間。
+完整版 12 步；--quick 跳過 FlashVSR（11 步）。結果寫 setup\\output\\report.json，並印出跟 docs\\hardware.md 對照用的時間。
 流程：VoxCPM2 設計聲音 → VoxCPM2 用它念台詞＋自動挑選 → faster-whisper 聽寫 → 聲調比對 →
 Qwen-Image 2.1 生首幀 → Qwen 附參考圖 → MiniMax Music 3 → BS-RoFormer 分離 → H3（DMAD 4 步，首幀＋配音當固定音軌）→ RTX VSR → FlashVSR"""
 import json
@@ -19,7 +19,7 @@ for _s in (sys.stdout, sys.stderr):                 # 中文輸出在非 UTF-8 �
         pass
 
 HERE = Path(__file__).resolve().parent
-OUT = HERE / "smoke_out"; OUT.mkdir(exist_ok=True)
+OUT = HERE / "output"; OUT.mkdir(exist_ok=True)
 T = Path(os.environ.get("AI_TOOLS", HERE.parent / "tools"))     # 預設直接用 repo 的 tools/
 PYH3 = os.environ.get("PY_H3", r"C:\AI\H3\venv\Scripts\python.exe")
 PYV = os.environ.get("PY_VOICE", r"C:\AI\Voice\venv\Scripts\python.exe")
@@ -149,8 +149,8 @@ def main():
             step("flashvsr", [PYH3, str(T / "flashvsr_cli.py"), str(clip), "flashvsr"], "flashvsr/clip.mp4")
     (OUT / "report.json").write_text(json.dumps(rows, ensure_ascii=False, indent=1), encoding="utf-8")
     bad = [r["step"] for r in rows if not r["ok"]]
-    print("\nALL OK" if not bad else f"\nFAILED: {bad}  (see setup/smoke_out/report.json)")
-    print("Watch setup/smoke_out/h3/clip.mp4 and vsr_1080p.mp4 to check picture and lip-sync.")
+    print("\nALL OK" if not bad else f"\nFAILED: {bad}  (see setup/output/report.json)")
+    print("Watch setup/output/h3/clip.mp4 and vsr_1080p.mp4 to check picture and lip-sync.")
 
 
 if __name__ == "__main__":

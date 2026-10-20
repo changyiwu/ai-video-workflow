@@ -65,8 +65,8 @@ def tests(o):
         ("whisper", [PYV, f"{T}\\stt.py", "--audio", "voxcpm.wav", "--outdir", "stt"], "stt/transcript.txt", False),
         ("separator", [SEP, "@music3_60s", "--model_filename", "model_bs_roformer_ep_317_sdr_12.9755.ckpt", "--model_file_dir", r"C:\AI\Voice\models\separator",
                        "--output_dir", "sep", "--output_format", "WAV"], "sep", False),
-        ("rtx_vsr", [PYH3, f"{T}\\upscale_vsr.py", "--source", str(HERE / "out" / "A" / "C04" / "clip.mp4"), "--output", "vsr/C04_1080p.mp4"], "vsr/C04_1080p.mp4", False),
-        ("flashvsr", [PYH3, str(HERE / "flashvsr_cli.py"), str(HERE / "out" / "A" / "C04" / "clip.mp4"), "flashvsr"], "flashvsr/clip.mp4", False),
+        ("rtx_vsr", [PYH3, f"{T}\\upscale_vsr.py", "--source", str(HERE / "output" / "A" / "C04" / "clip.mp4"), "--output", "vsr/C04_1080p.mp4"], "vsr/C04_1080p.mp4", False),
+        ("flashvsr", [PYH3, str(HERE / "flashvsr_cli.py"), str(HERE / "output" / "A" / "C04" / "clip.mp4"), "flashvsr"], "flashvsr/clip.mp4", False),
     ]
 
 

@@ -3,7 +3,7 @@
 用法：python tools/new_film.py <類型> <片名>     例：python tools/new_film.py 數學家故事 埃拉托賽尼的篩子
 
 - 類型是影片類型的資料夾（例：數學家故事、換角重製、原創短劇、測試），各類型專屬的規則寫在 films/<類型>/AGENTS.md。
-- 只複製 film.json、make_film.py、review.py（跳過 out/、__pycache__、README.md；說明請看範本的 README.md）。
+- 只複製 film.json、make_film.py、review.py（跳過 output/、__pycache__、README.md；說明請看範本的 README.md）。
 - film.json 的 title 換成片名，repo_dir 改成 "../../.."（片子在 repo 下三層）。
 - 另外建空的 需求確認.md、劇本.md、製作紀錄.md（需求確認表的欄位見 skills/ai-film/references/interview.md）。
 - films/AGENTS.md 不存在時（新電腦、新頻道），從 templates/AGENTS_TEMPLATE.md 建一份，並加 CLAUDE.md 橋接。

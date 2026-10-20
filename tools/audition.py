@@ -34,7 +34,7 @@ GAP_S = 0.6
 
 def voice_dir(p):
     p = Path(p).resolve()
-    for d in (p, p / "out" / "voice" / "bv", p / "voice" / "bv", p / "bv"):
+    for d in (p, p / "output" / "voice" / "bv", p / "voice" / "bv", p / "bv"):
         if (d / "picks.json").is_file():
             return d
     sys.exit(f"找不到 picks.json：給片子資料夾或 out\\voice\\bv（試過 {p}）")

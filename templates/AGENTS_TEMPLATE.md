@@ -17,7 +17,7 @@ films/
   <類型>/                 影片類型（例：數學家故事、換角重製、原創短劇、測試）
     AGENTS.md、CLAUDE.md  這個類型專屬的規則＋橋接（new_film.py 第一次建這個類型時自動建立）
     <片名>/               用 tools/new_film.py 從 ../pipeline/template_local/ 建立；film.json 的 repo_dir 是 "../../.."
-      劇本.md  製作紀錄.md  film.json  out/
+      劇本.md  製作紀錄.md  film.json  output/
 ```
 
 開新片：說「開新片 <類型> <片名>」（`short-film` 技能），或在 repo 根目錄跑 `python tools/new_film.py <類型> <片名>`；再改 `film.json`，照 `pipeline/template_local/README.md` 跑 `make_film.py`。

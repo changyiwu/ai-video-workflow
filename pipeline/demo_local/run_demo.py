@@ -3,7 +3,7 @@
 H3 venv 執行（同一個 cmd 視窗先 call <repo>\\configs\\profile.cmd → <repo>\\tools\\start_comfy.cmd）：
   "%PY_H3%" pipeline\\demo_local\\run_demo.py [stage ...]
 stage：chars → frames → voices → h3 → music → cut（不給就全部依序跑；已完成的檔案會跳過，可續跑）
-輸出 pipeline/demo_local/out/：角色定妝照、首幀、配音、H3 片段、配樂、cut/demo_1080p.mp4、timing.json
+輸出 pipeline/demo_local/output/：角色定妝照、首幀、配音、H3 片段、配樂、cut/demo_1080p.mp4、timing.json
 
 劇情（4 鏡）：放學後的教室。學生小芸舉手問老師明天考不考，老師說「要考」，小芸愣住，老師笑著補一句「考你會的」。
 做法都是本專案實測過的：
@@ -28,7 +28,7 @@ for _s in (sys.stdout, sys.stderr):                 # 中文輸出在非 UTF-8 �
         pass
 
 HERE = Path(__file__).resolve().parent
-OUT = HERE / "out"; OUT.mkdir(exist_ok=True)
+OUT = HERE / "output"; OUT.mkdir(exist_ok=True)
 T = Path(os.environ.get("AI_TOOLS", HERE.parents[1] / "tools"))     # 預設直接用 repo 的 tools/
 AI_ROOT = Path(os.environ.get("AI_ROOT", r"C:\AI"))   # 安裝根目錄（profile.cmd 有設 PY_* 時以 PY_* 為準）
 PYH3 = os.environ.get("PY_H3", str(AI_ROOT / "H3" / "venv" / "Scripts" / "python.exe"))

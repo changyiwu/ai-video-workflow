@@ -6,7 +6,7 @@
 
 - `films/<類型>/<片名>/需求確認.md` 與 `劇本.md`（含鏡表）都已經使用者確認。
 - 每個角色的 `look`、`voice_design` **照抄** `films/角色/<角色>/README.md`，不要自己改寫外觀。
-- 定妝已定：把 `<角色>_turn.png`、`<角色>_expr.png`（千問備選為 `<角色>.png`）複製到 `out/chars/`，`make_film.py` 看到檔案已存在就會沿用，不會重生。
+- 定妝已定：把 `<角色>_turn.png`、`<角色>_expr.png`（千問備選為 `<角色>.png`）複製到 `output/chars/`，`make_film.py` 看到檔案已存在就會沿用，不會重生。
 - 有做預演的話，旁邊開著 `camera_plan_v<N>.json`：`visible`、`motion` 要跟這裡一致。
 
 ## 鏡表 → shots[]
@@ -72,4 +72,4 @@
 - [ ] 沒台詞的鏡頭 `line: null` 且 `action` 寫明不說話
 - [ ] 同場景各鏡的母版、景別、窗戶方向一致
 - [ ] `look` 是照抄角色 README，不是改寫
-- [ ] 片尾是選用、預設不加（`ending.enabled` 預設 false；要加改 true 或設 `ENDING=1`）；有片尾時，`ending.cards` 的生圖工具名稱符合實際用的後端（`make_film.py` 依 `out/image_backends.json` 自動寫；有手動放進去的圖要再核對）
+- [ ] 片尾是選用、預設不加（`ending.enabled` 預設 false；要加改 true 或設 `ENDING=1`）；有片尾時，`ending.cards` 的生圖工具名稱符合實際用的後端（`make_film.py` 依 `output/image_backends.json` 自動寫；有手動放進去的圖要再核對）

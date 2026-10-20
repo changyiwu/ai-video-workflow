@@ -7,4 +7,4 @@
 
 - 自己的片一律放 `films/<類型>/<片名>/`（不進 repo，只走雲端硬碟）；做片規則在 `films/AGENTS.md`，整體流程見 [docs/02_端到端流程.md](../docs/02_端到端流程.md)。
 - `run_demo.py` 固定用本機 Qwen-Image 生圖、單張半身定妝（驗證本機安裝用）；做片的 `make_film.py` 預設走 OpenAI 生圖、轉面圖＋表情表。
-- 兩支腳本都直接用 repo 的 `tools/`，輸出在各自的 `out/`（已列入 `.gitignore`）。
+- 兩支腳本都直接用 repo 的 `tools/`，輸出在各自的 `output/`（已列入 `.gitignore`）。
