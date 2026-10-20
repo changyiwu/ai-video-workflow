@@ -1,4 +1,4 @@
-"""BreezyVoice 候選自動挑選（Voice venv）。2026-10-07 建立，搭配 breezyvoice_batch.py。
+"""配音候選自動挑選（Voice venv）：VoxCPM2（voxcpm_batch.py）與 BreezyVoice（breezyvoice_batch.py）共用，兩者候選檔名格式相同。2026-10-07 建立。
 每句的所有 seed 候選：
   1. faster-whisper large-v3 聽寫，必須和台詞逐字相同（數字、標點、注音標記不計）才算合格；
   2. 長度要在 edge-tts 台灣國語參考音的 0.5–2.5 倍之間（擋掉拖長、亂音）；
