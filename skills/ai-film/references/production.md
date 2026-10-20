@@ -21,7 +21,7 @@
 - 最難的一鏡先單獨跑（`set ONLY=<鏡號>`），過了再整批。
 - 不滿意只重做那幾鏡：刪該鏡產出、在 `seeds` 換數字、`set ONLY=…` 重跑；認可過的鏡頭不重拍。
 - 中斷後直接重跑同一段，已存在的檔案會跳過。
-- `make_film.py` 生圖預設 Image 2.5 API 優先、Codex CLI 次之，不用另外呼叫 `agent-draw`；看 log 的 `[backend]` 確認實際用哪個，規則見 repo 的 `AGENTS.md`〈生圖〉。
+- `make_film.py` 生圖預設 Image 2.5 API 優先、Codex CLI 次之，不用另外呼叫 `draw`；看 log 的 `[backend]` 確認實際用哪個，規則見 repo 的 `AGENTS.md`〈生圖〉。
 
 ## 收件與紀錄
 

@@ -2,7 +2,7 @@
 # 音樂（Music 3）、圖（Qwen）與影片（H3）都共用這個服務。
 # ComfyUI 的位置與 Python 由 configs\profile.cmd 的 COMFY_DIR、PY_H3 決定：
 #   Comfy Desktop：啟動 Desktop 安裝裡的 ComfyUI（不開 Desktop 視窗），模型、input、output 照 Desktop 的設定
-#                  （做法同全域技能 agent-comfyui；Desktop 視窗開著時它已佔用 8188，本腳本就不再啟動）
+#                  （做法同全域技能 comfyui；Desktop 視窗開著時它已佔用 8188，本腳本就不再啟動）
 #   自己安裝：C:\AI\H3\ComfyUI-0.36.0＋C:\AI\H3\venv（預設）
 $ErrorActionPreference = 'Stop'
 try {

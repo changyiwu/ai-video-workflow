@@ -6,7 +6,7 @@
 
 `ai-film/` 的結構：`SKILL.md` 是全片流程與「現在該讀哪份」的對照，細節依階段放在 `references/`（`interview.md`、`script/`、`previs/`、`film-json.md`、`production.md`、`review.md`）。2026-10-15 由 `ai-drama`、`blender-previs`、`new-film` 三個技能合併而成。
 
-本資料夾是技能的**原始檔**，agent 不會直接從這裡載入。裝成全域技能：說「同步技能」，交給全域技能 `sync-skills` 覆蓋到各 agent 的技能目錄；改了這裡的檔案要再同步一次。技能要用的腳本放在 `tools/`，不要放進技能資料夾（全域副本不在 repo 裡，找不到 repo 的檔案）。
+本資料夾是技能的**原始檔**，agent 不會直接從這裡載入。裝成全域技能：說「同步技能」，交給全域技能 `skill-sync` 覆蓋到各 agent 的技能目錄；改了這裡的檔案要再同步一次。技能要用的腳本放在 `tools/`，不要放進技能資料夾（全域副本不在 repo 裡，找不到 repo 的檔案）。
 
 做片入口範本在 [`templates/AGENTS_TEMPLATE.md`](../templates/AGENTS_TEMPLATE.md)：`new_film.py` 在 `films/AGENTS.md` 不存在時會自動複製過去並加 `CLAUDE.md` 橋接，不用手動建。
 

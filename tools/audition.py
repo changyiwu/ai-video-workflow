@@ -1,4 +1,4 @@
-"""配音候選試聽與人工改挑（Voice venv）。2026-10-20 建立，試聽做法參考 agent-video-specs 的 tools/fix_voice.py。
+"""配音候選試聽與人工改挑（Voice venv）。2026-10-20 建立，試聽做法參考 media-video-specs 的 tools/fix_voice.py。
 
 voice_pick.py 自動挑不到（needs_review）或使用者聽了不滿意時用：
   1. 試聽：把某一句的所有候選串成一個檔，每支前面用語音念出代號（s1、s2…；連不上 edge-tts 就用嗶聲），

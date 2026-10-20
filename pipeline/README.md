@@ -2,7 +2,7 @@
 
 | 資料夾 | 用途 | 怎麼用 |
 |---|---|---|
-| [`template_local/`](template_local/README.md) | **新片範本**：`film.json` 寫完整支片，`make_film.py` 從角色定妝做到成片＋自審 | 在 repo 根目錄跑 `python tools/new_film.py <類型> <片名>`（`ai-film` 技能），建成 `films/<類型>/<片名>/`；不要手動複製、不要直接在這裡改 |
+| [`template_local/`](template_local/README.md) | **新片範本**：`film.json` 寫完整支片，`make_film.py` 從角色定妝做到成片＋自審 | 在 repo 根目錄跑 `python tools/new_film.py <類型> <片名>`（`short-film` 技能），建成 `films/<類型>/<片名>/`；不要手動複製、不要直接在這裡改 |
 | `demo_local/` | **安裝驗證**：約 20 秒、4 鏡的示範片，證明本機環境能從頭跑到成片 | `"%PY_H3%" pipeline\demo_local\run_demo.py`（照 `AGENT_SETUP.md`、階段三） |
 
 - 自己的片一律放 `films/<類型>/<片名>/`（不進 repo，只走雲端硬碟）；做片規則在 `films/AGENTS.md`，整體流程見 [docs/02_端到端流程.md](../docs/02_端到端流程.md)。

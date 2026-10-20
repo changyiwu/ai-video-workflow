@@ -1,5 +1,5 @@
 """OpenAI Image 2.5 helper. API key (never printed), first found wins: env OPENAI_API_KEY -> the file named by env
-OPENAI_KEY_FILE -> ~/.openai.env (the global agent-draw skill's key file). A key file may hold the bare key or a line
+OPENAI_KEY_FILE -> ~/.openai.env (the global draw skill's key file). A key file may hold the bare key or a line
 OPENAI_API_KEY=sk-... .
 generate(prompt, out_stem, n) -> /images/generations ; edit(prompt, images, out_stem, n) -> /images/edits (refs)."""
 import base64

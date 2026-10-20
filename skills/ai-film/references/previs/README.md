@@ -1,6 +1,6 @@
 # 預演（選用）：Blender 鎖空間與運鏡
 
-> 原 `blender-previs` 技能，2026-10-15 併入 `ai-film`。需求訪談、`film.json` 填寫規則、自審清單已搬到 `ai-film` 主流程（`../interview.md`、`../film-json.md`、`../review.md`），本資料夾只留 Blender 專用的部分。
+> 原 `blender-previs` 技能，2026-10-15 併入 `short-film`。需求訪談、`film.json` 填寫規則、自審清單已搬到 `short-film` 主流程（`../interview.md`、`../film-json.md`、`../review.md`），本資料夾只留 Blender 專用的部分。
 
 ## 這一步解什麼問題
 
@@ -14,7 +14,7 @@ AI 影片最常見的失敗是**空間隨機性**：座位跑掉、人物增生�
 
 1. 需求確認表與鏡表已經使用者確認（`../interview.md`、`../script/segmentation.md`）。
 2. 該片 `films/<類型>/<片名>/製作紀錄.md`；角色外觀讀 `films/角色/<角色>/README.md`。
-3. Blender 安裝見 `<repo>/docs/06_安裝.md` §6b（安裝版、5.1 以上）；**操作方式一律照全域技能 `agent-blender`**，本資料夾的專用規則見 `blender-rules.md`〈前置〉。
+3. Blender 安裝見 `<repo>/docs/06_安裝.md` §6b（安裝版、5.1 以上）；**操作方式一律照全域技能 `blender`**，本資料夾的專用規則見 `blender-rules.md`〈前置〉。
 
 ## 只讀需要的檔
 

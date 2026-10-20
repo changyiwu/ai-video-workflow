@@ -2,15 +2,15 @@
 
 ## 前置
 
-- Blender 用一般安裝版、5.1 以上（見 `docs/06_安裝.md` §6b）。**操作 Blender 一律照全域技能 `agent-blender`**：環境偵測、安全規則、MCP 安裝與連線都以它為準，本檔只放預演專用的規則。
-- **算布置圖、驗證運鏡 → 背景模式**（不用開 Blender 畫面、可重現）。用 `agent-blender` 的 runner 跑本片的算圖腳本，輸入場景只讀、不會被覆寫：
+- Blender 用一般安裝版、5.1 以上（見 `docs/06_安裝.md` §6b）。**操作 Blender 一律照全域技能 `blender`**：環境偵測、安全規則、MCP 安裝與連線都以它為準，本檔只放預演專用的規則。
+- **算布置圖、驗證運鏡 → 背景模式**（不用開 Blender 畫面、可重現）。用 `blender` 的 runner 跑本片的算圖腳本，輸入場景只讀、不會被覆寫：
 
   ```text
-  uv run <agent-blender 技能目錄>/scripts/blender_runner.py run --blend <場景.blend> --script render_layouts.py --log <log> -- camera_plan_v<N>.json <輸出資料夾>
+  uv run <blender 技能目錄>/scripts/blender_runner.py run --blend <場景.blend> --script render_layouts.py --log <log> -- camera_plan_v<N>.json <輸出資料夾>
   ```
 
-  沒有 `agent-blender` 時的備案：`blender.exe -b <場景.blend> --python render_layouts.py -- camera_plan_v<N>.json <輸出資料夾>`。
-- **要在 Blender 畫面裡即時調場景 → 官方 MCP 模式**：照 `agent-blender` 的 `references/official-mcp.md`。先用唯讀工具盤點、確認**當下**開的是哪個檔，另存 checkpoint，再一小段一小段改；每輪截圖實看，不以工具回應成功代替驗收。
+  沒有 `blender` 時的備案：`blender.exe -b <場景.blend> --python render_layouts.py -- camera_plan_v<N>.json <輸出資料夾>`。
+- **要在 Blender 畫面裡即時調場景 → 官方 MCP 模式**：照 `blender` 的 `references/official-mcp.md`。先用唯讀工具盤點、確認**當下**開的是哪個檔，另存 checkpoint，再一小段一小段改；每輪截圖實看，不以工具回應成功代替驗收。
 - ⚠️ MCP 讓 agent 在 Blender 內執行任意 Python，權限等同 Blender。不要把使用者的工作覆蓋掉。
 
 ## 角色 proxy
@@ -86,7 +86,7 @@ cam.keyframe_insert("location", frame=N)
 | `Action` 沒有 `.fcurves` | 5.x 改用 slots／layers：`act.layers[0].strips[0].channelbag(act.slots[0]).fcurves` |
 | `Action` 沒有 `.fake_user` | 欄位名是 `use_fake_user` |
 | `bpy.ops.wm.open_mainfile()` 後 `bpy.context.window` 是 `None` | 開檔後不要直接存取 `bpy.context.window`；改用 `bpy.data.scenes`，或先做一次無害呼叫再取 |
-| 不確定屬性／enum 名稱 | 查 Blender 官方 Python API 文件，或先在 Blender 內印出該物件的屬性確認（寫法見 `agent-blender` 的 `references/bpy-modeling.md`），不要猜 |
+| 不確定屬性／enum 名稱 | 查 Blender 官方 Python API 文件，或先在 Blender 內印出該物件的屬性確認（寫法見 `blender` 的 `references/bpy-modeling.md`），不要猜 |
 | 假設燈光設定 | Workbench 不吃場景燈光；場景沒有 Light 也可能是正常的 |
 
 ## 檢查節點 ID

@@ -1,6 +1,6 @@
-"""讀音替換表（tts-lexicon.md）：送進 TTS 前把念錯的詞換成念得對的寫法，字幕照原文。2026-10-20 從 agent-video-specs 移植。
-表在 repo 根目錄的 tts-lexicon.md，格式與規則寫在表的開頭。這份表有四份、內容完全相同（agent-video-specs、本 repo、
-voxcpm2-voice-cloner、agent-speak-skill/speak/；四個 repo 都公開，各自單獨下載就能用），放在同一層時合併讀取。
+"""讀音替換表（tts-lexicon.md）：送進 TTS 前把念錯的詞換成念得對的寫法，字幕照原文。2026-10-20 從 media-video-specs 移植。
+表在 repo 根目錄的 tts-lexicon.md，格式與規則寫在表的開頭。這份表有四份、內容完全相同（media-video-specs、本 repo、
+media-voice-clone、agent-speak/speak/；四個 repo 都公開，各自單獨下載就能用），放在同一層時合併讀取。
 
 找表的順序（近的覆蓋遠的，同一個原文以近的為準）：
   同層其他三個 repo 的 tts-lexicon.md（有就合併）
@@ -20,8 +20,8 @@ from pathlib import Path
 NAME = "tts-lexicon.md"
 REPO = Path(__file__).resolve().parents[1]
 # 四份同內容的表（repo 名稱, 表在 repo 裡的位置）；本 repo 以外的三份放在同一層時一起讀
-COPIES = [("agent-video-specs", NAME), ("ai-video-workflow", NAME),
-          ("voxcpm2-voice-cloner", NAME), ("agent-speak-skill", f"speak/{NAME}")]
+COPIES = [("media-video-specs", NAME), ("media-short-film", NAME),
+          ("media-voice-clone", NAME), ("agent-speak", f"speak/{NAME}")]
 SIBLINGS = [REPO.parent / r / rel for r, rel in COPIES if r != REPO.name]
 HEAD = ("原文", "改寫")
 

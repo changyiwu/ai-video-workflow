@@ -25,7 +25,7 @@
 |---|---|---|
 | 入口 | 專案現況、常設規則 | `AGENTS.md`、`handoff.md`、`films/AGENTS.md` |
 | 答案與規則 | 使用者已接受的做法：參數、踩坑結論、重現指令 | `docs/`（規則與踩坑在 [03](03_規則與踩坑.md)、自審在 [04](04_自審清單.md)、安裝在 [06](06_安裝.md)） |
-| 決策與歷史 | 為什麼這樣決定、踩坑經過的完整版、逐次進度 | Obsidian vault 的 `ai-video-workflow/專案工作流程.md`（選用，有需要才讀）；沒有 Obsidian 就看 `git log`（commit 訊息寫「做什麼＋為什麼」） |
+| 決策與歷史 | 為什麼這樣決定、踩坑經過的完整版、逐次進度 | Obsidian vault 的 `media-short-film/專案工作流程.md`（選用，有需要才讀）；沒有 Obsidian 就看 `git log`（commit 訊息寫「做什麼＋為什麼」） |
 | 實測 | 本機 A/B 結果、數字 | 結論寫進 `docs/`（例：`docs/07` §0 多格定妝實測、`docs/hardware.md` 耗時）；大檔案（並排影片、測試圖）留在 `films/` 或本機，不進 repo |
 | 每片紀錄 | 劇本、需求確認、製作紀錄 | `films/<類型>/<片名>/`（`劇本.md`、`需求確認.md`、`製作紀錄.md`） |
 | 角色資產 | 定妝照、外觀描述、聲音 | `films/角色/<角色>/`（`README.md`、轉面圖、表情表） |
@@ -55,11 +55,11 @@ Claude Code 的自動記憶在 `~/.claude/projects/<專案路徑>/memory/`（`<�
 
 - `skills/ai-film/`：做片全流程——開新片（`tools/new_film.py`）→ 需求訪談 → 編劇與鏡表 →（選用）Blender 預演 → 填 `film.json` → `make_film.py` 三個人工關卡 → 自審交付。
 
-`skills/` 是原始檔，agent 不會直接載入。說「同步技能」交給全域技能 `sync-skills`：它先用 git 確認原始檔是最新的，再複製到這台四家 agent 的全域技能目錄（Claude Code、Codex、OpenCode、Antigravity）並逐檔比對 hash。**每台電腦要各同步一次**；各台裝了哪些技能記在雲端硬碟上 repo 外層的 `.skill-install/<電腦名>.json`，用來找出「只有這台沒裝」的技能。細節見 [skills/README.md](../skills/README.md)。
+`skills/` 是原始檔，agent 不會直接載入。說「同步技能」交給全域技能 `skill-sync`：它先用 git 確認原始檔是最新的，再複製到這台四家 agent 的全域技能目錄（Claude Code、Codex、OpenCode、Antigravity）並逐檔比對 hash。**每台電腦要各同步一次**；各台裝了哪些技能記在雲端硬碟上 repo 外層的 `.skill-install/<電腦名>.json`，用來找出「只有這台沒裝」的技能。細節見 [skills/README.md](../skills/README.md)。
 
 ## 工作習慣
 
-- **開工說「開工」、收工說「收工」**（全域技能 `startup`／`shutdown`）：開工讀 `AGENTS.md`＋`handoff.md`、檢查 git 與遠端、提醒是否在另一台電腦收工；收工重寫 `handoff.md`、commit＋push、寫 Obsidian 紀錄。
+- **開工說「開工」、收工說「收工」**（全域技能 `project-startup`／`project-shutdown`）：開工讀 `AGENTS.md`＋`handoff.md`、檢查 git 與遠端、提醒是否在另一台電腦收工；收工重寫 `handoff.md`、commit＋push、寫 Obsidian 紀錄。
 - 多步驟工作開跑前**先報每一步的時間與費用**。
 - 啟動背景工作後**自己確認真的在跑**（log、佇列、GPU 使用率）。
 - 「我去睡了」＝授權自動做完並自審，GPU 不要閒著；早上交成片＋自審報告。

@@ -56,7 +56,7 @@ mkdir C:\AI\Voice
 
 ### 2a. 主環境：Comfy Desktop（已安裝時用這個）
 
-連接、背景啟動、模型位置的通用做法以全域技能 `agent-comfyui` 為準；本專案只多做下面三件事。`configs\profile.cmd` 偵測到 Desktop（預設安裝名稱 `ComfyUI`）就自動改用它：`COMFY_DIR`、`PY_H3` 指向 Desktop 安裝裡的 `ComfyUI` 與 `.venv`，模型用 `ComfyUI-Shared\models`，`tools\start_comfy.cmd` 會在背景啟動它（不開 Desktop 視窗，帶上本硬體的 `--reserve-vram 1.5`）。工具的 input／output 資料夾會自動問執行中的 ComfyUI，不用設。
+連接、背景啟動、模型位置的通用做法以全域技能 `comfyui` 為準；本專案只多做下面三件事。`configs\profile.cmd` 偵測到 Desktop（預設安裝名稱 `ComfyUI`）就自動改用它：`COMFY_DIR`、`PY_H3` 指向 Desktop 安裝裡的 `ComfyUI` 與 `.venv`，模型用 `ComfyUI-Shared\models`，`tools\start_comfy.cmd` 會在背景啟動它（不開 Desktop 視窗，帶上本硬體的 `--reserve-vram 1.5`）。工具的 input／output 資料夾會自動問執行中的 ComfyUI，不用設。
 
 > Desktop 安裝改過名稱：先 `set DESKTOP_COMFY=<安裝路徑>\ComfyUI` 再 `call configs\profile.cmd`。不想用 Desktop：`set DESKTOP_COMFY=none`。
 > **Desktop 視窗開著時會佔用 8188 埠**，這時 `start_comfy` 不會再啟動，也就沒有 `--reserve-vram 1.5`。跑本專案前先關掉 Desktop 視窗。
@@ -177,7 +177,7 @@ call <repo>\configs\profile.cmd
 
 ## 6. 開始做片
 
-讀 `docs/03_規則與踩坑.md`（規則）和 `pipeline/template_local/README.md`（做法），做片規則入口是 `films/AGENTS.md`：第一次跑 `new_film.py` 時會從 `templates/AGENTS_TEMPLATE.md` 自動建好（含 Claude Code 的 `CLAUDE.md` 橋接），請使用者改成自己的頻道規則。做新片照 `ai-film` 技能（`skills/ai-film/SKILL.md`）：`python tools/new_film.py <類型> <片名>`（把 `pipeline/template_local/` 複製成 `films/<類型>/<片名>/`）→ 需求訪談 → 寫劇本與鏡表 →（選用）Blender 預演 → 把角色、場景、鏡表填進 `film.json` → `make_film.py` 分段跑，三個人工關卡（首幀總覽、每鏡抽格、成片）都要給使用者看。
+讀 `docs/03_規則與踩坑.md`（規則）和 `pipeline/template_local/README.md`（做法），做片規則入口是 `films/AGENTS.md`：第一次跑 `new_film.py` 時會從 `templates/AGENTS_TEMPLATE.md` 自動建好（含 Claude Code 的 `CLAUDE.md` 橋接），請使用者改成自己的頻道規則。做新片照 `short-film` 技能（`skills/ai-film/SKILL.md`）：`python tools/new_film.py <類型> <片名>`（把 `pipeline/template_local/` 複製成 `films/<類型>/<片名>/`）→ 需求訪談 → 寫劇本與鏡表 →（選用）Blender 預演 → 把角色、場景、鏡表填進 `film.json` → `make_film.py` 分段跑，三個人工關卡（首幀總覽、每鏡抽格、成片）都要給使用者看。
 
 ## 常見問題
 

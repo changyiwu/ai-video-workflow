@@ -20,7 +20,7 @@ films/
       劇本.md  製作紀錄.md  film.json  out/
 ```
 
-開新片：說「開新片 <類型> <片名>」（`ai-film` 技能），或在 repo 根目錄跑 `python tools/new_film.py <類型> <片名>`；再改 `film.json`，照 `pipeline/template_local/README.md` 跑 `make_film.py`。
+開新片：說「開新片 <類型> <片名>」（`short-film` 技能），或在 repo 根目錄跑 `python tools/new_film.py <類型> <片名>`；再改 `film.json`，照 `pipeline/template_local/README.md` 跑 `make_film.py`。
 
 ## 影片規格
 
@@ -34,7 +34,7 @@ films/
 ## 必讀（開工前）
 
 - 生角色圖前：讀 `角色/<角色>/README.md`，照抄鎖定的外觀描述，不要自己重寫。
-- 做片流程（訪談、劇本、預演、`film.json`、製作、自審）：照 `ai-film` 技能（`skills/ai-film/`）。
+- 做片流程（訪談、劇本、預演、`film.json`、製作、自審）：照 `short-film` 技能（`skills/ai-film/`）。
 - H3：一律寫分鏡 JSON，用 `<repo>\tools\h3_shot.py`（官方格式＋格式檢查），不手寫提示詞；用 `make_film.py` 時由它產生。
 - 做片前讀：`../docs/03_規則與踩坑.md`、`../docs/04_自審清單.md`。
 

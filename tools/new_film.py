@@ -113,14 +113,14 @@ def main():
 
     today = date.today().isoformat()
     (dst / "需求確認.md").write_text(REQ_TEMPLATE.format(name=name, today=today), encoding="utf-8")
-    (dst / "劇本.md").write_text(f"# {name}：劇本\n\n> 用 ai-film 技能寫；定稿後把鏡表填進 film.json 的 shots。\n", encoding="utf-8")
+    (dst / "劇本.md").write_text(f"# {name}：劇本\n\n> 用 short-film 技能寫；定稿後把鏡表填進 film.json 的 shots。\n", encoding="utf-8")
     (dst / "製作紀錄.md").write_text(f"# {name}：製作紀錄\n\n## {today} 開新片\n\n- 從 pipeline/template_local/ 建立。\n", encoding="utf-8")
 
     for c in created:
         print("建立", c)
     print(f"建立 films/{kind}/{name}/：{'、'.join(COPY)}、需求確認.md、劇本.md、製作紀錄.md")
     print("film.json 目前還是範例片〈被狗吃掉的作業〉的角色、場景與鏡表，要換成自己的。")
-    print("下一步：需求訪談（需求確認.md）→ 寫劇本與鏡表 → 填 film.json → 跑 make_film.py（流程見 ai-film 技能）")
+    print("下一步：需求訪談（需求確認.md）→ 寫劇本與鏡表 → 填 film.json → 跑 make_film.py（流程見 short-film 技能）")
 
 
 if __name__ == "__main__":
