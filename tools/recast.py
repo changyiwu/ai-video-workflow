@@ -366,7 +366,10 @@ def cmd_voice(film, a):
         sys.exit(in_env(film, "PY_VOICE", args))
     import torch
     from voxcpm import VoxCPM
+    sys.path.insert(0, str(TOOLS))
+    from tts_lexicon import load_lexicon, speakable
     ln = film.cfg["line"]
+    say = speakable(ln["text"], load_lexicon(film.p(".")))  # 讀音替換表：念的與聽寫比對都用替換後的文字
     ref = ensure_ref(film)
     out = film.p(ln.get("cand_dir", "素材/voice/cand"))
     out.mkdir(parents=True, exist_ok=True)
@@ -377,7 +380,7 @@ def cmd_voice(film, a):
     for mode in ("ref", "cont"):  # cont（接續模式）實測最準；ref 常漏最後一個字
         for s in range(1, a.seeds + 1):
             torch.manual_seed(s)
-            kw = dict(text=ln["text"], cfg_value=2.0, inference_timesteps=10, normalize=False, denoise=False, reference_wav_path=str(ref))
+            kw = dict(text=say, cfg_value=2.0, inference_timesteps=10, normalize=False, denoise=False, reference_wav_path=str(ref))
             if mode == "cont":
                 kw.update(prompt_wav_path=str(ref), prompt_text=ln["ref_text"])
             wav = model.generate(**kw)
@@ -389,14 +392,13 @@ def cmd_voice(film, a):
             print("[gen]", f.name, f"{len(wav) / sr:.2f}s", flush=True)
     del model
     torch.cuda.empty_cache()
-    sys.path.insert(0, str(TOOLS))
     import stt
     asr = stt.load_asr()
     rep = []
     for f in files:
-        segs, _ = asr.transcribe(str(f), language="zh", beam_size=5, initial_prompt=ln["text"])
+        segs, _ = asr.transcribe(str(f), language="zh", beam_size=5, initial_prompt=say)
         heard = "".join(s.text for s in segs).strip()
-        ok = ln["text"] in re.sub(r"[，。！？、\s]", "", heard)
+        ok = say in re.sub(r"[，。！？、\s]", "", heard)
         rep.append({"file": f.name, "heard": heard, "ok": ok})
         print("[asr]", f.name, heard, "OK" if ok else "✗", flush=True)
     (out / "report.json").write_text(json.dumps(rep, ensure_ascii=False, indent=1), encoding="utf-8")

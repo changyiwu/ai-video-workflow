@@ -12,7 +12,7 @@
   4. 逐字判斷走向：一聲高平、二聲上揚、三聲低（台灣三聲常為低降／低平，不要求曲折）、四聲高降；輕聲不檢查。
      判定 ok／bad／unsure（濁音太少、太短）。score＝ok/(ok+bad)。
 限制：規則式判斷，適合「挑候選」與「抓明顯錯」；最後仍以 bad 字列表人工對照。腔調（港腔、陸腔）沒有可靠的自動量法，
-源頭改用台灣口音引擎（Breeze TTS 2）＋本工具聲調把關。"""
+靠 voice_pick.py 的腔調分數（對照 edge-tts 台灣國語答案卷）＋本工具聲調把關，最後人聽。"""
 import json, re, sys
 from pathlib import Path
 import numpy as np

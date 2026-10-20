@@ -4,7 +4,7 @@
 > Claude Code 預設只在沒有 `CLAUDE.md` 時才讀 `AGENTS.md`，故由 `CLAUDE.md` 的 `@AGENTS.md` import 本檔（`CLAUDE.md` 只有這一行）；Claude 專屬規範寫在本檔〈Claude Code 專屬〉一節。
 
 ## 專案簡介
-在 16GB VRAM＋64GB RAM 的本機，用開源模型（MiniMax H3、Qwen-Image 2.1／Edit、VoxCPM2、MiniMax Music 3；選用 BreezyVoice＋Breeze TTS 2）製作 1–3 分鐘、16:9、24fps 的原創 AI 短片。改作自 [mathruffian-dot/shanshiba-workflow-16gvram-64gram](https://github.com/mathruffian-dot/shanshiba-workflow-16gvram-64gram)，來源與修改內容見 `NOTICE.md`。
+在 16GB VRAM＋64GB RAM 的本機，用開源模型（MiniMax H3、Qwen-Image 2.1／Edit、VoxCPM2、MiniMax Music 3）製作 1–3 分鐘、16:9、24fps 的原創 AI 短片。改作自 [mathruffian-dot/shanshiba-workflow-16gvram-64gram](https://github.com/mathruffian-dot/shanshiba-workflow-16gvram-64gram)，來源與修改內容見 `NOTICE.md`。
 
 ## 關鍵時程
 
@@ -38,6 +38,7 @@
   - [x] 角色「歐幾里得」＋〈歐幾里得的完美數〉（課本 88 頁〈完美數〉，依史料改主角為歐幾里得）成片 100 秒＋發布資訊
   - [x] 挑音加響度與嘶聲篩選、配音混音前濾波與真峰值把關；`breezyvoice_pick.py` 改名 `voice_pick.py`
   - [x] 每鏡配樂倍數（`music_gain`）併進範本
+  - [x] 移除選用配音引擎 BreezyVoice／Breeze TTS 2；讀音替換表從 agent-video-specs 移植成兩專案共用的 `tts-lexicon.md`
 
 ## 資料夾結構
 ```
@@ -45,6 +46,7 @@ README.md / AGENT_SETUP.md     專案說明、給 agent 的安裝手冊
 NOTICE.md                      來源與作者、本分支修改清單（必須保留）
 LICENSE / LICENSE-docs.md      MIT（程式）／CC BY-NC 4.0（文件素材）
 THIRD_PARTY_NOTICES.md         第三方模型與工具授權
+tts-lexicon.md                 讀音替換表主表（多音字、英文詞 → TTS 念得對的寫法；與 agent-video-specs 共用）
 docs/                          總覽、端到端流程、規則與踩坑、自審清單、安裝、角色與首幀、換角重製、硬體說明
 tools/                         全域工具（各腳本直接用這裡，不再複製到 C:\AI\tools）
 films/                         自己的片與角色資產（.gitignore，不進 repo；規則見 films/AGENTS.md）
@@ -62,7 +64,7 @@ setup/spark_check.py、setup/env/arm64/   RTX Spark 相容性檢查與 ARM64 套
 ## 專案專屬規則
 
 ### 授權與來源
-- **僅限非商業用途**：文件素材為 CC BY-NC 4.0；Qwen-Image 2.1、Breeze TTS 2（選用配音引擎才會用到）只能非商用。要營利前先照 `THIRD_PARTY_NOTICES.md` 替換模型。
+- **僅限非商業用途**：文件素材為 CC BY-NC 4.0；Qwen-Image 2.1 只能非商用。要營利前先照 `THIRD_PARTY_NOTICES.md` 替換模型。
 - **必須保留來源標示**：`LICENSE`、`LICENSE-docs.md`、`THIRD_PARTY_NOTICES.md`、`NOTICE.md`、`skills/ai-film/NOTICE.md`、`skills/ai-film/LICENSE-AI-drama-pound.txt` 不可刪除或移除原作者署名；修改上游文件時在 `NOTICE.md` 的修改清單補一筆。
 
 ### 生圖
@@ -72,8 +74,9 @@ setup/spark_check.py、setup/env/arm64/   RTX Spark 相容性檢查與 ARM64 套
 - 走 Codex 的圖由 `make_film.py` 記成 `codex`，片尾寫「OpenAI 生圖（Codex）」；不要再手動用 `agent-draw` 代 `make_film.py` 生圖（不會記到 `out/image_backends.json`，片尾名稱會錯）。
 
 ### 配音
-- 預設引擎 VoxCPM2（聲音設計＋台詞，`tools/voxcpm_batch.py`）；`VOICE_ENGINE=breezyvoice` 改用 Breeze TTS 2＋BreezyVoice（台灣腔較準、可標注音，但官方以 Linux 為準，RTX Spark 大概率裝不起來）。
-- 挑音兩個引擎共用 `voice_pick.py`；VoxCPM2 不支援注音標記，念錯的字改同音字。
+- 配音引擎只有 VoxCPM2（聲音設計＋台詞，`tools/voxcpm_batch.py`），挑音 `voice_pick.py`；VoxCPM2 不支援注音標記。
+- 多音字、英文詞念錯：加進 repo 根目錄的讀音替換表 `tts-lexicon.md`（Markdown 表格，與 agent-video-specs 共用的主表，格式寫在檔頭）；只對某支片的放片子資料夾的同名檔，只有某句的寫 `film.json` 該句的 `"tts"`（同音字）。不要改字幕或劇本原文。
+- 送進 TTS 的文字一律經 `tools/tts_lexicon.py`（`voxcpm_batch`、`gen_voice`、`voice_pick`、`recast` 已接），新寫的配音工具也要接；改 `tts-lexicon.md` 的格式時，agent-video-specs 各範本的 `generate_narration.py` 要一起改。
 - 語音環境照 `AGENT_SETUP.md` §2b 自建（位置用 `AI_ROOT`／`PY_VOICE` 設定），不要拿其他專案的 venv 共用（例如 `voxcpm2-voice-cloner`）。
 - 聽寫（ASR）一律經 `tools/stt.py` 的 `load_asr()`，不要直接 import `faster_whisper`：Windows on Arm 沒有 ctranslate2，靠它自動改用 openai-whisper。
 - 工具要呼叫 venv 裡套件的命令列（例如 edge-tts）時，一律用 `[sys.executable, "-m", <模組>]`，不要靠 PATH 找執行檔：PATH 上可能是系統 Python 的舊版。

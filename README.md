@@ -27,7 +27,7 @@ Windows on Arm＋64GB 統一記憶體的 RTX Spark 筆電另有設定（`configs
 
 32GB 顯卡、16GB＋32GB RAM、Google Colab 的版本由上游原作者維護，連結見 [NOTICE.md](NOTICE.md)。每一版都有 `cloud/`，本機跑不動時可以把 H3 送到 Colab。
 
-> ⚠️ **本 repo 預設給非商業用途**（教學、研究、個人創作）。用到的 **Qwen-Image 2.1 只能非商業使用**（選用的 Breeze TTS 2 也是）；要營利請照 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) 處理（生圖預設已是雲端 Image 2.5，商用時關掉本機備選 `IMAGE_FALLBACK=0`）。預設配音引擎 VoxCPM2 是 Apache-2.0，可商用；選用引擎 `VOICE_ENGINE=breezyvoice` 會用到非商用的 Breeze TTS 2 設計角色聲音。另外**MiniMax H3 的授權排除美國、歐盟、英國、南韓**；MiniMax H3／Music 3 要求公開內容標示 AI 生成。本 repo 不含任何模型權重。
+> ⚠️ **本 repo 預設給非商業用途**（教學、研究、個人創作）。用到的 **Qwen-Image 2.1 只能非商業使用**；要營利請照 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) 處理（生圖預設已是雲端 Image 2.5，商用時關掉本機備選 `IMAGE_FALLBACK=0`）。配音引擎 VoxCPM2 是 Apache-2.0，可商用。另外**MiniMax H3 的授權排除美國、歐盟、英國、南韓**；MiniMax H3／Music 3 要求公開內容標示 AI 生成。本 repo 不含任何模型權重。
 
 ## 2. 流程一覽
 
@@ -59,8 +59,8 @@ docs/
   hardware.md               ⭐ 你這個硬體版本：模型組合、啟動參數、實測數據、風險
 tools/                      全域工具（各腳本直接用，不用複製）
   h3_shot.py ⭐             分鏡 JSON → 官方格式提示詞 → 格式檢查 → H3 生成
-  make_voxcpm.cmd ⭐        台詞配音（預設）：VoxCPM2 每句 8 候選 → 聽寫＋腔調自動挑
-  make_breezyvoice.cmd      台詞配音（選用）：BreezyVoice，台灣腔較準、可標注音，官方以 Linux 為準
+  make_voxcpm.cmd ⭐        台詞配音：VoxCPM2 每句 8 候選 → 聽寫＋腔調自動挑
+  tts_lexicon.py            讀音替換表：送進 TTS 前照根目錄 tts-lexicon.md 把念錯的詞改字
   gen_image.py              生圖入口：預設 OpenAI Image 2.5，備選本機 Qwen-Image 2.1／Edit（--backend local）
   start_comfy.cmd           啟動 ComfyUI
   img25.py                  OpenAI Image 2.5 生圖／編輯（gen_image.py 預設呼叫它）
@@ -79,7 +79,7 @@ configs/profile.cmd         這個硬體版本的環境變數
 ## 4. 最快上手
 
 0. **AI agent 請先讀 [AGENT_SETUP.md](AGENT_SETUP.md)**，它會一步步帶你檢查硬體、安裝、下載、驗證。`python setup/detect_hardware.py` 會列出每個元件建議在本機還是雲端跑；**本機跑不動 H3 → [cloud/README.md](cloud/README.md)**（用 Google AI 方案的 Colab 運算單元跑）。
-1. 照 [AGENT_SETUP.md](AGENT_SETUP.md) 裝好 ComfyUI＋H3、Voice 環境（含 VoxCPM2；Breeze TTS、BreezyVoice 選用）。`tools/` 不用複製，腳本直接用 repo 裡的。
+1. 照 [AGENT_SETUP.md](AGENT_SETUP.md) 裝好 ComfyUI＋H3、Voice 環境（含 VoxCPM2）。`tools/` 不用複製，腳本直接用 repo 裡的。
 2. 先讀 [docs/hardware.md](docs/hardware.md)，再在同一個 cmd 視窗 `call configs\profile.cmd` 套用這個硬體版本的設定，然後執行 `<repo>\tools\start_comfy.cmd`。
 3. 跑 `setup\smoke_test.py` 與 `pipeline\demo_local\run_demo.py` 確認全部正常。
 4. 開始做自己的片，照下面的檢查表一步一步來（2026-10-07 實測：一個沒看過本專案的 agent 照這個 repo，約 45 分鐘做出 7 鏡、28 秒的片）。
@@ -90,7 +90,7 @@ configs/profile.cmd         這個硬體版本的環境變數
 | 2 | 角色定妝：轉面圖＋表情表（備選千問：單張、灰底、半身） | `gen_image.py`（預設 Image 2.5；備選 Qwen-Image 2.1） | `docs/07` §0（備選 §1） | `chars/<角色>_turn.png`、`_expr.png`（備選 `chars/<角色>.png`） | ✅ 定案 |
 | 3 | 場景母版（空景，之後裁成各鏡景別） | `gen_image.py` | `docs/07` §4 | `masters/*.png` | |
 | 4 | 首幀（附定妝＋母版裁切，**每鏡照抄角色完整外觀描述**） | `gen_image.py --model qwen-edit --ref`（預設 OpenAI 生圖（Image 2.5 或 Codex）附轉面圖＋表情表，`--model` 這時不作用；`IMAGE_BACKEND=local` 時才用 Qwen-Image-Edit 附單張半身，不加會用到不適合附參考圖的 Qwen-Image 2.1） | `docs/07` §2–3 | `first/<鏡>.png` | ✅ 逐張看：臉、服裝、多手多腳、背景有沒有字 |
-| 5 | 角色聲音（一次）→ 台詞配音 | `voxcpm_batch.py`（設計參考音）→ `make_voxcpm.cmd`（選用：`breeze_batch.py` → `make_breezyvoice.cmd`） | `docs/03` §5 | `bv/<句>.wav`（已去頭尾靜音） | `needs_review` 的句子聽一次 |
+| 5 | 角色聲音（一次）→ 台詞配音 | `voxcpm_batch.py`（設計參考音）→ `make_voxcpm.cmd`；念錯的詞加進 `tts-lexicon.md` | `docs/03` §5 | `bv/<句>.wav`（已去頭尾靜音） | `needs_review` 的句子聽一次 |
 | 6 | H3 每鏡（DMAD 4 步、只給首幀、台詞當固定音軌；看得到臉又沒台詞的鏡給靜音） | `h3_shot.py`（spec 加 `"draft": true`） | `docs/03` §4、`tools/examples/` | `h3/<鏡>/clip.mp4` | ✅ 抽格看：換臉、多人、鏡頭漂移 |
 | 7 | 配樂（純器樂、多抽幾個 seed，挑人聲殘留最少的） | `gen_music3.py` → `audio-separator` | `docs/02` §8 | `music/*.flac` | |
 | 8 | 放大、剪接（台詞提前 0.2 秒）、配樂壓低（台詞期間 15–30%）、響度、字幕 | `upscale_vsr.py`、ffmpeg | `docs/02` §9、§10（**`alimiter` 要 `level=false`**） | `cut/<片名>_1080p.mp4` | |
@@ -109,7 +109,7 @@ configs/profile.cmd         這個硬體版本的環境變數
 4. **單鏡 ≤12 秒**；15 秒會漂移、自己切鏡。
 5. **不說話的鏡頭給靜音引導音軌**，否則角色會自己嘟囔。
 6. **畫面上的中文一律後製疊字**，H3 會把字寫成亂碼。
-7. **台灣腔配音**：VoxCPM2 設計角色聲音（一次）→ 用它念每句台詞（每句 8 候選）→ 聽寫全對＋跟台灣國語參考音比聲調自動挑；念不準的字改同音字。要更準的台灣腔可改用選用引擎 BreezyVoice（`VOICE_ENGINE=breezyvoice`，可直接標注音 `連假[:ㄐㄧㄚ4]`，但官方以 Linux 為準）。
+7. **台灣腔配音**：VoxCPM2 設計角色聲音（一次）→ 用它念每句台詞（每句 8 候選）→ 聽寫全對＋跟台灣國語參考音比聲調自動挑；念錯的多音字、英文詞加進讀音替換表 `tts-lexicon.md`（送進 TTS 前自動改字，字幕照原文；與 agent-video-specs 共用），只有某句的就改同音字。
 8. **低頭、轉身後臉會換人** → 再生一張「動作結束時」的畫面當尾幀鎖住（預設 Image 2.5；本地可用 Qwen-Image-Edit 附定妝照）。
 9. **先做最難的一鏡再批次**，不要整片生完才發現共通問題。
 10. **不合格就重拍到合格**，不靠剪掉躲；給人看並排影片，數字只當備註。
@@ -135,4 +135,4 @@ configs/profile.cmd         這個硬體版本的環境變數
 | 本 repo 的文件與素材（`*.md`、技能文字、範例圖） | **CC BY-NC 4.0**（姓名標示、非商業） | [LICENSE-docs.md](LICENSE-docs.md) |
 | 用到的模型與第三方工具 | 各自的授權（**不隨本 repo 散布，自行下載**） | [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) |
 
-fork 或轉載時請保留這三個檔案與 [NOTICE.md](NOTICE.md)（來源與作者標示）。用這套工作流做出來的影片要遵守各模型的條款，特別是：MiniMax H3 的使用地區限制、MiniMax Music 3 的標示與 AI 揭露、Breeze TTS 2 的非商用限制（細節見 THIRD_PARTY_NOTICES.md）。
+fork 或轉載時請保留這三個檔案與 [NOTICE.md](NOTICE.md)（來源與作者標示）。用這套工作流做出來的影片要遵守各模型的條款，特別是：MiniMax H3 的使用地區限制、MiniMax Music 3 的標示與 AI 揭露、Qwen-Image 2.1 的非商用限制（細節見 THIRD_PARTY_NOTICES.md）。

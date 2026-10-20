@@ -45,7 +45,7 @@ films/
 - 影片：本機 H3，只給首幀；需要時加尾幀。`"draft": true`（DMAD 4 步）是定稿。
 - 片尾：預設不加（`ending.enabled: false`）；使用者要才打開。沒片尾時，AI 生成標示寫在貼文。
 - 照參考影片換主角：照 `../docs/08_換角重製.md`。
-- 配音：角色參考音定了就不換；台詞一律 `<repo>\tools\make_voxcpm.cmd jobs.json`（VoxCPM2，每句 8 候選自動挑；`make_film.py` 內建），念不準的字改同音字（要標注音 `連假[:ㄐㄧㄚ4]` 就改用選用的 `VOICE_ENGINE=breezyvoice`），`needs_review` 的句子請人聽。
+- 配音：角色參考音定了就不換；台詞一律 `<repo>\tools\make_voxcpm.cmd jobs.json`（VoxCPM2，每句 8 候選自動挑；`make_film.py` 內建），念錯的多音字、英文詞加進 `<repo>\tts-lexicon.md`（讀音替換表，字幕照原文），只有某句的就改同音字，`needs_review` 的句子請人聽。
 - 配樂：MiniMax Music 3 純器樂。
 - 放大：近景 RTX VSR、全景 FlashVSR（RTX Spark 筆電見 `../docs/hardware_rtxspark.md`）。
 - 雲端影片服務（Seedance 等）：使用者明說才用。

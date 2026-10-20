@@ -148,7 +148,6 @@ python pipeline/template_local/make_film.py h3 amb # 或直接：python cloud/hy
 | 下載模型大量 `HTTP 429 Too Many Requests` | 舊 `download.py` 每 8MB 一個請求打 huggingface.co（26GB＝3,000 多次），多份清單同時跑就被限速 → 改寫 `download.py`：轉址只解析一次、每檔 16 段長串流、可續傳、429 退避；全雲端安裝一次只跑一份清單；可設 `HF_TOKEN` |
 | 舊 `download.py` 大檔要兩倍硬碟 | 先存分段再合併 → 新版直接寫進同一個檔 |
 | whisper：`libcublas.so.12` 找不到 | Linux 的 CUDA 12 函式庫是 pip 套件，安裝時被濾掉、執行時也不在搜尋路徑 → 安裝只濾掉 `名稱==` 完全相符的 Windows 套件；`tools/stt.py` 在 Linux 先預載 |
-| BreezyVoice：`No module named torchmetrics` | 過濾 `^torch` 時連 torchmetrics 一起拿掉 → 同上 |
 | 第 2、3 個 ComfyUI 啟動失敗 | 複製程式碼時「跳過 models 資料夾」連 `comfy/ldm/models`（程式碼）也跳過 → 只跳過最上層 |
 | 字幕、片尾中文變方塊 | 字型寫死 Windows 路徑 → `tools/fonts.py`（Linux 用 Noto CJK／文鼎楷書，`install_full.sh` 會裝） |
 | RTX VSR 在 Colab 沒有裝 | `nvidia-vfx` 在 pypi.nvidia.com 其實有 Linux x64 版，但 `install_full.sh` 沿用 Windows 清單時把它濾掉、Colab 上也還沒實測 → `UPSCALE=lanczos`（預設）或 `flashvsr` |

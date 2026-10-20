@@ -122,7 +122,7 @@ def arm64_version(name, py, orig=None):
 def emit(report):
     out = ENV / "arm64"; out.mkdir(exist_ok=True)
     for req, r in report.items():
-        py = "3.10" if "breezyvoice" in req else "3.12"
+        py = "3.12"
         fix = {}
         for p in r["problems"]:
             if p["status"] == "special":
@@ -148,7 +148,7 @@ def wheel_scan():
     report = {}
     for req in sorted(ENV.glob("requirements_*.txt")):
         pkgs = parse_req(req)
-        py = "3.10" if "breezyvoice" in req.name else "3.12"     # 與 emit() 相同
+        py = "3.12"     # 與 emit() 相同
         with ThreadPoolExecutor(16) as ex:
             res = list(ex.map(lambda p: (p[0], p[1], *classify(p[0], p[1], py)), pkgs))
         bad = [r for r in res if r[2] != "ok"]

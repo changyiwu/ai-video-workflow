@@ -12,9 +12,7 @@ set COMFY_EXTRA_ARGS=--reserve-vram 6 --disable-pinned-memory --disable-async-of
 rem nvidia-vfx 0.2.0.0 has a win_arm64 wheel (pypi.nvidia.com), but RTX VSR on RTX Spark is untested: keep lanczos until
 rem docs\hardware_rtxspark.md first-run step 6b passes, then change this to UPSCALE=rtxvsr (or set UPSCALE=flashvsr)
 set UPSCALE=lanczos
-rem Voice environments live outside the repo. Installed somewhere else? set AI_ROOT (install root) or PY_VOICE / PY_BREEZE / PY_BREEZYVOICE before calling this.
+rem Voice environments live outside the repo. Installed somewhere else? set AI_ROOT (install root) or PY_VOICE before calling this.
 if not defined AI_ROOT set "AI_ROOT=C:\AI"
 if not defined PY_VOICE set "PY_VOICE=%AI_ROOT%\Voice\venv\Scripts\python.exe"
-if not defined PY_BREEZE set "PY_BREEZE=%AI_ROOT%\BreezeTTS\venv\Scripts\python.exe"
-if not defined PY_BREEZYVOICE set "PY_BREEZYVOICE=%AI_ROOT%\BreezyVoice\venv\Scripts\python.exe"
 echo [profile] RTX Spark (Windows on Arm, unified memory, UNTESTED): ComfyUI %COMFY_EXTRA_ARGS%, UPSCALE=%UPSCALE%. Close other big apps.

@@ -22,8 +22,6 @@
    |---|---|---|---|
    | `C:\AI\H3`（ComfyUI、H3、Qwen、Music 3） | 97／109 | torch 家族要換來源（NVIDIA nightly 有 torch 2.16 dev、torchaudio、torchvision 的 win_arm64）；`triton-windows` 3.8.0.post28 起有 win_arm64，但預覽版 CUDA 上未驗證，先不裝；`numba`／`llvmlite` 原鎖版本的 ARM64 版只有 Python 3.14，ARM64 清單改用 0.68／0.50；`nvidia-vfx`（RTX VSR）0.2.0.0 起在 pypi.nvidia.com 有 win_arm64 版（PyPI 上只有 sdist 空殼，2026-10-14 更正） | 用 `setup/env/arm64/requirements_h3_venv_arm64.txt`；RTX VSR 驗證前放大先用 `UPSCALE=lanczos` |
    | `C:\AI\Voice`（VoxCPM2、faster-whisper、分軌） | 126／146 | **`ctranslate2`（faster-whisper 核心）任何版本都沒有 Windows ARM64 版**（CUDA 12 函式庫也只有 x64；CUDA 13 版有 ARM64，但 ctranslate2 用不到）；`soxr`、`torchcodec` 沒有 ARM64 wheel（見下方〈語音〉）；`tiktoken`（openai-whisper 需要）與 `praat-parselmouth`（挑音的聲調比對）只有原始碼 | 聽寫：`stt.py` 自動改用 openai-whisper，但要先編得出 tiktoken（要 Rust 工具鏈）；parselmouth 編不起來時挑音照跑，只是沒有腔調分數；VoxCPM2 先試本機 |
-   | `C:\AI\BreezeTTS`（選用引擎） | 81／88 | 少數套件要現場編譯 | 用 arm64 清單試裝 |
-   | `C:\AI\BreezyVoice`（選用引擎，Python 3.10） | 110／136 | **numpy 1.26、scipy、pandas、scikit-learn、pydantic-core、pyyaml 等在 Python 3.10 沒有 ARM64 wheel**（新版的 ARM64 wheel 從 3.11／3.12 起），要自己編譯，很可能失敗 | 要用選用引擎就送 Colab（`cloud/colab_h3.py full-setup`）或在桌機跑 |
 
 3. **記憶體是共用的**：桌機的做法是「顯存放不下的模型先放系統記憶體」，在統一記憶體上這等於同一池子放兩份。上游 16GB 顯存＋32GB 記憶體版實測 H3 一共約用掉 45–50GB 仍可跑，所以 64GB 統一記憶體**理論上夠**，但 Windows 與桌面程式也從同一池子拿，生成時一定要關掉其他大程式。
 
@@ -53,15 +51,15 @@ H3 還是記憶體不足時，依序試：`--reserve-vram` 調到 8–10 → 加
 | RTX VSR | 🟡 很有機會 | nvidia-vfx 0.2.0.0 有官方 ARM64 版，第一次上機 6b 驗證 |
 | FlashVSR | 🟠 不確定 | 要 Triton，且要能在預覽版 CUDA 上編譯 |
 
-## 語音：VoxCPM2（本專案預設配音引擎）
+## 語音：VoxCPM2（本專案的配音引擎）
 
-2026-10-14 起本專案預設配音引擎就是 VoxCPM2，桌機與筆電同一套。選用引擎 Breeze TTS 2（官方只支援 Linux）與 BreezyVoice（安裝與相依套件以 Linux 為準，Python 3.10 套件沒有 ARM64 wheel）在筆電上都很難裝。**VoxCPM2 是語音元件裡最有機會在筆電本機跑的**（2026-10-11 查資料與掃 PyPI，尚未實機驗證）：
+2026-10-14 起本專案的配音引擎就是 VoxCPM2，桌機與筆電同一套。**VoxCPM2 是語音元件裡最有機會在筆電本機跑的**（2026-10-11 查資料與掃 PyPI，尚未實機驗證）：
 
 - **官方需求沒有限定平台**：Python 3.10–3.12、PyTorch ≥ 2.5、CUDA ≥ 12；裝置可選 `cpu`／`cuda`／`mps`。社群在 Windows 上有在用，上游作者在 Windows 實測顯存峰值 3.6–6.4GB，佔共用記憶體很少。
 - **它一個就包辦兩件事**（`make_film.py` 的 `voices` 呼叫 `tools/voxcpm_batch.py`）：
   - 設計角色參考音（描述寫在 `film.json` 的 `voice_design`）。
   - 用參考音念每句台詞（每句 8 候選，自動挑）。
-  - 代價：上游實測台灣腔比 BreezyVoice 差（腔調分數 0.80 對 0.85），且不能標注音。要更準的台灣腔，在桌機或 Colab 用 `VOICE_ENGINE=breezyvoice`。
+  - 代價：上游實測台灣腔分數 0.80，且不能標注音；念錯的詞靠讀音替換表 `tts-lexicon.md` 改字。
 
 ARM64 套件狀況：
 
@@ -83,7 +81,7 @@ ARM64 套件狀況：
 | 角色與首幀 | OpenAI Image 2.5（本專案預設，雲端，不受 ARM64 影響）；備選本機 Qwen-Image |
 | 配樂（Music 3） | 筆電（ComfyUI 跑得起來的話） |
 | H3 影片 | 筆電先試；不行改 `set H3_BACKEND=colab` |
-| 角色參考音＋台詞配音 | 筆電本機 VoxCPM2（預設引擎）；不行改 Colab 或桌機。要更準的台灣腔：選用引擎 BreezyVoice 在 Colab 或桌機 |
+| 角色參考音＋台詞配音 | 筆電本機 VoxCPM2；不行改 Colab 或桌機 |
 | 聽寫校對（挑配音、自審） | 筆電本機：faster-whisper 裝不起來時 `stt.py` 自動改用 openai-whisper（較慢，第一次另下載約 3GB 權重）；不行再改 Colab 或桌機 |
 | 放大 | 筆電：先用 ffmpeg lanczos；RTX VSR（nvidia-vfx 0.2.0.0 ARM64 版）驗證通過後改用它 |
 
@@ -120,7 +118,7 @@ ARM64 套件狀況：
    - 附參考音克隆（torchcodec 風險）：`gen_voice.py --ref design.wav --text "明天要考試" --out clone.wav`；報 `libtorchcodec` 錯誤就記下來，改送 Colab／桌機
    - 失敗時記下卡在哪個套件，再評估 llama.cpp-omni 備案
    - 聽寫備援（openai-whisper）：`C:\AI\Voice\venv\Scripts\python.exe <repo>\tools\stt.py --audio design.wav --outdir stt` → `stt\transcript.json` 的 `backend` 應為 `openai`，記下秒數
-8. **smoke test**：`setup\smoke_test.py`；過了再跑 `pipeline\demo_local\run_demo.py`（聽寫應該會印出 `[asr] ... falling back to openai-whisper`，代表備援生效；選用的 Breeze／BreezyVoice 沒裝會自動跳過）。
+8. **smoke test**：`setup\smoke_test.py`；過了再跑 `pipeline\demo_local\run_demo.py`（聽寫應該會印出 `[asr] ... falling back to openai-whisper`，代表備援生效）。
 9. 把每一步的結果（成功／失敗、速度、記憶體峰值）寫回本文件，並更新上面的分工表。
 
 ## 重新產生 ARM64 套件清單

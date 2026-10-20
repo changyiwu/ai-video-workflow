@@ -32,27 +32,27 @@ python setup\detect_hardware.py
 |---|---|---|
 | Windows | 11 | `winver` |
 | NVIDIA 驅動 | 610.88（要支援 CUDA 13.0） | `nvidia-smi` 右上角 CUDA Version ≥ 13.0 |
-| Python | 3.12（3.12.10–3.12.14 都可）；選用的 BreezyVoice 另需 3.10（用 uv 安裝即可）。系統沒有 3.12 時不用另外裝，`uv python install 3.12`，建 venv 時改用 `uv venv --python 3.12`（見 2b） | `py -3.12 --version` |
-| uv | 任意（裝套件用；選用的 BreezyVoice 環境也靠它裝 Python 3.10：`pip install uv`） | `uv --version` |
+| Python | 3.12（3.12.10–3.12.14 都可）。系統沒有 3.12 時不用另外裝，`uv python install 3.12`，建 venv 時改用 `uv venv --python 3.12`（見 2b） | `py -3.12 --version` |
+| uv | 任意（裝套件用：`pip install uv`） | `uv --version` |
 | Git | 任意 | `git --version` |
 | ffmpeg／ffprobe | 9.0.1 full build，要在 PATH（2026-10-17 桌機用 8.1.1 full build 跑 `smoke_test.py` 也全部通過） | `ffmpeg -version` |
 | 硬碟 | C 槽至少 250GB 可用（必要模型約 150GB），NVMe SSD | `detect_hardware.py` |
 | 分頁檔 | Windows 預設「系統管理」即可，不要設成固定的小數字 | 系統 → 進階系統設定 → 效能 → 虛擬記憶體（**這是系統設定，要請使用者自己確認或改**） |
 
-## 2. 資料夾與 Python 環境（必裝兩個，選用兩個）
+## 2. 資料夾與 Python 環境（兩個）
 
-ComfyUI 有兩種裝法：**已經有 Comfy Desktop 就直接用它**（2a，模型共用、不用另外裝 ComfyUI）；沒有才自己裝在 `C:\AI\H3`（2a′）。語音環境裝在 `C:\AI`（不要放進雲端硬碟同步的資料夾）；工具不用裝，直接用 repo 的 `tools/`（2e）。
+ComfyUI 有兩種裝法：**已經有 Comfy Desktop 就直接用它**（2a，模型共用、不用另外裝 ComfyUI）；沒有才自己裝在 `C:\AI\H3`（2a′）。語音環境裝在 `C:\AI`（不要放進雲端硬碟同步的資料夾）；工具不用裝，直接用 repo 的 `tools/`（2c）。
 
 **順序很重要：先做完第 2 節（尤其是 clone ComfyUI），再做第 3 節下載模型。** 部分模型清單會寫進 `ComfyUI-0.36.0\models\`，先下載的話資料夾已經存在，`git clone` 會因為目錄不是空的而失敗。
 
-**套件一律用 uv 裝**（比 pip 快很多；2026-10-07 全新安裝實測，pip 下載部分大檔只有 100–200 kB/s，H3 環境卡了 20 分鐘以上，改 uv 1.5 分鐘裝完）。四份清單都是原專案 `pip freeze` 的完整結果，所以都加 `--no-deps` 照清單裝，不要讓 pip／uv 自己重新解依賴（語音環境的 voxcpm 依賴會跟鎖定的 fsspec 衝突，照清單裝則沒問題）。uv 也卡住時，見文末常見問題。
+**套件一律用 uv 裝**（比 pip 快很多；2026-10-07 全新安裝實測，pip 下載部分大檔只有 100–200 kB/s，H3 環境卡了 20 分鐘以上，改 uv 1.5 分鐘裝完）。兩份清單都是原專案 `pip freeze` 的完整結果，所以都加 `--no-deps` 照清單裝，不要讓 pip／uv 自己重新解依賴（語音環境的 voxcpm 依賴會跟鎖定的 fsspec 衝突，照清單裝則沒問題）。uv 也卡住時，見文末常見問題。
 
 ```
 mkdir C:\AI\Voice
 ```
-（自己裝 ComfyUI 時再建 `C:\AI\H3`；要裝選用配音引擎時再建 `C:\AI\BreezeTTS`、`C:\AI\BreezyVoice`。）
+（自己裝 ComfyUI 時再建 `C:\AI\H3`。）
 
-語音環境不一定要裝在 `C:\AI`：裝到別處（例如 `D:\AI`）時，在呼叫 `configs\profile*.cmd` 之前 `set AI_ROOT=D:\AI`（三個語音環境都在它底下），或個別設 `PY_VOICE`、`PY_BREEZE`、`PY_BREEZYVOICE` 指向各自的 `python.exe`。`make_film.py`、`smoke_test.py`、`make_voxcpm.cmd`、`make_breezyvoice.cmd` 都讀這幾個變數。下面的指令以預設的 `C:\AI` 為例。
+語音環境不一定要裝在 `C:\AI`：裝到別處（例如 `D:\AI`）時，在呼叫 `configs\profile*.cmd` 之前 `set AI_ROOT=D:\AI`（語音環境在它底下），或直接設 `PY_VOICE` 指向語音環境的 `python.exe`。`make_film.py`、`smoke_test.py`、`make_voxcpm.cmd` 都讀這兩個變數。下面的指令以預設的 `C:\AI` 為例。
 
 ### 2a. 主環境：Comfy Desktop（已安裝時用這個）
 
@@ -104,36 +104,7 @@ uv venv --python 3.12 C:\AI\Voice\venv
 
 確認：`C:\AI\Voice\venv\Scripts\python.exe -c "import voxcpm, faster_whisper, audio_separator, stable_whisper, edge_tts;print('ok')"` → `ok`
 
-### 2c.（選用）Breeze TTS 2 環境 C:\AI\BreezeTTS（`VOICE_ENGINE=breezyvoice` 時設計新角色的參考音）
-
-2026-10-14 起預設配音引擎改為 VoxCPM2，2c、2d 只有要用選用引擎（台灣腔較準、可標注音）時才裝。兩者官方都以 Linux 為準，下面是上游作者在 Windows 跑通的非官方裝法；Breeze TTS 2 權重非商用。
-
-```
-git clone https://github.com/breezeblue-ai/breeze-tts C:\AI\BreezeTTS\breeze-tts
-py -3.12 -m venv C:\AI\BreezeTTS\venv
-uv pip install --python C:\AI\BreezeTTS\venv\Scripts\python.exe --no-deps -r <repo>\setup\env\requirements_breeze_venv.txt --extra-index-url https://download.pytorch.org/whl/cu128 --index-strategy unsafe-best-match
-```
-（Breeze 用 cu128 的 torch，跟另外兩個環境不同，這是原專案實際狀態。）
-
-### 2d.（選用）BreezyVoice 環境 C:\AI\BreezyVoice（`VOICE_ENGINE=breezyvoice` 時念台詞）
-
-BreezyVoice（聯發科＋台大，Apache-2.0）是選用的台詞配音引擎：用角色參考音念任何台詞，台灣國語腔，念不準的字可直接標注音。官方安裝說明只有 Linux 版（文字正規化需要的 pynini 在 PyPI 只有 Linux wheel，細節見 `docs/06_安裝.md` §5b），下面是原專案在 Windows 上實際跑通的非官方裝法：
-
-```
-git clone --recurse-submodules https://github.com/mtkresearch/BreezyVoice C:\AI\BreezyVoice\code
-cd C:\AI\BreezyVoice\code && git checkout d592c9d3e8927a0f53f68616387060dcd32a05ea && git submodule update --init --recursive
-uv python install 3.10
-uv venv --python 3.10 C:\AI\BreezyVoice\venv
-uv pip install --python C:\AI\BreezyVoice\venv\Scripts\python.exe "setuptools<70" wheel
-uv pip install --python C:\AI\BreezyVoice\venv\Scripts\python.exe --no-build-isolation --no-deps -r <repo>\setup\env\requirements_breezyvoice_venv.txt --index-strategy unsafe-best-match --extra-index-url https://download.pytorch.org/whl/cu128
-xcopy /E /I <repo>\setup\breezyvoice\winstub C:\AI\BreezyVoice\winstub
-```
-- 一定要 `--no-deps` 照清單裝：`g2pw` 會要求編不起來的舊版 transformers；`openai-whisper` 要先有 `setuptools<70` 再用 `--no-build-isolation` 建置；`HyperPyYAML` 要 `ruamel.yaml<0.18`（清單已鎖）。
-- `winstub`：官方的文字正規化（WeTextProcessing）需要 pynini，Windows 裝不了，用這個直通替身取代。**它不會把數字轉成國字**，`breezyvoice_batch.py` 會自動轉阿拉伯整數，其他（小數、英文縮寫）請在台詞裡寫成國字。
-- 第一次執行會自動下載 g2pW 注音模型（607MB，到 `C:\AI\BreezyVoice\code\G2PWModel`）和 bert-base-chinese 的 tokenizer（不到 1MB）。
-- 確認：`C:\AI\BreezyVoice\venv\Scripts\python.exe -c "import torch;print(torch.__version__, torch.cuda.is_available())"` → `2.7.1+cu128 True`
-
-### 2e. 工具
+### 2c. 工具
 
 不用複製：`make_film.py`、`run_demo.py`、`smoke_test.py` 預設直接用 repo 的 `tools/`（要放別處才設 `AI_TOOLS`）。repo 放在 Google 雲端硬碟時，把 repo 資料夾設成「可離線使用」（或雲端硬碟用鏡像模式），否則串流模式下工具檔可能只在雲端，離線時會失敗。
 
@@ -142,14 +113,14 @@ xcopy /E /I <repo>\setup\breezyvoice\winstub C:\AI\BreezyVoice\winstub
 cmd 視窗：
 ```
 cd <repo>\setup
-for %f in (downloads.json downloads_uncensored.json downloads_dmad.json downloads_qwen_image.json downloads_qwen_image_edit.json downloads_music3.json downloads_voxcpm2.json downloads_breeze_tts2.json downloads_breezyvoice.json downloads_flashvsr.json) do C:\AI\H3\venv\Scripts\python.exe download.py %f
+for %f in (downloads.json downloads_uncensored.json downloads_dmad.json downloads_qwen_image.json downloads_qwen_image_edit.json downloads_music3.json downloads_voxcpm2.json downloads_flashvsr.json) do C:\AI\H3\venv\Scripts\python.exe download.py %f
 ```
 （寫進 .bat 檔要把 `%f` 改成 `%%f`。）PowerShell：
 ```
 cd <repo>\setup
-foreach ($f in 'downloads.json','downloads_uncensored.json','downloads_dmad.json','downloads_qwen_image.json','downloads_qwen_image_edit.json','downloads_music3.json','downloads_voxcpm2.json','downloads_breeze_tts2.json','downloads_breezyvoice.json','downloads_flashvsr.json') { C:\AI\H3\venv\Scripts\python.exe download.py $f }
+foreach ($f in 'downloads.json','downloads_uncensored.json','downloads_dmad.json','downloads_qwen_image.json','downloads_qwen_image_edit.json','downloads_music3.json','downloads_voxcpm2.json','downloads_flashvsr.json') { C:\AI\H3\venv\Scripts\python.exe download.py $f }
 ```
-**用 Comfy Desktop 時**：先 `call <repo>\configs\profile.cmd`（它設的 `COMFY_MODELS_DIR`、`COMFY_DIR` 讓 `download.py` 把模型放進 Desktop 的資料夾），用 `"%PY_H3%"` 代替上面的 `C:\AI\H3\venv\Scripts\python.exe`，**只跑 `downloads_dmad.json`、`downloads_flashvsr.json`、`downloads_voxcpm2.json`**（其他 Desktop 已經有，或改用 Desktop 的版本；要用選用配音引擎再加 Breeze 兩份）。Desktop 的共用資料夾裡沒有 Music 3、Qwen-Image 2.1 就再加 `downloads_music3.json`、`downloads_qwen_image.json`（`smoke_test.py` 兩個都要用）；要做換角重製的骨架鏡再加 `downloads_funcontrol.json`。
+**用 Comfy Desktop 時**：先 `call <repo>\configs\profile.cmd`（它設的 `COMFY_MODELS_DIR`、`COMFY_DIR` 讓 `download.py` 把模型放進 Desktop 的資料夾），用 `"%PY_H3%"` 代替上面的 `C:\AI\H3\venv\Scripts\python.exe`，**只跑 `downloads_dmad.json`、`downloads_flashvsr.json`、`downloads_voxcpm2.json`**（其他 Desktop 已經有，或改用 Desktop 的版本）。Desktop 的共用資料夾裡沒有 Music 3、Qwen-Image 2.1 就再加 `downloads_music3.json`、`downloads_qwen_image.json`（`smoke_test.py` 兩個都要用）；要做換角重製的骨架鏡再加 `downloads_funcontrol.json`。
 
 每份清單跑完會印 `downloaded N, already present M, failed K`，全部成功才印 `ALL DOWNLOADS VERIFIED`（有失敗時結束碼非 0，重跑會從斷點續傳、已驗證的檔案自動跳過）。大檔用 SHA-256 驗證，小設定檔用 Hugging Face 公布的 git 雜湊驗證。
 
@@ -162,16 +133,13 @@ foreach ($f in 'downloads.json','downloads_uncensored.json','downloads_dmad.json
 | `downloads_qwen_image_edit.json` | Qwen-Image-Edit 2511 fp8＋文字編碼器＋VAE（**本機備選的首幀做法**；預設是 OpenAI 生圖，不用下載） | 28.1GB |
 | `downloads_music3.json` | MiniMax Music 3 | 11.1GB |
 | `downloads_voxcpm2.json` | VoxCPM2 主權重（**預設配音引擎**） | 4.6GB（另需同 repo 的 config／tokenizer 小檔，見下） |
-| `downloads_breeze_tts2.json` | 選用：Breeze TTS 2（含 tokenizer、audio_tokenizer；`VOICE_ENGINE=breezyvoice` 時設計參考音） | 7.1GB |
-| `downloads_breezyvoice.json` | 選用：BreezyVoice-300M（`VOICE_ENGINE=breezyvoice` 時念台詞） | 3.0GB |
 | `downloads_flashvsr.json` | FlashVSR v1.1 | 6.3GB |
 | 選用 | `downloads_action_loras.json`（動作 LoRA）、`downloads_funcontrol.json`（舞蹈骨架控制） | — |
 
-另外四個會自動下載的：
+另外三個會自動下載的：
 - VoxCPM2 小檔：`C:\AI\Voice\venv\Scripts\python.exe -c "from huggingface_hub import snapshot_download as s; s('openbmb/VoxCPM2', revision='32279effe8c19989596f05d353d1447f51d9e915', local_dir=r'C:\AI\Voice\models\VoxCPM2')"`
 - faster-whisper large-v3：`C:\AI\Voice\venv\Scripts\python.exe -c "from faster_whisper import WhisperModel; WhisperModel('large-v3', device='cpu', download_root='C:/AI/Voice/models/whisper')"`
   - ⚠️ 先在同一個視窗 `set HF_HUB_DISABLE_SYMLINKS=1`。Windows 沒開「開發人員模式」時不能建符號連結，Hugging Face 快取會報 `OSError: [WinError 1314] 用戶端沒有這項特殊權限`；設了之後改成直接放檔案，已下載的部分會沿用。印出 float16 轉 float32 的警告是因為這裡用 CPU 載入，正常。
-- g2pW 注音模型（選用）：第一次跑 BreezyVoice 時自動下載（見 2d）。
 - BS-RoFormer：第一次跑 `audio-separator` 時自動下載到 `C:\AI\Voice\models\separator`（`smoke_test.py` 會觸發）。
 
 DMAD 轉檔：
@@ -194,10 +162,10 @@ call <repo>\configs\profile.cmd
 "%PY_H3%" <repo>\setup\smoke_test.py
 ```
 （`PY_H3` 由 `profile.cmd` 設定：Comfy Desktop 的 `.venv`，或自己裝的 `C:\AI\H3\venv\Scripts\python.exe`。）
-`smoke_test.py` 會自己設計一個聲音、生一張首幀，跑完 VoxCPM2（設計聲音）→ VoxCPM2（念台詞）→ 自動挑選 →（有裝才跑：Breeze 設計 → BreezyVoice 念＋挑選）→ faster-whisper → 聲調比對 → Qwen-Image 2.1 → Music 3 → BS-RoFormer → H3 → RTX VSR → FlashVSR，最後印出每一步 OK／FAIL 和秒數。
-- 全部 OK，且每步時間在 `docs/hardware.md` 列的範圍內（真實顯卡比 5090 慢是正常的），就算安裝完成。完整版 12 步；`--quick` 跳過 FlashVSR，11 步；有裝選用的 Breeze＋BreezyVoice 會多 3 步。
-- 2026-10-07 全新安裝實測（上游，當時預設 BreezyVoice、smoke test 為 14 步；另一個 agent 只看本 repo、在清空的 `C:\AI` 從零安裝，RTX 5090）：完整版 14 步全部 OK，共 500 秒；第一次跑 BreezyVoice 會先下載 g2pW 注音模型，那一步多約 45 秒。
-- 2026-10-17 本分支桌機實測（RTX 5060 Ti 16GB＋64GB RAM，Comfy Desktop，`--reserve-vram 1.5`，沒裝選用的 Breeze／BreezyVoice）：12 步全部 OK，共約 1205 秒（20 分鐘），各步秒數見 `docs/hardware.md`〈真實 16GB 卡實測〉。
+`smoke_test.py` 會自己設計一個聲音、生一張首幀，跑完 VoxCPM2（設計聲音）→ VoxCPM2（念台詞）→ 自動挑選 → faster-whisper → 聲調比對 → Qwen-Image 2.1 → Music 3 → BS-RoFormer → H3 → RTX VSR → FlashVSR，最後印出每一步 OK／FAIL 和秒數。
+- 全部 OK，且每步時間在 `docs/hardware.md` 列的範圍內（真實顯卡比 5090 慢是正常的），就算安裝完成。完整版 12 步；`--quick` 跳過 FlashVSR，11 步。
+- 2026-10-07 全新安裝實測（上游，當時的配音引擎與 smoke test 步數都跟現在不同；另一個 agent 只看本 repo、在清空的 `C:\AI` 從零安裝，RTX 5090）：全部 OK，共 500 秒。
+- 2026-10-17 本分支桌機實測（RTX 5060 Ti 16GB＋64GB RAM，Comfy Desktop，`--reserve-vram 1.5`）：12 步全部 OK，共約 1205 秒（20 分鐘），各步秒數見 `docs/hardware.md`〈真實 16GB 卡實測〉。
 - 打開 `setup\smoke_out\h3\clip.mp4` 看：畫面清楚、嘴型有跟著台詞動。
 
 ## 5. 跑全本地示範片

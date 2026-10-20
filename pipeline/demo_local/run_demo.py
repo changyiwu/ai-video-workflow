@@ -10,7 +10,6 @@ stage：chars → frames → voices → h3 → music → cut（不給就全部�
 - 角色：Qwen-Image 2.1 生「單張半身定妝照」（灰底、正面）。
 - 首幀：Qwen-Image-Edit 2511 附定妝照當參考（不訓練就能保持長相、又會照劇本演），直接出 1344×768。
 - 聲音：VoxCPM2 用文字描述設計角色聲音 → VoxCPM2 以它為參考念台詞（每句 8 候選）→ faster-whisper＋聲調比對（對照 edge-tts 標準台灣國語）自動挑最好的。
-  VOICE_ENGINE=breezyvoice 改回 Breeze TTS 2 設計＋BreezyVoice 念（台灣腔較準，但官方以 Linux 為準）。
 - 影片：H3 DMAD 4 步、只給首幀、台詞放進固定音軌（不說話的鏡頭給靜音）。
 - 配樂：MiniMax Music 3 純器樂；放大：RTX VSR。"""
 import json
@@ -34,9 +33,6 @@ T = Path(os.environ.get("AI_TOOLS", HERE.parents[1] / "tools"))     # 預設直�
 AI_ROOT = Path(os.environ.get("AI_ROOT", r"C:\AI"))   # 安裝根目錄（profile.cmd 有設 PY_* 時以 PY_* 為準）
 PYH3 = os.environ.get("PY_H3", str(AI_ROOT / "H3" / "venv" / "Scripts" / "python.exe"))
 PYV = os.environ.get("PY_VOICE", str(AI_ROOT / "Voice" / "venv" / "Scripts" / "python.exe"))
-PYB = os.environ.get("PY_BREEZE", str(AI_ROOT / "BreezeTTS" / "venv" / "Scripts" / "python.exe"))
-PYBV = os.environ.get("PY_BREEZYVOICE", str(AI_ROOT / "BreezyVoice" / "venv" / "Scripts" / "python.exe"))
-VOICE_ENGINE = os.environ.get("VOICE_ENGINE", "voxcpm2")   # voxcpm2（預設）｜breezyvoice
 SEP = str(Path(PYV).parent / "audio-separator.exe")
 HOST = os.environ.get("COMFY_HOST", "http://127.0.0.1:8188")
 sys.path.insert(0, str(HERE.parents[1] / "tools"))
@@ -150,19 +146,11 @@ def frames():
 @stage("voices")
 def voices():
     free_comfy()
-    if VOICE_ENGINE not in ("voxcpm2", "breezyvoice"):
-        sys.exit(f"VOICE_ENGINE 只能是 voxcpm2 或 breezyvoice（現在是 {VOICE_ENGINE}）")
     (OUT / "voice").mkdir(exist_ok=True)
-    mark = OUT / "voice" / "engine.txt"              # 換引擎時，舊的參考音與候選不能混用
-    if mark.exists() and mark.read_text(encoding="utf-8").strip() != VOICE_ENGINE:
-        sys.exit(f"out/voice 是用 {mark.read_text(encoding='utf-8').strip()} 做的，現在 VOICE_ENGINE={VOICE_ENGINE}：刪掉 out/voice 再跑 voices")
-    mark.write_text(VOICE_ENGINE, encoding="utf-8")
-    vox = VOICE_ENGINE == "voxcpm2"
-    key = "control" if vox else "instruction"       # 聲音描述：VoxCPM2 叫 control、Breeze 叫 instruction
-    jobs = [dict(name=f"ref_{k}", text=c["voice_sample"], seed=7, **{key: c["voice_design"]}) for k, c in CHARS.items()]
+    jobs = [dict(name=f"ref_{k}", text=c["voice_sample"], seed=7, control=c["voice_design"]) for k, c in CHARS.items()]
     lines = [s["line"] for s in SHOTS if s["line"]]
     # 挑音用的「台灣國語答案卷」：預設 edge-tts（原專案驗收過的做法；只產生參考音、不進成片，要連網、免費免帳號）。
-    # 沒網路時改用設計出來的播報聲音（2026-10-07 用 Breeze 實測：跟 edge-tts 挑出的第一名只有 4/19 句相同，可靠度較低）。
+    # 沒網路時改用設計出來的播報聲音（上游實測：跟 edge-tts 挑出的第一名只有 4/19 句相同，可靠度較低）。
     for i, (who, txt, _) in enumerate(lines):
         w = OUT / "voice" / f"tw_{i}.wav"
         if w.exists():
@@ -174,21 +162,16 @@ def voices():
             run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(mp3), "-ar", "48000", "-ac", "1", str(w)])
         else:
             print("edge-tts unavailable, falling back to a designed news-reading voice for line", i, flush=True)
-            jobs.append(dict(name=f"tw_{i}", text=txt, seed=11, **{key: "A clear, neutral standard Taiwanese Mandarin news-reading voice, calm, precise tones."}))
+            jobs.append(dict(name=f"tw_{i}", text=txt, seed=11, control="A clear, neutral standard Taiwanese Mandarin news-reading voice, calm, precise tones."))
     # 台詞：用設計好的聲音念，每句 8 個 seed → 自動挑（聽寫的拼音聲調要全對，再比台灣國語腔調分數）
-    # BreezyVoice 念不準的字可以標注音，例如「連假[:ㄐㄧㄚ4]」；VoxCPM2 不支援注音，要改同音字。
+    # VoxCPM2 不支援注音，念不準的字加進讀音替換表 tts-lexicon.md 或改同音字。
     bv_jobs = [dict(name=f"line{i}", text=txt, ref_audio=f"voice/ref_{who}.wav", ref_text=CHARS[who]["voice_sample"], tw_ref=f"voice/tw_{i}.wav", seeds=8)
                for i, (who, txt, _) in enumerate(lines)]
     (OUT / "bv.json").write_text(json.dumps(dict(out_dir="voice/bv", jobs=bv_jobs), ensure_ascii=False, indent=1), encoding="utf-8")
-    if vox:
-        (OUT / "vox_design.json").write_text(json.dumps(dict(out_dir="voice", jobs=jobs), ensure_ascii=False), encoding="utf-8")
-        run([PYV, str(T / "voxcpm_batch.py"), "vox_design.json"])
-        run([PYV, str(T / "voxcpm_batch.py"), "bv.json"])
-    else:
-        (OUT / "breeze.json").write_text(json.dumps(dict(out_dir="voice", jobs=jobs), ensure_ascii=False), encoding="utf-8")
-        run([PYB, str(T / "breeze_batch.py"), "breeze.json"])
-        run([PYBV, str(T / "breezyvoice_batch.py"), "bv.json"])
-    run([PYV, str(T / "voice_pick.py"), "bv.json"])         # 挑選兩個引擎共用
+    (OUT / "vox_design.json").write_text(json.dumps(dict(out_dir="voice", jobs=jobs), ensure_ascii=False), encoding="utf-8")
+    run([PYV, str(T / "voxcpm_batch.py"), "vox_design.json"])
+    run([PYV, str(T / "voxcpm_batch.py"), "bv.json"])
+    run([PYV, str(T / "voice_pick.py"), "bv.json"])
     bp = json.loads((OUT / "voice" / "bv" / "picks.json").read_text(encoding="utf-8"))
     picks = {}
     for i, (who, txt, _) in enumerate(lines):
@@ -196,7 +179,7 @@ def voices():
         if p["needs_review"]:
             best = next(c for c in p["cands"] if c["file"] == p["pick"])
             raise SystemExit(f"台詞「{txt}」8 個候選聽寫都不對（最好的聽成「{best['asr']}」）。" +
-                             ("念錯的字請改同音字（VoxCPM2 不支援注音）" if vox else "念錯的字請在台詞標注音（例：假[:ㄐㄧㄚ4]）") + "或換說法，再刪掉 voice/bv 重跑。")
+                             "念錯的詞加進 tts-lexicon.md 或改同音字（VoxCPM2 不支援注音）、換說法，再刪掉 voice/bv 重跑。")
         best = next(c for c in p["cands"] if c["file"] == p["pick"])
         picks[i] = dict(file=str(OUT / "voice" / "bv" / f"line{i}.wav"), heard=best["asr"], tw_score=best.get("tw_score"))
         print("pick", txt, "→", p["pick"], best["asr"], flush=True)

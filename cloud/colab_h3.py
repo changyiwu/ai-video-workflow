@@ -287,7 +287,6 @@ def cmd_full_setup(a):
 
 
 VM_ENV = ("AI_ROOT=/content/AI AI_TOOLS=/content/repo/tools PY_H3=python PY_VOICE=/content/AI/Voice/venv/bin/python "
-          "PY_BREEZE=/content/AI/BreezeTTS/venv/bin/python PY_BREEZYVOICE=/content/AI/BreezyVoice/venv/bin/python "
           "COMFY_DIR=/content/AI/H3/ComfyUI-0.36.0 H3_BACKEND=local UPSCALE=lanczos H3_PARALLEL=2")
 
 

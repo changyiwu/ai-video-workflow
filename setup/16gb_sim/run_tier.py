@@ -21,7 +21,6 @@ HERE = R.HERE
 ROOT = R.ROOT
 CH = ROOT / "角色資產" / "老師這次換你"
 PYH3, PYV = R.PY, r"C:\AI\Voice\venv\Scripts\python.exe"
-PYB = r"C:\AI\BreezeTTS\venv\Scripts\python.exe"
 SEP = r"C:\AI\Voice\venv\Scripts\audio-separator.exe"
 T = str(R.TOOLS)
 TIERS = {"base": dict(vram_hog=False, ramcap=None, flags=[]),
@@ -45,8 +44,6 @@ def tests(o):
     (o / "p_t2i.txt").write_text(CINE.format(who="the boy Afu, " + AFU), encoding="utf-8")
     (o / "p_ref.txt").write_text("The boy in <image1> is Afu: keep exactly his face, round cheeks and spiky black hair. " + CINE.format(who="the boy Afu from <image1>, " + AFU), encoding="utf-8")
     (o / "p_lora.txt").write_text(CINE.format(who="afu_img25, the boy Afu, " + AFU), encoding="utf-8")
-    (o / "breeze.json").write_text(json.dumps(dict(out_dir="breeze", jobs=[dict(name="line", text=LINE, ref_audio=str(CH / "阿福/voice_ref.wav"), ref_text=AFU_REF_TEXT, seed=37)]),
-                                              ensure_ascii=False), encoding="utf-8")
     (o / "music_cap.txt").write_text("Genre: light playful school comedy underscore, purely instrumental film score. BPM 108, key F major.\nVocal: NONE.\n"
                                      "Arrangement: pizzicato strings, marimba, glockenspiel, light brushed snare, upright bass.", encoding="utf-8")
     (o / "music_lyr.txt").write_text("[Intro]\n" + "[Instrumental]\n" * 14 + "[Outro]\n[Instrumental]\n", encoding="utf-8")
@@ -65,9 +62,7 @@ def tests(o):
         ("h3_C04", [PYH3, f"{T}\\h3_shot.py", "h3_C04.json", "--out", "h3_C04"], "h3_C04/clip.mp4", True),
         ("__free__", None, None, True),
         ("voxcpm2", [PYV, f"{T}\\gen_voice.py", "--text", LINE, "--ref", str(CH / "阿福/voice_ref.wav"), "--seed", "7", "--out", "voxcpm.wav"], "voxcpm.wav", False),
-        ("breeze", [PYB, f"{T}\\breeze_batch.py", "breeze.json"], "breeze/line.wav", False),
         ("whisper", [PYV, f"{T}\\stt.py", "--audio", "voxcpm.wav", "--outdir", "stt"], "stt/transcript.txt", False),
-        ("pron_compare", [PYV, f"{T}\\pron_compare.py", "voxcpm.wav", "breeze/line.wav", LINE], None, False),
         ("separator", [SEP, "@music3_60s", "--model_filename", "model_bs_roformer_ep_317_sdr_12.9755.ckpt", "--model_file_dir", r"C:\AI\Voice\models\separator",
                        "--output_dir", "sep", "--output_format", "WAV"], "sep", False),
         ("rtx_vsr", [PYH3, f"{T}\\upscale_vsr.py", "--source", str(HERE / "out" / "A" / "C04" / "clip.mp4"), "--output", "vsr/C04_1080p.mp4"], "vsr/C04_1080p.mp4", False),

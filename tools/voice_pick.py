@@ -1,4 +1,5 @@
-"""配音候選自動挑選（Voice venv）：VoxCPM2（voxcpm_batch.py）與 BreezyVoice（breezyvoice_batch.py）共用，兩者候選檔名格式相同。2026-10-07 建立。
+"""配音候選自動挑選（Voice venv）：挑 voxcpm_batch.py 生的候選。2026-10-07 建立。
+比對與 edge-tts 答案卷都用「套過讀音替換表（tts-lexicon.md）的台詞」，跟 voxcpm_batch.py 實際念的一致。
 每句的所有 seed 候選：
   1. faster-whisper large-v3 聽寫，必須和台詞逐字相同（數字、標點、注音標記不計）才算合格；
   2. 長度要在 edge-tts 台灣國語參考音的 0.5–2.5 倍之間（擋掉拖長、亂音）；
@@ -23,6 +24,7 @@ from stt import load_asr  # noqa: E402  (faster-whisper；裝不了時自動改 
 import soundfile as sf  # noqa: E402
 import opencc  # noqa: E402
 from pron_compare import compare  # noqa: E402
+from tts_lexicon import load_lexicon, speakable  # noqa: E402
 
 DIG = "零一二三四五六七八九"
 
@@ -120,8 +122,9 @@ def main():
     picks_path = out / "picks.json"
     picks = json.loads(picks_path.read_text(encoding="utf-8")) if picks_path.exists() else {}
     asr, s2t, todo = None, opencc.OpenCC("s2twp"), []
+    lex = load_lexicon(spec_path.parent)
     for j in spec["jobs"]:                           # 第一輪：每句候選聽寫、腔調、響度、高頻比
-        name, plain = j["name"], re.sub(r"\[:[^\]]*\]", "", j["text"])
+        name, plain = j["name"], re.sub(r"\[:[^\]]*\]", "", speakable(j["text"], lex))
         cands = sorted((out / "cand").glob(f"{name}_s*.wav"), key=lambda p: int(p.stem.rsplit("_s", 1)[1]))
         if not cands:
             print("[miss]", name); continue
@@ -133,7 +136,7 @@ def main():
         if asr is None:
             asr = load_asr("large-v3")
         ref = refdir / f"{name}.mp3"
-        if j.get("tw_ref"):                              # 自備的台灣國語參考音（例如沒網路時用 Breeze 產生）
+        if j.get("tw_ref"):                              # 自備的台灣國語參考音（make_film.py 先用 gen_voice.py 的 edge-tts 做好；沒網路時用 VoxCPM2 播報聲音）
             tw = Path(j["tw_ref"]); tw = tw if tw.is_absolute() else spec_path.parent / tw
             if not ref.exists() or ref.stat().st_mtime < tw.stat().st_mtime:
                 subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(tw), str(ref)], check=True)
@@ -174,7 +177,7 @@ def main():
 
 def write_trimmed(src, dst, head=0.08, tail=0.15):
     """選中的那支去掉頭尾靜音（保留開頭 80 ms、結尾 150 ms），台詞放到時間軸上才會準時開口、字幕對得上。
-    BreezyVoice 候選頭尾常有 0.3–1.0 秒靜音（2026-10-07 全新安裝測試發現）。回傳 [裁掉的開頭秒數, 保留的長度秒數]。"""
+    TTS 候選頭尾常有 0.3–1.0 秒靜音（2026-10-07 全新安裝測試發現）。回傳 [裁掉的開頭秒數, 保留的長度秒數]。"""
     import librosa
     x, sr = sf.read(str(src), dtype="float32")
     mono = x.mean(axis=1) if x.ndim > 1 else x

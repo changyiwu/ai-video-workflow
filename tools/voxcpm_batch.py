@@ -12,8 +12,9 @@ jobs.json（相對路徑以 jobs.json 所在資料夾為準）：
 已存在的檔案跳過；紀錄 <out_dir>/vox_log.jsonl。
 
 送進模型前的文字處理（字幕仍用原文）：
+- 讀音替換表（repo 根目錄的 tts-lexicon.md，jobs.json 所在資料夾往上找到的同名表會覆蓋；tools/tts_lexicon.py）。
 - 繁轉簡（繁體字讀音較不穩，原專案實測）。
-- VoxCPM2 不支援注音標記：「連假[:ㄐㄧㄚ4]」的標記會被拿掉並印警告；念不準的字請改同音字（寫在 film.json 該句的 "tts"）。
+- VoxCPM2 不支援注音標記：「連假[:ㄐㄧㄚ4]」的標記會被拿掉並印警告；念不準的詞加進 tts-lexicon.md，只有這一句的就改同音字（寫在 film.json 該句的 "tts"）。
 - 阿拉伯整數轉國字；刪節號、破折號改逗號。單字台詞常念成亂音，請寫成兩三個字。"""
 import json
 import os
@@ -21,6 +22,8 @@ import re
 import sys
 import time
 from pathlib import Path
+
+from tts_lexicon import load_lexicon, speakable
 
 MODEL_PATH = Path(os.environ.get("AI_ROOT", r"C:\AI")) / "Voice" / "models" / "VoxCPM2"  # AI_ROOT = install root (default C:\AI)
 DIG = "零一二三四五六七八九"
@@ -48,7 +51,8 @@ def make_t2s():
     raise RuntimeError("opencc 無法載入 t2s 設定")
 
 
-def prep(text, t2s):
+def prep(text, t2s, lex):
+    text = speakable(text, lex)
     if "[:" in text:
         print(f"[warn] VoxCPM2 不支援注音標記，已拿掉：{text}（念錯請改同音字）", flush=True)
         text = re.sub(r"\[:[^\]]*\]", "", text)
@@ -70,13 +74,14 @@ def main():
     if not MODEL_PATH.exists():
         sys.exit(f"VoxCPM2 model path does not exist: {MODEL_PATH}")
     t2s = make_t2s()
+    lex = load_lexicon(base)
     t0 = time.time()
     model = VoxCPM.from_pretrained(str(MODEL_PATH), load_denoiser=False, optimize=False, device="cuda")
     sr = model.tts_model.sample_rate
     print(f"[load] {time.time() - t0:.1f}s", flush=True)
 
     for j in spec["jobs"]:
-        text = prep(j["text"], t2s)
+        text = prep(j["text"], t2s, lex)
         if j.get("control"):                         # 聲音設計："(描述)文字"；不給參考音就設計一個新聲音
             text = f"({j['control'].strip()}){text}"
         if "seed" in j:

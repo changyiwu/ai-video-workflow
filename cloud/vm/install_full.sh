@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Runs ON the Colab VM (started by cloud/colab_h3.py full-setup): the WHOLE local stack on Linux, for people whose computer
-# cannot run anything locally - voice (VoxCPM2, faster-whisper, separator), BreezyVoice, Breeze TTS 2, ComfyUI (H3, Qwen-Image 2.1,
+# cannot run anything locally - voice (VoxCPM2, faster-whisper, separator), ComfyUI (H3, Qwen-Image 2.1,
 # Qwen-Edit 2511, Music 3, FlashVSR) + CJK fonts. Tested on a Colab L4 / G4 2026-10-10: setup/smoke_test.py passes everything
 # except rtx_vsr (nvidia-vfx is filtered out below - it has Linux x64 wheels on pypi.nvidia.com but is untested on Colab;
 # Linux uses FlashVSR or lanczos). Models ~150 GB of the VM's ~236 GB disk.
@@ -24,7 +24,7 @@ EOF
 (
   cd "$REPO/setup"
   for m in /content/downloads_h3core.json downloads_uncensored.json downloads_dmad.json downloads_qwen_image.json downloads_qwen_image_edit.json \
-           downloads_music3.json downloads_flashvsr.json downloads_voxcpm2.json downloads_breezyvoice.json downloads_breeze_tts2.json; do
+           downloads_music3.json downloads_flashvsr.json downloads_voxcpm2.json; do
     t=$(date +%s)
     n=$(basename "$m")
     AI_ROOT="$AI" python download.py "$m" > "/content/dl_$n.log" 2>&1 && echo "[full] model $n OK $(( $(date +%s) - t ))s" \
@@ -40,24 +40,6 @@ uv pip install -q --python "$VP" torch==2.14.0 torchaudio==2.11.0 torchvision==0
   && uv pip install -q --python "$VP" --no-deps -r /content/req_voice.txt --index-strategy unsafe-best-match \
   && "$VP" -c "import voxcpm, faster_whisper, audio_separator, stable_whisper, parselmouth, pypinyin, opencc" && echo "[full] voice env OK" \
   || echo "[full] voice env FAILED"
-# --- BreezyVoice (Python 3.10; winstub instead of pynini = same behaviour as the Windows install)
-BV="$AI/BreezyVoice"
-git clone -q --recurse-submodules https://github.com/mtkresearch/BreezyVoice "$BV/code" \
-  && git -C "$BV/code" checkout -q d592c9d3e8927a0f53f68616387060dcd32a05ea && git -C "$BV/code" submodule update -q --init --recursive
-cp -r "$REPO/setup/breezyvoice/winstub" "$BV/winstub"
-uv venv -q -p 3.10 "$BV/venv"; BP="$BV/venv/bin/python"
-uv pip install -q --python "$BP" "setuptools<70" wheel \
-  && uv pip install -q --python "$BP" torch==2.7.1 torchaudio==2.7.1 --index-url https://download.pytorch.org/whl/cu128 \
-  && filt "$REPO/setup/env/requirements_breezyvoice_venv.txt" > /content/req_bv.txt \
-  && uv pip install -q --python "$BP" --no-build-isolation --no-deps -r /content/req_bv.txt --index-strategy unsafe-best-match \
-  && echo "[full] breezyvoice env OK" || echo "[full] breezyvoice env FAILED"
-# --- Breeze TTS 2 (only for designing new reference voices)
-git clone -q https://github.com/breezeblue-ai/breeze-tts "$AI/BreezeTTS/breeze-tts"
-uv venv -q -p 3.12 "$AI/BreezeTTS/venv"; RP="$AI/BreezeTTS/venv/bin/python"
-uv pip install -q --python "$RP" torch==2.9.1 torchaudio==2.9.1 --index-url https://download.pytorch.org/whl/cu128 \
-  && filt "$REPO/setup/env/requirements_breeze_venv.txt" > /content/req_breeze.txt \
-  && uv pip install -q --python "$RP" --no-deps -r /content/req_breeze.txt --index-strategy unsafe-best-match \
-  && echo "[full] breeze env OK" || echo "[full] breeze env FAILED"
 mark voice_envs
 
 # --- ComfyUI 0.37.0 + FlashVSR node on the VM's python (keeps Colab's torch)

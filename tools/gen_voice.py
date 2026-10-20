@@ -95,6 +95,10 @@ def main():
     else:
         timestamp = time.strftime("%Y%m%d_%H%M%S")
         out_path = OUTPUT_DIR / f"voice_{args.engine}_{timestamp}{ext}"
+    # Pronunciation lexicon (repo-root tts-lexicon.md; a copy in the output folder or above it overrides): subtitles keep the original text
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from tts_lexicon import load_lexicon, speakable
+    text = speakable(text, load_lexicon(out_path.parent))
 
     t0 = time.time()
     if args.engine == "voxcpm2":

@@ -22,7 +22,7 @@
    "image": "frames/close2.png",
    "tools": [
     [
-     "BreezyVoice＋Breeze TTS 2",
+     "VoxCPM2",
      "配音"
     ],
     [
