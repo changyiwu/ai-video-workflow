@@ -356,10 +356,12 @@ def voices():
         raise SystemExit("這幾句 8 個候選聽寫都不對：" + "；".join(bad) +
                          "\n念錯的詞以後也會遇到就加進 repo 根目錄的 tts-lexicon.md（只有這支片才在片子資料夾放一份）；"
                          "只是這句就在 film.json 該句加 \"tts\"，把念錯的字換成同音字（VoxCPM2 不支援注音標記）或換說法。改完刪掉 out/voice/bv 再跑 voices；"
-                         "確定只是 ASR 聽錯（例如單字喊叫）就用 ALLOW_REVIEW=1 繼續。")
+                         "確定只是 ASR 聽錯（例如單字喊叫）就用 ALLOW_REVIEW=1 繼續。"
+                         "\n想用耳朵挑：tools/audition.py <片子資料夾> <lineN> 把候選串成一個檔，選好用 --pick sK（會記成人工挑選，重跑 voices 不會被換掉）。")
     if odd and os.environ.get("ALLOW_REVIEW") != "1":
         raise SystemExit("這幾句聽寫正確的候選音量或音質全都異常（響度離群或嘶聲）：" + "；".join(odd) +
-                         "\n先聽 out/voice/bv 裡那句：確定可以用就用 ALLOW_REVIEW=1 繼續；不行就在 film.json 該句加 \"tts\" 換說法，刪掉 out/voice/bv 再跑 voices。")
+                         "\n先聽那句的候選（tools/audition.py <片子資料夾> <lineN> 串成一個檔，標出哪幾支音量或嘶聲異常）：有能用的就 --pick sK；"
+                         "全都不行就在 film.json 該句加 \"tts\" 換說法，刪掉 out/voice/bv 再跑 voices；確定原本那支可以用就 ALLOW_REVIEW=1 繼續。")
 
 
 # ------------------------------------------------------------------------------------------------ H3
@@ -735,7 +737,7 @@ def cut():
                    input=mix[: int(vtotal * SR)].astype(np.float32).tobytes(), check=True)
     # 響度：固定增益 → 4 倍超取樣限幅（近似真峰值限幅；alimiter 一定要 level=false，預設會把峰值拉到 0 dBFS）→ 編成成片用的 AAC 再量
     # 響度與真峰值（review pass4 量的就是 AAC）：響度差太多調增益、真峰值超過 -1 dBTP 就壓低限幅門檻，最多 8 次
-    target = MIX.get("target_lufs", -15.5); tp_max = -1.2; gain, lim = 0.0, 0.78
+    target = MIX.get("target_lufs", -15.0); tp_max = -1.2; gain, lim = 0.0, 0.78
     for _ in range(8):
         run(["ffmpeg", "-y", "-loglevel", "error", "-i", raw, "-af", f"volume={gain:.2f}dB,aresample={SR * 4},"
              f"alimiter=limit={lim:.3f}:level=false:attack=2:release=80,aresample={SR}", "-c:a", "pcm_s24le", post / "mix.wav"])

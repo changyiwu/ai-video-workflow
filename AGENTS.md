@@ -46,7 +46,7 @@ README.md / AGENT_SETUP.md     專案說明、給 agent 的安裝手冊
 NOTICE.md                      來源與作者、本分支修改清單（必須保留）
 LICENSE / LICENSE-docs.md      MIT（程式）／CC BY-NC 4.0（文件素材）
 THIRD_PARTY_NOTICES.md         第三方模型與工具授權
-tts-lexicon.md                 讀音替換表（多音字、英文詞 → TTS 念得對的寫法；agent-video-specs 也有一份，同層時合併讀取）
+tts-lexicon.md                 讀音替換表（多音字、英文詞 → TTS 念得對的寫法；四個 repo 各一份、內容相同，同層時合併讀取）
 docs/                          總覽、端到端流程、規則與踩坑、自審清單、安裝、角色與首幀、換角重製、硬體說明
 tools/                         全域工具（各腳本直接用這裡，不再複製到 C:\AI\tools）
 films/                         自己的片與角色資產（.gitignore，不進 repo；規則見 films/AGENTS.md）
@@ -77,7 +77,7 @@ setup/spark_check.py、setup/env/arm64/   RTX Spark 相容性檢查與 ARM64 套
 - 配音引擎只有 VoxCPM2（聲音設計＋台詞，`tools/voxcpm_batch.py`），挑音 `voice_pick.py`；VoxCPM2 不支援注音標記。
 - 多音字、英文詞念錯：加進 repo 根目錄的讀音替換表 `tts-lexicon.md`（Markdown 表格，格式寫在檔頭）；只對某支片的放片子資料夾的同名檔，只有某句的寫 `film.json` 該句的 `"tts"`（同音字）。不要改字幕或劇本原文。
 - 送進 TTS 的文字一律經 `tools/tts_lexicon.py`（`voxcpm_batch`、`gen_voice`、`voice_pick`、`recast` 已接），新寫的配音工具也要接；改 `tts-lexicon.md` 的格式時，agent-video-specs 各範本的 `generate_narration.py` 要一起改。
-- 讀音替換表**兩個 repo 各一份**（本 repo 與 agent-video-specs 都公開，不能假設使用者兩個都下載，各自要單獨可用）：**通用條目（多音字、英文詞）兩份都加**；同層時 `tts_lexicon.py` 會合併讀取，本 repo 的優先。只跟 VoxCPM2 有關的條目只加這邊，說明欄註明引擎。
+- 讀音替換表**四個 repo 各一份、內容逐位元組相同**（agent-video-specs、ai-video-workflow、voxcpm2-voice-cloner、agent-speak-skill/speak/；四個都公開，不能假設使用者每個都下載，各自要單獨可用）：**改表時四份一起改**，用 `tools/tts_lexicon.py --check` 檢查、`--sync` 把各份條目合併寫回四份（遇到同一個原文改寫不同、或表頭說明不一樣時不寫入）；同層時 `tts_lexicon.py` 會合併讀取，本 repo 的優先。只有某個引擎會念錯的條目四份照樣都加，說明欄註明引擎。
 - 語音環境照 `AGENT_SETUP.md` §2b 自建（位置用 `AI_ROOT`／`PY_VOICE` 設定），不要拿其他專案的 venv 共用（例如 `voxcpm2-voice-cloner`）。
 - 聽寫（ASR）一律經 `tools/stt.py` 的 `load_asr()`，不要直接 import `faster_whisper`：Windows on Arm 沒有 ctranslate2，靠它自動改用 openai-whisper。
 - 工具要呼叫 venv 裡套件的命令列（例如 edge-tts）時，一律用 `[sys.executable, "-m", <模組>]`，不要靠 PATH 找執行檔：PATH 上可能是系統 Python 的舊版。

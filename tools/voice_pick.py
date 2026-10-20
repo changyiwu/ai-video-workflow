@@ -132,7 +132,8 @@ def main():
             rows = measure(out, picks[name]["cands"])
             if RERANK:
                 rows = [judge(r, plain, dur(refdir / f"{name}.mp3"), out / "cand" / r["file"]) for r in rows]
-            todo.append((j, rows, RERANK)); continue  # 已挑過的不改（H3 可能已照它的長度拍好），只補量數字
+            # 已挑過的不改（H3 可能已照它的長度拍好），只補量數字；audition.py 人工改挑的（manual）連 --rerank 也不改
+            todo.append((j, rows, RERANK and not picks[name].get("manual"))); continue
         if asr is None:
             asr = load_asr("large-v3")
         ref = refdir / f"{name}.mp3"
