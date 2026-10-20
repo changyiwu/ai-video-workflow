@@ -35,6 +35,7 @@ description: 用 ai-video-workflow repo（本機 MiniMax H3）做 16:9、1–3 �
 | 5 | 填 `film.json` | `references/film-json.md` | `film.json` | |
 | 6 | 生成 | `references/production.md` | `out/` | ✅ 關卡 1、2 |
 | 7 | 自審與交付 | `references/review.md` | `out/cut/film_1080p.mp4`、自審報告 | ✅ 關卡 3：完整看成片 |
+| 8 | 定案 | `references/review.md`〈交付與歸檔〉 | `out/cut/<片名>.mp4`、`發布資訊.md` | ✅ 問「可以成片嗎？」，說可以才做 |
 
 **什麼時候要做預演（第 4 步）**：多人同框、座位或左右位置容易跑掉、要運鏡、同一場景很多機位。單人、固定鏡頭的短片可以跳過。
 
