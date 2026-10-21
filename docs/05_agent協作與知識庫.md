@@ -53,7 +53,7 @@ Claude Code 的自動記憶在 `~/.claude/projects/<專案路徑>/memory/`（`<�
 
 ## 技能（Skills）
 
-- `skills/ai-film/`：做片全流程——開新片（`tools/new_film.py`）→ 需求訪談 → 編劇與鏡表 →（選用）Blender 預演 → 填 `film.json` → `make_film.py` 三個人工關卡 → 自審交付。
+- `skills/short-film/`：做片全流程——開新片（`tools/new_film.py`）→ 需求訪談 → 編劇與鏡表 →（選用）Blender 預演 → 填 `film.json` → `make_film.py` 三個人工關卡 → 自審交付。
 
 `skills/` 是原始檔，agent 不會直接載入。說「同步技能」交給全域技能 `skill-sync`：它先用 git 確認原始檔是最新的，再複製到這台四家 agent 的全域技能目錄（Claude Code、Codex、OpenCode、Antigravity）並逐檔比對 hash。**每台電腦要各同步一次**；各台裝了哪些技能記在雲端硬碟上 repo 外層的 `.skill-install/<電腦名>.json`，用來找出「只有這台沒裝」的技能。細節見 [skills/README.md](../skills/README.md)。
 
