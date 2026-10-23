@@ -32,7 +32,7 @@ Windows on Arm＋64GB 統一記憶體的 RTX Spark 筆電另有設定（`configs
 ## 2. 流程一覽
 
 ```
-選題 → 劇本 ─✅─→ 角色定妝：轉面圖＋表情表（Image 2.5）→ 首幀（Image 2.5）─✅─→ 配音候選 → 自動挑音
+選題 → 劇本 ─✅─→ 角色定妝：轉面圖＋表情表＋臉部近照（Image 2.5）→ 首幀（Image 2.5）─✅─→ 配音候選 → 自動挑音
      → H3 生成（DMAD 4 步）→ RTX VSR 放大 → 後製（名片、字卡、音效、配樂、字幕）
      → 組裝 →（選用）片尾 → 自審五遍 ─✅─→ 發社群（貼文附 AI 生成標示；封面等上架資訊選用）
                                            ✅ = 人工驗收關卡
@@ -89,9 +89,9 @@ configs/profile.cmd         這個硬體版本的環境變數
 | # | 步驟 | 工具 | 看哪份文件 | 產出 | 要人工看嗎 |
 |---|---|---|---|---|---|
 | 1 | 劇本＋鏡表（每鏡 ≤12 秒） | `skills/short-film` | `SKILL.md`、`docs/03` | `劇本.md` | ✅ 確認劇本 |
-| 2 | 角色定妝：轉面圖＋表情表（備選千問：單張、灰底、半身） | `gen_image.py`（預設 Image 2.5；備選 Qwen-Image 2.1） | `docs/07` §0（備選 §1） | `chars/<角色>_turn.png`、`_expr.png`（備選 `chars/<角色>.png`） | ✅ 定案 |
+| 2 | 角色定妝：轉面圖＋表情表＋臉部近照（備選千問：單張、灰底、半身） | `gen_image.py`（預設 Image 2.5；備選 Qwen-Image 2.1） | `docs/07` §0（備選 §1） | `chars/<角色>_turn.png`、`_expr.png`、`_face.png`（備選 `chars/<角色>.png`） | ✅ 定案 |
 | 3 | 場景母版（空景，之後裁成各鏡景別） | `gen_image.py` | `docs/07` §4 | `masters/*.png` | |
-| 4 | 首幀（附定妝＋母版裁切，**每鏡照抄角色完整外觀描述**） | `gen_image.py --model qwen-edit --ref`（預設 OpenAI 生圖（Image 2.5 或 Codex）附轉面圖＋表情表，`--model` 這時不作用；`IMAGE_BACKEND=local` 時才用 Qwen-Image-Edit 附單張半身，不加會用到不適合附參考圖的 Qwen-Image 2.1） | `docs/07` §2–3 | `first/<鏡>.png` | ✅ 逐張看：臉、服裝、多手多腳、背景有沒有字 |
+| 4 | 首幀（附定妝＋母版裁切，**每鏡照抄角色完整外觀描述**） | `gen_image.py --model qwen-edit --ref`（預設 OpenAI 生圖（Image 2.5 或 Codex）依每鏡 `sheets` 附 1–3 張定妝，`--model` 這時不作用；`IMAGE_BACKEND=local` 時才用 Qwen-Image-Edit 附單張半身，不加會用到不適合附參考圖的 Qwen-Image 2.1） | `docs/07` §2–3 | `first/<鏡>.png` | ✅ 逐張看：臉、服裝、多手多腳、背景有沒有字 |
 | 5 | 角色參考音（一次）；旁白與 `fixed` 台詞的配音 | `voxcpm_batch.py`（設計參考音）→ `make_voxcpm.cmd`；念錯的詞加進 `tts-lexicon.md` | `docs/03` §5 | `voice/ref_<角色>.wav`、`bv/<句>.wav`（已去頭尾靜音） | `needs_review` 的句子聽一次 |
 | 6 | H3 每鏡（DMAD 4 步、只給首幀；台詞預設由 H3 拿角色參考音自己念（`voice_mode: "h3_ref"`），`fixed` 的句子當固定音軌；看得到臉又沒台詞的鏡給靜音） | `h3_shot.py`（spec 加 `"draft": true`） | `docs/03` §4、`tools/examples/` | `h3/<鏡>/clip.mp4` | ✅ 抽格看：換臉、多人、鏡頭漂移 |
 | 7 | 配樂（純器樂、多抽幾個 seed，挑人聲殘留最少的） | `gen_music3.py` → `audio-separator` | `docs/02` §8 | `music/*.flac` | |
@@ -120,7 +120,7 @@ configs/profile.cmd         這個硬體版本的環境變數
 
 | 東西 | 原因 | 你要自己準備 |
 |---|---|---|
-| 上游原頻道的角色定妝照、轉面圖、表情表 | 原作者的角色資產 | 用 Image 2.5 為自己的角色做轉面圖＋表情表；備選用本機 Qwen-Image 2.1 做單張半身定妝照（見 [07_角色與首幀.md](docs/07_角色與首幀.md)） |
+| 上游原頻道的角色定妝照、轉面圖、表情表 | 原作者的角色資產 | 用 Image 2.5 為自己的角色做轉面圖＋表情表＋臉部近照；備選用本機 Qwen-Image 2.1 做單張半身定妝照（見 [07_角色與首幀.md](docs/07_角色與首幀.md)） |
 | 配音參考音 | 屬於個人聲音，不散布 | 自己錄或用 VoxCPM2 設計 |
 | 模型權重 | 檔案大、各有授權、可照清單重現（詳見 [docs/06 §1](docs/06_安裝.md)） | 照 [AGENT_SETUP.md](AGENT_SETUP.md) 第 3 節下載（約 150GB） |
 | 成片影片 | 檔案大 | — |

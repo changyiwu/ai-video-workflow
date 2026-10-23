@@ -1,6 +1,6 @@
 # template_local：全本地多鏡短片範本（做新片從這裡開始）
 
-一個設定檔 `film.json` 寫完整支片（角色、場景、每一鏡、台詞、配樂、片尾），`make_film.py` 從角色定妝照一路做到成片和自審。生圖預設用 OpenAI 生圖（Image 2.5 API 金鑰優先、沒有金鑰才用 Codex CLI，失敗就停下，要用本機 Qwen 得整支片設 `IMAGE_BACKEND=local`），角色定妝是轉面圖＋表情表（千問備選為單張半身）；配音用 VoxCPM2（送進 TTS 前套 repo 根目錄的讀音替換表 `tts-lexicon.md`）；其餘全部本機模型。片尾名單會依實際用到的生圖後端自動寫（記在 `output/image_backends.json`）。
+一個設定檔 `film.json` 寫完整支片（角色、場景、每一鏡、台詞、配樂、片尾），`make_film.py` 從角色定妝照一路做到成片和自審。生圖預設用 OpenAI 生圖（Image 2.5 API 金鑰優先、沒有金鑰才用 Codex CLI，失敗就停下，要用本機 Qwen 得整支片設 `IMAGE_BACKEND=local`），角色定妝是轉面圖＋表情表＋臉部近照、首幀依景別每個角色附 1–3 張（千問備選為單張半身）；配音用 VoxCPM2（送進 TTS 前套 repo 根目錄的讀音替換表 `tts-lexicon.md`）；其餘全部本機模型。片尾名單會依實際用到的生圖後端自動寫（記在 `output/image_backends.json`）。
 
 範例 `film.json` 是〈被狗吃掉的作業〉：7 鏡、正片約 28 秒（片尾選用、預設不加；打開時再加 9.5 秒），開新片時整份換成自己的劇本。
 
@@ -55,6 +55,7 @@
 |---|---|
 | `id` | 鏡號 |
 | `refs` | 畫面裡的角色代號（依序對應 `<image1>`、`<image2>`…）。**只放畫面裡要演戲的人**，有定義但不入鏡的角色 H3 會把他叫進畫面 |
+| `sheets` | 首幀每個角色附哪幾張定妝（選填，預設 `["turn", "expr"]`）：`turn` 轉面圖、`expr` 表情表、`face` 臉部近照，挑 1–3 張。寫清單＝鏡裡所有角色共用，寫 `{"角色": [...]}`＝各自指定（沒寫到的角色用預設）。依景別挑法見 `docs/07` §0；千問備選（`IMAGE_BACKEND=local`）不看這欄。`frame` 裡的 `<imageN>` 照「第 N 個角色、最後一個是場景」寫，附幾張都不用改號，`frames` 會換成實際圖號 |
 | `scene` | `[母版名稱, [x0, y0, x1, y1]]`：從母版裁哪一塊當場景參考（0–1 比例） |
 | `dur` | 秒數（4–12）。有台詞時會自動延長到「開口時間＋台詞長度＋0.8 秒」；`h3_ref` 的台詞改用 max(3, 字數 ÷ 3＋2 秒) |
 | `line` | `{"who", "text", "at"}`：誰說、字幕文字、第幾秒開口（`h3_ref` 時開口由 H3 決定，實際時間由聽寫抓）；`"voice_mode"`（選填）這句改用別的模式；`"tts"`（選填）是送給配音引擎的寫法（同音字；讀音替換表會再套在它上面）。沒台詞寫 `null`（H3 會收到靜音音軌，角色不會自己嘟囔） |
@@ -73,7 +74,7 @@
 
 ## 輸出（`output/`）
 
-`chars/` 定妝（`<角色>_turn.png`、`<角色>_expr.png`；千問備選為 `<角色>.png`）、`masters/` 場景母版與每鏡裁切、`first/` 首幀與 `_sheet.jpg`、`voice/` 角色參考音、答案卷與 `bv/`（候選、`picks.json`、選中的台詞）、`h3/<鏡>/` 每鏡 spec、提示詞與 clip、`insert/` 後製插入鏡、`music/`、`ending/`、`post/`（`edl.json` 時間軸、放大片段、混音、字幕）、`cut/film_1080p.mp4` 成片＋手機版、`review/` 自審、`timing.json` 各階段時間。
+`chars/` 定妝（`<角色>_turn.png`、`<角色>_expr.png`、`<角色>_face.png`；千問備選為 `<角色>.png`）、`masters/` 場景母版與每鏡裁切、`first/` 首幀與 `_sheet.jpg`、`voice/` 角色參考音、答案卷與 `bv/`（候選、`picks.json`、選中的台詞）、`h3/<鏡>/` 每鏡 spec、提示詞與 clip、`insert/` 後製插入鏡、`music/`、`ending/`、`post/`（`edl.json` 時間軸、放大片段、混音、字幕）、`cut/film_1080p.mp4` 成片＋手機版、`review/` 自審、`timing.json` 各階段時間。
 
 ## 耗時參考
 

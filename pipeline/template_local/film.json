@@ -59,7 +59,7 @@
    "cut_in": 0.0, "cut_out": "full"
   },
   {
-   "id": "S3", "refs": ["zhe"], "scene": ["seats", [0.25, 0.20, 0.75, 0.90]], "dur": 4.6,
+   "id": "S3", "refs": ["zhe"], "sheets": ["turn", "expr", "face"], "scene": ["seats", [0.25, 0.20, 0.75, 0.90]], "dur": 4.6,
    "line": {"who": "zhe", "text": "老師，我的作業被狗吃掉了。", "at": 0.6},
    "frame": "Medium close-up from the front of the classroom from <image2>, facing the students: the boy from <image1> sits at his front-row wooden desk, raising one hand high, with a forced, overly innocent smile and nervous eyes looking toward the front of the room. Behind him, out of focus, a few seated classmates in the same white school shirts sit quietly at their wooden desks, all facing the front of the classroom. The windows are on the right side of the frame.",
    "action": "Starting from <Picture 1>, the boy keeps his right hand raised high above his head and holds it there for the whole shot. His eyebrows lift, he widens his forced innocent smile and tilts his head slightly to one side, then he speaks his excuse toward the front of the room, his lips moving with each word, and after the line he gives two quick nervous blinks and keeps smiling stiffly.",
@@ -67,14 +67,14 @@
    "cut_in": 0.30, "tail": 0.9
   },
   {
-   "id": "S4", "refs": ["chen"], "scene": ["front", [0.35, 0.0, 0.95, 0.68]], "dur": 3.6,
+   "id": "S4", "refs": ["chen"], "sheets": ["face", "expr"], "scene": ["front", [0.35, 0.0, 0.95, 0.68]], "dur": 3.6,
    "line": {"who": "chen", "text": "你家沒有養狗。", "at": 0.7},
    "frame": "Close-up at eye level: the woman from <image1> in front of the green chalkboard of the classroom from <image2>, pushing up her gold-rimmed glasses with one finger, looking straight ahead with a completely flat, unimpressed expression. The windows are on the left side of the frame.",
    "action": "Starting from <Picture 1>, the teacher slowly lowers her finger from her gold-rimmed glasses until her hand rests at her chest. Her face stays completely flat with no smile; she keeps looking straight ahead, opens her mouth and answers in a short, even sentence, her lips moving only slightly, then closes her lips and stays perfectly still, raising one eyebrow a tiny amount at the end.",
    "cut_in": 0.35, "tail": 1.3
   },
   {
-   "id": "S5", "refs": ["zhe"], "scene": ["seats", [0.30, 0.20, 0.70, 0.80]], "dur": 4.0,
+   "id": "S5", "refs": ["zhe"], "sheets": ["face", "expr"], "scene": ["seats", [0.30, 0.20, 0.70, 0.80]], "dur": 4.0,
    "line": {"who": "zhe", "text": "是……鄰居的狗。", "at": 0.6},
    "frame": "Close-up from the front of the classroom from <image2>: the boy from <image1> at his desk, frozen for a moment, his eyes sliding to the side, a sheepish guilty face. Behind him, out of focus, a classmate sits at a desk. The windows are on the right side of the frame.",
    "action": "Starting from <Picture 1>, the boy stays frozen for a moment with his mouth slightly open. Then his eyes drift slowly to his right and back again, his shoulders rise toward his ears, and he mumbles a weak correction with a guilty face, his lips barely moving. After the line he presses his lips together and glances down at the desk once.",
@@ -88,7 +88,7 @@
    "cut_in": 0.30, "tail": 0.9
   },
   {
-   "id": "S7", "refs": ["zhe"], "scene": ["seats", [0.30, 0.20, 0.70, 0.80]], "dur": 4.0,
+   "id": "S7", "refs": ["zhe"], "sheets": ["face", "expr"], "scene": ["seats", [0.30, 0.20, 0.70, 0.80]], "dur": 4.0,
    "line": {"who": "zhe", "text": "……是我的。", "at": 0.9},
    "frame": "Close-up from the front of the classroom from <image2>: the boy from <image1> at his desk, staring at something in front of him, his face flushed red with embarrassment, shoulders starting to shrink down into his chair. Behind him, out of focus, a classmate sits at a desk. The windows are on the right side of the frame.",
    "action": "Starting from <Picture 1>, the boy keeps staring straight ahead as the red blush spreads across his cheeks and ears. He opens his mouth and admits it in a tiny voice, his lips barely moving, then his shoulders drop and he slowly slides down into his chair until his chin is near the desk, his mouth curling into a small embarrassed smile by the end of the shot.",

@@ -20,14 +20,14 @@ description: 用 media-short-film repo（本機 MiniMax H3）做 16:9、1–3 �
 | 鏡頭 | **每鏡 4–12 秒**（超過 12 秒 H3 容易自己切鏡、漂移）；一鏡最多一句台詞、一個人說話 |
 | 影片 | 本機 MiniMax H3，只給首幀；顯卡跑不動時 `make_film.py` 自動送 Colab |
 | 生圖 | OpenAI 生圖（`gen_image.py` 預設：Image 2.5 API 優先、Codex CLI 次之，失敗就停、不自動改用千問）；本機 Qwen 為備選（整支片 `IMAGE_BACKEND=local`） |
-| 定妝 | 轉面圖＋表情表兩張（Image 2.5）；千問備選用單張半身 |
+| 定妝 | 轉面圖＋表情表＋臉部近照三張（Image 2.5），首幀依景別每個角色附 1–3 張；千問備選用單張半身 |
 | 配音 | 畫面內台詞**預設 H3 拿角色參考音自己念**（`voice_mode: "h3_ref"`，念錯換 seed，抽不出來那句改 `fixed`）；角色參考音、旁白、`fixed` 的台詞用 VoxCPM2，念錯的詞加進 repo 根目錄的 `tts-lexicon.md`（只對 VoxCPM2 有效） |
 
 ## 全片流程
 
 | # | 階段 | 讀 | 產出（都在 `films/<類型>/<片名>/`） | 人工 |
 |---|---|---|---|---|
-| 0 | 角色（只做一次，各片共用） | `<repo>/docs/07_角色與首幀.md`、`films/角色/README.md` | `films/角色/<角色>/` 轉面圖、表情表、`README.md`、參考音 | ✅ 定裝 |
+| 0 | 角色（只做一次，各片共用） | `<repo>/docs/07_角色與首幀.md`、`films/角色/README.md` | `films/角色/<角色>/` 轉面圖、表情表、臉部近照、`README.md`、參考音 | ✅ 定裝 |
 | 1 | 開新片 | 本檔〈開新片〉 | 資料夾、`film.json`、`劇本.md`、`製作紀錄.md` | |
 | 2 | 需求訪談 | `references/interview.md` | `需求確認.md` | ✅ 確認 |
 | 3 | 劇本＋鏡表 | `references/script/workflow.md`（格式 `format.md`、拆鏡 `segmentation.md`） | `劇本.md`（含鏡表） | ✅ 確認劇本 |

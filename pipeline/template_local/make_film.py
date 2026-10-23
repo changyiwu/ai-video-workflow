@@ -226,17 +226,33 @@ def insert_file(s):
 
 
 # ------------------------------------------------------------------------------------------------ 圖
-def char_refs(k):
-    """首幀要附的角色參考圖：Image 2.5／Codex 用轉面圖＋表情表（預設）；本機 Qwen 用單張半身（Qwen 會把多格版面照抄成拼貼）。"""
+SHEETS = {"turn": "turnaround sheet", "expr": "expression sheet", "face": "close-up face sheet"}
+DEFAULT_SHEETS = ["turn", "expr"]
+
+
+def char_refs(k, names=None):
+    """首幀要附的角色參考圖：Image 2.5／Codex 依 names 從轉面圖、表情表、臉部近照挑 1–3 張（預設轉面圖＋表情表）；
+    本機 Qwen 一律單張半身（Qwen 會把多格版面照抄成拼貼）。"""
     if IMG_BACKEND == "local":
         return [OUT / "chars" / f"{k}.png"]
-    return [OUT / "chars" / f"{k}_turn.png", OUT / "chars" / f"{k}_expr.png"]
+    return [OUT / "chars" / f"{k}_{n}.png" for n in (names or DEFAULT_SHEETS)]
+
+
+def shot_sheets(s, k):
+    """這一鏡角色 k 要附哪幾張定妝：shot 的 "sheets" 可寫清單（所有角色共用）或 {角色: 清單}，沒寫就用 DEFAULT_SHEETS。"""
+    v = s.get("sheets") or DEFAULT_SHEETS
+    names = v.get(k, DEFAULT_SHEETS) if isinstance(v, dict) else v
+    bad = [n for n in names if n not in SHEETS]
+    if bad or not 1 <= len(names) <= 3 or len(set(names)) != len(names):
+        sys.exit(f"[frames] {s['id']} 的 sheets（{k}）只能是 turn／expr／face 中 1–3 個不重複的：{names}")
+    return names
 
 
 @stage("chars")
 def chars():
     """角色定妝（docs/07 §0；千問備選 §1）。不滿意就在 seeds 加 char_<角色> 換 seed、刪檔重跑。
-    預設（Image 2.5 或 Codex）：先生轉面圖 <角色>_turn.png（純文字，角色的基準），再附它生表情表 <角色>_expr.png（同一張臉）。
+    預設（Image 2.5 或 Codex）：先生轉面圖 <角色>_turn.png（純文字，角色的基準），再附它生表情表 <角色>_expr.png（同一張臉），
+    最後附這兩張生臉部近照 <角色>_face.png（正面＋3/4 兩格，給特寫鏡看清五官）。
     IMAGE_BACKEND=local（千問備選）：單張、灰底、正面半身 <角色>.png。"""
     for k, c in CHARS.items():
         if IMG_BACKEND == "local":
@@ -250,7 +266,7 @@ def chars():
                  "--prefix", f"film/char_{k}", "--out", "chars"])
             newest(OUT / "chars").rename(dst)
             continue
-        turn, expr = char_refs(k)
+        turn, expr, face = char_refs(k, ["turn", "expr", "face"])
         if not turn.exists():
             p = ("Character turnaround reference sheet of ONE single person, realistic photograph: four full-body views of the same person "
                  "side by side in one row, left to right: front view, three-quarter view, side profile, back view. Same outfit, same hairstyle, "
@@ -267,6 +283,15 @@ def chars():
             gen_img([PYH3, T / "gen_image.py", "--prompt", p, "--ref", turn, "--width", "1536", "--height", "1024", "--seed", seed("char_" + k, 11),
                  "--prefix", f"film/char_{k}_expr", "--out", "chars"])
             newest(OUT / "chars").rename(expr)
+        if not face.exists():
+            p = ("Close-up face reference sheet of exactly the same person as <image1> and <image2> (same face, hairstyle and clothes): two "
+                 "head-and-shoulders close-ups side by side, realistic photograph. Left: front view looking straight into the camera. Right: "
+                 "three-quarter view, head turned toward the left of the image. Each face is large and fills most of its half, with every "
+                 "facial detail sharp. Same calm neutral expression, same hairstyle and parting, same light in both. Plain light grey seamless "
+                 "background, soft even studio light. " + c["look"] + ". No text, no labels, no numbers, no watermark.")
+            gen_img([PYH3, T / "gen_image.py", "--prompt", p, "--ref", turn, "--ref", expr, "--width", "1536", "--height", "1024",
+                 "--seed", seed("char_" + k, 11), "--prefix", f"film/char_{k}_face", "--out", "chars"])
+            newest(OUT / "chars").rename(face)
 
 
 @stage("masters")
@@ -288,26 +313,33 @@ def masters():
 
 @stage("frames")
 def frames():
-    """首幀：OpenAI 生圖（預設 Image 2.5 API 優先、Codex 次之）附「每個角色的轉面圖＋表情表＋場景裁切（最後一張）」；IMAGE_BACKEND=local 時
-    Qwen-Image-Edit 附「角色單張半身＋場景裁切」。每鏡都照抄角色完整外觀描述，否則會掉眼鏡、換髮型。"""
+    """首幀：OpenAI 生圖（預設 Image 2.5 API 優先、Codex 次之）附「每個角色 1–3 張定妝（shot 的 sheets，預設轉面圖＋表情表）＋場景裁切（最後一張）」；
+    IMAGE_BACKEND=local 時 Qwen-Image-Edit 附「角色單張半身＋場景裁切」。每鏡都照抄角色完整外觀描述，否則會掉眼鏡、換髮型。"""
     for s in SHOTS:
         dst = OUT / "first" / f"{s['id']}.png"
         if dst.exists() or s["id"] in INSERTS:
             continue
-        refs, keep = [], []
-        for k in s["refs"]:
-            rs = char_refs(k); i = len(refs) + 1; refs += rs
-            if len(rs) == 1:
+        refs, keep, first = [], [], {}
+        for j, k in enumerate(s["refs"], start=1):
+            names = shot_sheets(s, k); rs = char_refs(k, names); i = len(refs) + 1; refs += rs; first[j] = i
+            missing = [r.name for r in rs if not r.exists()]
+            if missing:
+                sys.exit(f"[frames] {s['id']} 缺定妝 {missing}：先跑 chars")
+            if IMG_BACKEND == "local":
                 keep.append(f"Keep exactly the same person as <image{i}>: same face, hairstyle and clothes ({CHARS[k]['look']}).")
             else:
-                keep.append(f"<image{i}> (turnaround sheet) and <image{i + 1}> (expression sheet) both show the same person "
+                pics = " and ".join(f"<image{i + j}> ({SHEETS[n]})" for j, n in enumerate(names))
+                keep.append(f"{pics} {('shows', 'both show', 'all show')[len(names) - 1]} the same person "
                             f"({CHARS[k]['look']}); keep exactly that face, hairstyle and clothes.")
-        if len(refs) > len(s["refs"]):
+        if refs and IMG_BACKEND != "local":
             keep.append("The reference sheets are only for the person's identity: do NOT copy their grid layout, grey background, "
                         "labels or poses; the result is one single photo.")
         keep = " ".join(keep)
         set_s = (" " + CFG["set_sentence"].format(n=len(refs) + 1)) if s.get("scene") else ""
-        p = keep + set_s + " New photo: " + CFG["cine"] + s["frame"] + CFG.get("frame_suffix", " No text, no watermark, no captions.")
+        # frame 裡的 <imageN> 照「第 N 個角色、最後一個是場景」寫；每個角色附的張數不同，這裡換成實際的圖號
+        first[len(s["refs"]) + 1] = len(refs) + 1
+        fr = re.sub(r"<image(\d+)>", lambda m: f"<image{first.get(int(m.group(1)), int(m.group(1)))}>", s["frame"])
+        p = keep + set_s + " New photo: " + CFG["cine"] + fr + CFG.get("frame_suffix", " No text, no watermark, no captions.")
         cmd = [PYH3, T / "gen_image.py", "--model", "qwen-edit", "--width", "1344", "--height", "768", "--prompt", p,
                "--seed", seed("frame_" + s["id"], 5101), "--prefix", f"film/{s['id']}", "--out", "first"]
         for r in refs:
