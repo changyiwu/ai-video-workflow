@@ -253,7 +253,10 @@ def chars():
     """角色定妝（docs/07 §0；千問備選 §1）。不滿意就在 seeds 加 char_<角色> 換 seed、刪檔重跑。
     預設（Image 2.5 或 Codex）：先生轉面圖 <角色>_turn.png（純文字，角色的基準），再附它生表情表 <角色>_expr.png（同一張臉），
     最後附這兩張生臉部近照 <角色>_face.png（正面＋3/4 兩格，給特寫鏡看清五官）。
-    IMAGE_BACKEND=local（千問備選）：單張、灰底、正面半身 <角色>.png。"""
+    IMAGE_BACKEND=local（千問備選）：單張、灰底、正面半身 <角色>.png。
+    同時用 VoxCPM2 設計角色參考音 voice/ref_<角色>.wav（念 voice_sample）：定案後存進 films/角色/<角色>/，之後每支片複製沿用、
+    不再重新設計，H3 每鏡拿同一個檔當音色參考，聲音才不會漂移。沒寫 voice_design 的角色（例：沿用原片聲音的換角）跳過。"""
+    char_voices()
     for k, c in CHARS.items():
         if IMG_BACKEND == "local":
             dst = OUT / "chars" / f"{k}.png"
@@ -292,6 +295,20 @@ def chars():
             gen_img([PYH3, T / "gen_image.py", "--prompt", p, "--ref", turn, "--ref", expr, "--width", "1536", "--height", "1024",
                  "--seed", seed("char_" + k, 11), "--prefix", f"film/char_{k}_face", "--out", "chars"])
             newest(OUT / "chars").rename(face)
+
+
+def char_voices():
+    """角色參考音 voice/ref_<角色>.wav：已存在（從 films/角色/ 複製來的）就沿用，只補缺的。旁白不是角色，留在 voices 階段。"""
+    vd = OUT / "voice"; vd.mkdir(exist_ok=True)
+    jobs = [dict(name=f"ref_{k}", text=c["voice_sample"], seed=seed("voice_" + k, 7), control=c["voice_design"])
+            for k, c in CHARS.items() if c.get("voice_design") and not (vd / f"ref_{k}.wav").exists()]
+    if not jobs:
+        return
+    free_comfy()
+    (OUT / "vox_chars.json").write_text(json.dumps(dict(out_dir="voice", jobs=jobs), ensure_ascii=False, indent=1), encoding="utf-8")
+    run([PYV, T / "voxcpm_batch.py", "vox_chars.json"])
+    print("→ 人工試聽 output/voice/ref_<角色>.wav，定案後連同 voice_sample 存進 films/角色/<角色>/（之後不換）：",
+          ", ".join(j["name"] for j in jobs), flush=True)
 
 
 @stage("masters")
@@ -371,14 +388,18 @@ def voices():
     """設計角色聲音（一次）→ edge-tts 台灣國語答案卷 → 每句 8 候選 → 自動挑（聽寫拼音聲調全對＋腔調分數，已去頭尾靜音）。
     角色台詞（line）和旁白（vo）走同一套；旁白的聲音設計在 film.json 的 narrator。聲音設計與念台詞都用 VoxCPM2。
     送進 TTS 的文字會先套讀音替換表（tts-lexicon.md，由 voxcpm_batch／gen_voice／voice_pick 各自套用），字幕照原文。
-    h3_ref 的台詞這裡只做角色參考音（voice/ref_<角色>.wav，給 H3 當音色參考），台詞在 h3 階段由 H3 自己念。"""
+    角色參考音（voice/ref_<角色>.wav，給 H3 當音色參考）在 chars 階段就做好或從 films/角色/ 複製來，這裡只補旁白的；
+    h3_ref 的台詞在 h3 階段由 H3 自己念。"""
+    char_voices()
     free_comfy()
     vd = OUT / "voice"; vd.mkdir(exist_ok=True)
-    jobs = [dict(name=f"ref_{k}", text=c["voice_sample"], seed=seed("voice_" + k, 7), control=c["voice_design"]) for k, c in VOICES.items()]
+    jobs = [dict(name=f"ref_{k}", text=c["voice_sample"], seed=seed("voice_" + k, 7), control=c["voice_design"])
+            for k, c in VOICES.items() if k not in CHARS]
     fixed = [(i, sid, ln) for i, (sid, ln) in enumerate(LINES) if not h3_says(ln)]
-    if not fixed:                                    # 全部 h3_ref：只要角色參考音
-        (OUT / "vox_design.json").write_text(json.dumps(dict(out_dir="voice", jobs=jobs), ensure_ascii=False, indent=1), encoding="utf-8")
-        run([PYV, T / "voxcpm_batch.py", "vox_design.json"])
+    if not fixed:                                    # 全部 h3_ref：只要參考音
+        if jobs:
+            (OUT / "vox_design.json").write_text(json.dumps(dict(out_dir="voice", jobs=jobs), ensure_ascii=False, indent=1), encoding="utf-8")
+            run([PYV, T / "voxcpm_batch.py", "vox_design.json"])
         print("[voices] voice_mode h3_ref：角色參考音在 output/voice/ref_<角色>.wav，台詞由 H3 在 h3 階段自己念", flush=True)
         return
     for i, sid, ln in fixed:                         # 答案卷：只拿來比腔調，不進成片
@@ -396,8 +417,9 @@ def voices():
     bv = [dict(name=f"line{i}", text=ln.get("tts", ln["text"]), ref_audio=f"voice/ref_{ln['who']}.wav", ref_text=VOICES[ln["who"]]["voice_sample"],
                tw_ref=f"voice/tw_{i}.wav", seeds=8) for i, sid, ln in fixed]
     (OUT / "bv.json").write_text(json.dumps(dict(out_dir="voice/bv", jobs=bv), ensure_ascii=False, indent=1), encoding="utf-8")
-    (OUT / "vox_design.json").write_text(json.dumps(dict(out_dir="voice", jobs=jobs), ensure_ascii=False, indent=1), encoding="utf-8")
-    run([PYV, T / "voxcpm_batch.py", "vox_design.json"])
+    if jobs:
+        (OUT / "vox_design.json").write_text(json.dumps(dict(out_dir="voice", jobs=jobs), ensure_ascii=False, indent=1), encoding="utf-8")
+        run([PYV, T / "voxcpm_batch.py", "vox_design.json"])
     run([PYV, T / "voxcpm_batch.py", "bv.json"])
     run([PYV, T / "voice_pick.py", "bv.json"])
     bp = json.loads((vd / "bv" / "picks.json").read_text(encoding="utf-8"))

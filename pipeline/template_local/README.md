@@ -20,7 +20,7 @@
 5. `make_film.py voices inserts h3`（`inserts` 只在有後製插入鏡時才有事做）
    - 有句子 8 個候選都念錯時程式會停下來：以後也會遇到的詞加進 repo 根目錄的 `tts-lexicon.md`（只對這支片的，在片子資料夾放一份同名檔）；只有這句的就在該句加 `"tts"`，把念錯的字換成同音字（VoxCPM2 不支援注音）。刪掉 `output/voice/bv` 再跑 `voices`。
    - 單字喊叫這類 ASR 本來就聽不準的句子，人聽過沒問題就用 `set ALLOW_REVIEW=1` 繼續。
-   - 上面兩條只適用 `fixed` 的句子與旁白。預設 `voice_mode` 為 `h3_ref`（H3 自己念）：`voices` 只做角色參考音，`h3` 結尾自動分離人聲、聽寫、拼音比對原文，結果寫在 `output/voice_picks.json`（`heard`、`match`、`at`）。差太多會停下來：在 `seeds` 加 `"h3_<鏡>": 新數字`、刪 `output/h3/<鏡>/clip.mp4`，`set ONLY=<鏡>` 再跑 `h3`；抽 2–3 次都不對（常見：數字日期、H3 改用詞），在該句 `line` 加 `"voice_mode": "fixed"`，跑 `voices` 再重拍那一鏡。
+   - 上面兩條只適用 `fixed` 的句子與旁白。預設 `voice_mode` 為 `h3_ref`（H3 自己念）：角色參考音在 `chars` 已做好（或從 `films/角色/` 複製），`h3` 結尾自動分離人聲、聽寫、拼音比對原文，結果寫在 `output/voice_picks.json`（`heard`、`match`、`at`）。差太多會停下來：在 `seeds` 加 `"h3_<鏡>": 新數字`、刪 `output/h3/<鏡>/clip.mp4`，`set ONLY=<鏡>` 再跑 `h3`；抽 2–3 次都不對（常見：數字日期、H3 改用詞），在該句 `line` 加 `"voice_mode": "fixed"`，跑 `voices` 再重拍那一鏡。
 6. **人工關卡 2**：看 `output/review/clips_<鏡>.jpg`（每鏡 6 格），檢查有沒有換臉、多出人、鏡頭漂移。不滿意就刪 `output/h3/<鏡>/clip.mp4`，在 `seeds` 加 `"h3_<鏡>": 新數字`，再跑 `set ONLY=S3 S5` → `make_film.py h3`。後製插入鏡也會出 `clips_<鏡>.jpg`；要改就刪 `output/insert/<鏡>.mp4` 再跑 `inserts`。
 7. `make_film.py amb edl music ending cut review`
 8. **人工關卡 3**：看 `output/review/` 的自審結果，最後**一定要人看完整的** `output/cut/film_1080p.mp4`。
