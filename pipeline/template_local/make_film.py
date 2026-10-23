@@ -511,7 +511,8 @@ def edl():
     lead = MIX.get("say_lead", 0.2); t, rows = 0.0, []
     for s in SHOTS:
         ins = s["id"] in INSERTS
-        cd = dur(clip_of(s)); a = float(s.get("cut_in", 0.0)); b = s.get("cut_out", "full" if ins else None); lines = []; end = None
+        # 修剪點一律對齊 1/24 秒：cut 階段每段用 -frames:v 取整數格，沒對齊的話每鏡多／少零點幾格、累積起來畫面會落後聲音
+        cd = dur(clip_of(s)); a = round(float(s.get("cut_in", 0.0)) * FPS) / FPS; b = s.get("cut_out", "full" if ins else None); lines = []; end = None
         for i, ln in shot_lines(s):
             d = dur(picks[str(i)]["file"])
             lines.append(dict(id=f"line{i}", who=ln["who"], kind=ln["kind"], text=ln["text"], file=picks[str(i)]["file"],
@@ -520,6 +521,7 @@ def edl():
         if b is None and end is not None:
             b = end + s.get("tail", MIX.get("default_tail", 0.55))
         b = cd if b in (None, "full") else min(float(b), cd)
+        b = min(round(b * FPS), int(cd * FPS + 1e-6)) / FPS
         rows.append(dict(id=s["id"], start=round(t, 3), dur=round(b - a, 3), src_in=a, src_out=round(b, 3), lines=lines, amb=amb_files.get(s["id"]),
                          src=str(clip_of(s)), insert=ins, overlay=s.get("overlay", [])))
         t += b - a

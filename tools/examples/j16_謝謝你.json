@@ -14,7 +14,7 @@
   "audio": {"voice_ref": {"subject": "ahe", "file": "ahe_voice_ref.wav"}},
   "shots": [
     {"camera": "The camera holds a static over-the-shoulder shot on a tripod.",
-     "action": "Ahe sits at his desk with a grey cloth under his hands, head turned up and to the left toward the teacher. Early in the clip he looks up with a small grateful smile.",
+     "action": "Starting from <Picture 1>, Ahe sits at his desk with a grey cloth under his hands, head turned up and to the left toward the teacher. Early in the clip his eyebrows rise and the corners of his mouth curl up slowly into a small grateful smile; his hands stay resting on the cloth, and he gives one short nod as he speaks, his lips clearly forming each word.",
      "dialogue": [{"subject": "ahe", "line": "謝謝你讓我自己做。", "lang": "Chinese",
                    "after": "Right after the line he closes his lips and keeps smiling up at the teacher, whose shoulder and hood stay still in the foreground."}]}
   ],

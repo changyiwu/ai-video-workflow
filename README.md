@@ -59,6 +59,7 @@ docs/
   hardware.md               ⭐ 你這個硬體版本：模型組合、啟動參數、實測數據、風險
 tools/                      全域工具（各腳本直接用，不用複製）
   h3_shot.py ⭐             分鏡 JSON → 官方格式提示詞 → 格式檢查 → H3 生成
+  table_read.py             生成前試映：照 film.json 估片長、做文字讀本試映影片（選用 16 宮格草圖）
   make_voxcpm.cmd ⭐        台詞配音：VoxCPM2 每句 8 候選 → 聽寫＋腔調自動挑
   tts_lexicon.py            讀音替換表：送進 TTS 前照根目錄 tts-lexicon.md 把念錯的詞改字
   gen_image.py              生圖入口：預設 OpenAI Image 2.5，備選本機 Qwen-Image 2.1／Edit（--backend local）

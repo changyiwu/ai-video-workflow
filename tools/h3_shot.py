@@ -35,7 +35,12 @@ Shot spec (JSON; relative paths resolve against the JSON file's folder):
        # or {"fixed": {"file": "guide.wav"}}  exact soundtrack reused 1:1 (48 kHz mono; [] silence -> write a silent wav)
   "shots": [
     {"camera": "The camera holds a static shot on a tripod.",           # official camera wording (type + amplitude + speed)
-     "action": "Ahe looks up at the teacher with a small grateful smile.",
+     # action: write 50-120 words in the official order "Starting from <Picture 1>, ..." first-frame anchor -> action onset ->
+     # continuous development -> result; name the body parts, amplitude and repetitions, no abstract adjectives
+     # (upstream A/B 2026-10-23: one-line actions gave 1/2.7 of the motion). In-shot times ("at about 1.2 seconds") optional.
+     "action": "Starting from <Picture 1>, Ahe lifts his chin from the notebook and turns his head toward the teacher on his left. "
+               "His eyebrows rise, the corners of his mouth curl up slowly into a small grateful smile, and he gives one short nod. "
+               "He speaks his line with his lips clearly forming each word, then closes his lips and keeps smiling at the teacher.",
      "dialogue": [{"subject": "ahe", "line": "謝謝你讓我自己做。", "lang": "Chinese", "offscreen": false,
                    "after": "He closes his lips and keeps smiling."}],
      "vocals": [{"subject": "ahe", "start": 0.2, "end": 2.1, "sound": "a fast rhythmic chant of short nonsense syllables"}],
@@ -477,6 +482,16 @@ def main():
     E, W = lint(prompt, spec["duration"])
     if spec["duration"] > 12:
         W.append(f"duration {spec['duration']}s > 12 s: in this project 15 s clips drifted / self-cut; keep shots <= 12 s")
+    # upstream A/B 2026-10-23 (6 shots x 2 seeds, optical flow): one-line actions -> ~1/2.7 of the motion; end frame = first frame freezes people
+    for i, sh in enumerate(spec["shots"], start=1):
+        n = len((sh.get("action") or "").split())
+        if 0 < n < 50:
+            W.append(f"[Shot {i}] action is short ({n} words): write 50-120 words 'Starting from <Picture 1>, ...' onset -> development -> result,"
+                     " with body parts, amplitude and repetitions (official h3-prompt-writing; one-liners moved ~1/2.7 as much)")
+    first, last = spec.get("first_frame"), spec.get("last_frame")
+    if first and last and (spec_path.parent / first).resolve() == (spec_path.parent / last).resolve():
+        W.append("last_frame = first_frame pins everyone back to the first pose (upstream 2026-10-23: 100% still); fine for static/prop-lock shots,"
+                 " but if someone must move, use an end image of the finished pose or no end frame")
     for x in E:
         print("ERROR", x)
     for x in W:

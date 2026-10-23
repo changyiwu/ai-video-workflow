@@ -33,6 +33,7 @@ description: 用 media-short-film repo（本機 MiniMax H3）做 16:9、1–3 �
 | 3 | 劇本＋鏡表 | `references/script/workflow.md`（格式 `format.md`、拆鏡 `segmentation.md`） | `劇本.md`（含鏡表） | ✅ 確認劇本 |
 | 4 | 預演（選用） | `references/previs/README.md` | 布置圖、`camera_plan_v<N>.json` | 看布置圖 |
 | 5 | 填 `film.json` | `references/film-json.md` | `film.json` | |
+| 5.5 | 生成前試映（文字讀本，選用草圖） | `references/table-read.md` | `output/preview/讀本試映.mp4`、`讀本_timeline.json` | ✅ 看完說「通過」才生成 |
 | 6 | 生成 | `references/production.md` | `output/` | ✅ 關卡 1、2 |
 | 7 | 自審與交付 | `references/review.md` | `output/cut/film_1080p.mp4`、自審報告 | ✅ 關卡 3：完整看成片 |
 | 8 | 定案 | `references/review.md`〈交付與歸檔〉 | `output/<片名>.mp4`、`發布資訊.md` | ✅ 問「可以成片嗎？」，說可以才做 |
@@ -53,6 +54,7 @@ description: 用 media-short-film repo（本機 MiniMax H3）做 16:9、1–3 �
 | 審劇本、改劇本 | `references/script/checklists.md`；要判斷格式再讀 `format.md` |
 | 預演、布置圖、鏡位、運鏡、交付包 | `references/previs/README.md` |
 | 把鏡表填進 `film.json`、寫 `frame`／`action` | `references/film-json.md` |
+| 試映、估片長、分鏡草圖 | `references/table-read.md` |
 | 跑 `make_film.py`、重拍某幾鏡、換配樂 | `references/production.md` |
 | 自審、選鏡、交片 | `references/review.md` |
 | 照參考影片換主角（保留動作、背景、聲音，只換人或換台詞的詞） | `<repo>/docs/08_換角重製.md`（不寫劇本；片子資料夾寫 `recast.json`，用 `tools/recast.py`） |
