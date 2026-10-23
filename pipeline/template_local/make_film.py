@@ -286,7 +286,7 @@ def chars():
         if not face.exists():
             p = ("Close-up face reference sheet of exactly the same person as <image1> and <image2> (same face, hairstyle and clothes): two "
                  "head-and-shoulders close-ups side by side, realistic photograph. Left: front view looking straight into the camera. Right: "
-                 "three-quarter view, head turned toward the left of the image. Each face is large and fills most of its half, with every "
+                 "three-quarter view, head turned about 45 degrees from the camera. Each face is large and fills most of its half, with every "
                  "facial detail sharp. Same calm neutral expression, same hairstyle and parting, same light in both. Plain light grey seamless "
                  "background, soft even studio light. " + c["look"] + ". No text, no labels, no numbers, no watermark.")
             gen_img([PYH3, T / "gen_image.py", "--prompt", p, "--ref", turn, "--ref", expr, "--width", "1536", "--height", "1024",
