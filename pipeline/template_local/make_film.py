@@ -7,7 +7,9 @@ stage（不給＝全部依序）：chars masters frames voices inserts h3 amb ed
 每一步的輸出都在 output/，已存在的檔案會跳過，所以可以中斷後續跑、或刪掉某個檔重做：
   - 重生某一鏡首幀：刪 output/first/<鏡>.png，在 film.json 的 seeds 加 "frame_<鏡>": 新 seed，再跑 frames
   - 重拍某一鏡 H3：刪 output/h3/<鏡>/clip.mp4（或加 "h3_<鏡>": 新 seed），再跑 h3（環境變數 ONLY="S2 S5" 只跑指定鏡）
-  - 改了台詞：刪 output/voice/bv 裡那句的檔（或整個 output/voice/bv），再跑 voices
+  - 改了台詞：H3 自己念的句子（預設）刪 output/h3/<鏡>/clip.mp4 再跑 h3；fixed 的句子與旁白刪 output/voice/bv 裡那句的檔，再跑 voices
+台詞聲音 voice_mode（film.json 全片設，單句可在 line 裡設）："h3_ref"（預設）＝H3 拿角色參考音自己念（h3 階段結尾
+tools/h3_line_harvest.py 分離人聲、聽寫、拼音比對原文，差太多就停）；"fixed"＝VoxCPM2 配音當 H3 固定音軌。旁白 vo 一律 fixed。
   - 改了剪接（cut_in、tail…）：跑 edl cut review 即可
 人工關卡：frames 之後看 output/first/_sheet.jpg；h3 之後看 output/review/clips_*.jpg；review 之後一定要看成片。
 完整流程見 docs/02_端到端流程.md，film.json 欄位見本資料夾的 README.md。"""
@@ -103,6 +105,28 @@ for _s in SHOTS:
             sys.exit(f"{_s['id']} 有旁白 vo，但 film.json 沒有 narrator")
         LINES.append((_s["id"], {**_s["vo"], "who": "vo", "kind": "vo"}))
 INSERTS = {s["id"] for s in SHOTS if s.get("insert")}               # 後製插入鏡：不生首幀、不走 H3，inserts 階段直接做 1080p 影片
+# 台詞聲音（移植自上游 2026-10-23；2026-10-24 使用者決定預設 h3_ref）：h3_ref＝H3 拿角色參考音自己念（預設；嘴型與聲音一起生成，
+# 表演較生動；h3 階段結尾用 h3_line_harvest.py 抓出台詞、比對原文）｜fixed＝VoxCPM2 配音當 H3 固定音軌（要念對的名詞、數字日期、念錯抽不出來的句子）。
+# 全片設 film.json 的 voice_mode，單句可在 line 裡設 "voice_mode"。旁白（vo）不進 H3，一律 fixed。讀音替換表對 h3_ref 無效（H3 照字念）。
+VOICE_MODE = CFG.get("voice_mode", "h3_ref")
+H3_CPS, H3_PAD, H3_MIN = 3.0, 2.0, 3.0                              # h3_ref 鏡長＝max(3, 字數 ÷ 3＋2 秒)：同 tools/table_read.py
+
+
+def h3_says(ln):
+    """這句是不是讓 H3 自己念（h3_ref）。"""
+    return ln["kind"] == "line" and ln.get("voice_mode", VOICE_MODE) == "h3_ref"
+
+
+def nchars(t):
+    return len(re.findall(r"[一-鿿A-Za-z0-9]", t or ""))
+
+
+def load_picks():
+    """output/voice_picks.json：每句實際用的聲音檔（VoxCPM2 挑的，或 h3_ref 從 H3 成片分離出的人聲，source＝"h3"）。"""
+    p = OUT / "voice_picks.json"
+    return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
+
+
 MIX = CFG.get("mix", {})
 TIMING = OUT / "timing.json"
 timing = json.loads(TIMING.read_text(encoding="utf-8")) if TIMING.exists() else {}
@@ -314,11 +338,18 @@ def sheet(files, dst, cols=3):
 def voices():
     """設計角色聲音（一次）→ edge-tts 台灣國語答案卷 → 每句 8 候選 → 自動挑（聽寫拼音聲調全對＋腔調分數，已去頭尾靜音）。
     角色台詞（line）和旁白（vo）走同一套；旁白的聲音設計在 film.json 的 narrator。聲音設計與念台詞都用 VoxCPM2。
-    送進 TTS 的文字會先套讀音替換表（tts-lexicon.md，由 voxcpm_batch／gen_voice／voice_pick 各自套用），字幕照原文。"""
+    送進 TTS 的文字會先套讀音替換表（tts-lexicon.md，由 voxcpm_batch／gen_voice／voice_pick 各自套用），字幕照原文。
+    h3_ref 的台詞這裡只做角色參考音（voice/ref_<角色>.wav，給 H3 當音色參考），台詞在 h3 階段由 H3 自己念。"""
     free_comfy()
     vd = OUT / "voice"; vd.mkdir(exist_ok=True)
     jobs = [dict(name=f"ref_{k}", text=c["voice_sample"], seed=seed("voice_" + k, 7), control=c["voice_design"]) for k, c in VOICES.items()]
-    for i, (sid, ln) in enumerate(LINES):          # 答案卷：只拿來比腔調，不進成片
+    fixed = [(i, sid, ln) for i, (sid, ln) in enumerate(LINES) if not h3_says(ln)]
+    if not fixed:                                    # 全部 h3_ref：只要角色參考音
+        (OUT / "vox_design.json").write_text(json.dumps(dict(out_dir="voice", jobs=jobs), ensure_ascii=False, indent=1), encoding="utf-8")
+        run([PYV, T / "voxcpm_batch.py", "vox_design.json"])
+        print("[voices] voice_mode h3_ref：角色參考音在 output/voice/ref_<角色>.wav，台詞由 H3 在 h3 階段自己念", flush=True)
+        return
+    for i, sid, ln in fixed:                         # 答案卷：只拿來比腔調，不進成片
         w = vd / f"tw_{i}.wav"
         if w.exists():
             continue
@@ -331,15 +362,15 @@ def voices():
             jobs.append(dict(name=f"tw_{i}", text=ln["text"], seed=11,
                              control="A clear, neutral standard Taiwanese Mandarin news-reading voice, calm, precise tones."))
     bv = [dict(name=f"line{i}", text=ln.get("tts", ln["text"]), ref_audio=f"voice/ref_{ln['who']}.wav", ref_text=VOICES[ln["who"]]["voice_sample"],
-               tw_ref=f"voice/tw_{i}.wav", seeds=8) for i, (sid, ln) in enumerate(LINES)]
+               tw_ref=f"voice/tw_{i}.wav", seeds=8) for i, sid, ln in fixed]
     (OUT / "bv.json").write_text(json.dumps(dict(out_dir="voice/bv", jobs=bv), ensure_ascii=False, indent=1), encoding="utf-8")
     (OUT / "vox_design.json").write_text(json.dumps(dict(out_dir="voice", jobs=jobs), ensure_ascii=False, indent=1), encoding="utf-8")
     run([PYV, T / "voxcpm_batch.py", "vox_design.json"])
     run([PYV, T / "voxcpm_batch.py", "bv.json"])
     run([PYV, T / "voice_pick.py", "bv.json"])
     bp = json.loads((vd / "bv" / "picks.json").read_text(encoding="utf-8"))
-    picks, bad, odd = {}, [], []
-    for i, (sid, ln) in enumerate(LINES):
+    picks, bad, odd = {k: v for k, v in load_picks().items() if v.get("source") == "h3"}, [], []   # 保留 h3 階段抓到的 h3_ref 台詞
+    for i, sid, ln in fixed:
         p = bp[f"line{i}"]; best = next(c for c in p["cands"] if c["file"] == p["pick"])
         if p["needs_review"] and p.get("review_reason") == "sound":
             odd.append(f"{sid}「{ln['text']}」響度差 {best.get('lufs_dev')} dB、4 kHz 以上能量比 {best.get('hf_4k')}")
@@ -349,6 +380,7 @@ def voices():
                              tw_score=best.get("tw_score"), lufs=best.get("lufs"), hf_4k=best.get("hf_4k"), needs_review=p["needs_review"])
         print("pick", sid, ln["text"], "→", p["pick"], best["asr"], best.get("tw_score"), best.get("lufs"), "LUFS", flush=True)
     (OUT / "voice_picks.json").write_text(json.dumps(picks, ensure_ascii=False, indent=1), encoding="utf-8")
+    picks = dict(sorted(picks.items(), key=lambda kv: int(kv[0])))
     ls = [p["lufs"] for p in picks.values() if p.get("lufs") is not None]
     if ls and max(ls) - min(ls) > 6 and MIX.get("voice_lufs") is None:
         print(f"[warn] 各句原始響度差 {max(ls) - min(ls):.1f} dB（不同角色聲音大小不同）：film.json 的 mix 加 \"voice_lufs\": -20，成片才不會忽大忽小", flush=True)
@@ -366,10 +398,14 @@ def voices():
 
 # ------------------------------------------------------------------------------------------------ H3
 def shot_secs(s, picks):
-    """鏡長：至少 dur，有台詞或旁白就延長到「開口時間＋長度＋0.8 秒」；H3 鏡再湊成 H3 的格數。"""
+    """鏡長：至少 dur，有台詞或旁白就延長到「開口時間＋長度＋0.8 秒」；H3 鏡再湊成 H3 的格數。
+    h3_ref 的台詞還沒有音檔，照字數估：max(3, 字數 ÷ 3＋2 秒)（上游實測 H3 自己念每秒 2.3–4.7 字、有時晚 1.5–2.1 秒開口）。"""
     d = s["dur"]
     for i, ln in shot_lines(s):
-        d = max(d, ln["at"] + dur(picks[str(i)]["file"]) + 0.8)
+        if h3_says(ln):
+            d = max(d, H3_MIN, nchars(ln["text"]) / H3_CPS + H3_PAD)
+        else:
+            d = max(d, ln["at"] + dur(picks[str(i)]["file"]) + 0.8)
     return d if s["id"] in INSERTS else frames_for(d) / FPS
 
 
@@ -385,8 +421,9 @@ def h3_spec(s, secs, dialogue):
 @stage("h3")
 def h3():
     """每鏡 H3（DMAD 4 步、只給首幀）。看得到臉的鏡頭一律給固定音軌：有台詞放配音，沒台詞放靜音（否則角色會自己嘟囔）。
+    h3_ref 的台詞改給角色參考音（audio.voice_ref），H3 自己念；跑完 harvest_lines() 抓出台詞、比對原文。
     旁白（vo）不放進引導音軌：畫面裡的人不能跟著旁白動嘴。後製插入鏡跳過（inserts 階段做）。"""
-    picks = json.loads((OUT / "voice_picks.json").read_text(encoding="utf-8")) if LINES else {}
+    picks = load_picks()
     only = os.environ.get("ONLY", "").split(); todo = []
     for s in SHOTS:
         if (only and s["id"] not in only) or s["id"] in INSERTS:
@@ -396,6 +433,14 @@ def h3():
             continue
         od.mkdir(parents=True, exist_ok=True)
         secs = shot_secs(s, picks); buf = bytearray(int(secs * SR) * 2); dlg = []
+        if s.get("line") and h3_says({**s["line"], "kind": "line"}):
+            ln = s["line"]
+            dlg = [dict(subject=ln["who"], line=ln["text"], lang="Chinese", after="Right after the line the speaker's lips close and stay closed.")]
+            spec = h3_spec(s, secs, dlg)
+            spec["audio"] = {"voice_ref": {"subject": ln["who"], "file": str(OUT / "voice" / f"ref_{ln['who']}.wav")}}
+            (od / "spec.json").write_text(json.dumps(spec, ensure_ascii=False, indent=1), encoding="utf-8")
+            todo.append(od)
+            continue
         if s.get("line"):
             ln = s["line"]; f = picks[str(line_index(s["id"], "line"))]["file"]
             pcm = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", f, "-ar", str(SR), "-ac", "1", "-f", "s16le", "-"], capture_output=True).stdout
@@ -407,7 +452,38 @@ def h3():
         (od / "spec.json").write_text(json.dumps(spec, ensure_ascii=False, indent=1), encoding="utf-8")
         todo.append(od)
     render_h3(todo)
+    harvest_lines()
     sheet_clips()
+
+
+def harvest_lines():
+    """h3_ref 的台詞：H3 成片 → tools/h3_line_harvest.py（分離人聲、聽寫、拼音比對原文、切出那句）→ output/voice/h3/line<i>.wav，
+    寫進 voice_picks.json（source "h3"、at＝實際開口秒數）。H3 會改用詞、偶爾晚開口；聽寫和原文差太多就停下來換 seed。"""
+    picks, bad = load_picks(), []
+    hd = OUT / "voice" / "h3"; hd.mkdir(parents=True, exist_ok=True)
+    for i, (sid, ln) in enumerate(LINES):
+        clip = OUT / "h3" / sid / "clip.mp4"
+        if not h3_says(ln) or not clip.exists():
+            continue
+        dst = hd / f"line{i}.wav"; p = picks.get(str(i), {})
+        if p.get("source") == "h3" and dst.exists() and dst.stat().st_mtime >= clip.stat().st_mtime:
+            if p.get("needs_review"):
+                bad.append(f"{sid}「{ln['text']}」聽成「{p['heard']}」")
+            continue                                 # 已抓過、而且鏡頭沒重拍
+        free_comfy()
+        r = run([PYV, T / "h3_line_harvest.py", "--clip", clip, "--text", ln["text"], "--out", dst, "--work", hd / f"{sid}_work"])
+        h = json.loads(r.stdout.strip().splitlines()[-1])
+        picks[str(i)] = dict(shot=sid, who=ln["who"], text=ln["text"], file=str(dst), heard=h["heard"], at=h["at"],
+                             match=h["match"], tone_match=h["tone_match"], needs_review=h["needs_review"], source="h3")
+        print(f"line {sid}: H3 念「{h['heard']}」（拼音相似 {h['match']:.2f}、含聲調 {h['tone_match']:.2f}，{h['at']:.2f}–{h['end']:.2f} 秒）", flush=True)
+        if h["needs_review"]:
+            bad.append(f"{sid}「{ln['text']}」聽成「{h['heard']}」")
+    (OUT / "voice_picks.json").write_text(json.dumps(dict(sorted(picks.items(), key=lambda kv: int(kv[0]))), ensure_ascii=False, indent=1),
+                                          encoding="utf-8")
+    if bad and os.environ.get("ALLOW_REVIEW") != "1":
+        raise SystemExit("H3 念的台詞和原文差太多：" + "；".join(bad) +
+                         "\n在 film.json 的 seeds 加 \"h3_<鏡>\": 新數字、刪 output/h3/<鏡>/clip.mp4，再 set ONLY=<鏡> 跑 h3；抽 2–3 次都不對就在該句 line 加 "
+                         "\"voice_mode\": \"fixed\"（改用 VoxCPM2 固定音軌，先跑 voices 再刪 clip 重跑 h3）。確定只是聽寫聽錯就用 ALLOW_REVIEW=1 繼續。")
 
 
 @stage("inserts")
@@ -416,7 +492,7 @@ def inserts():
     insert 二選一：{"image": "圖.png"}＝靜態圖撐滿鏡長；{"script": "inserts/x.py", "args": [...]}＝用 PY_H3 跑片子資料夾裡的腳本，
     腳本會收到 args 之後再加 --out <mp4> --dur <秒> --fps 24 --size 1920x1080。鏡長＝dur，有旁白就延長到念完＋0.8 秒。
     改了腳本或參數：刪 output/insert/<鏡>.mp4 再跑 inserts。"""
-    picks = json.loads((OUT / "voice_picks.json").read_text(encoding="utf-8")) if LINES else {}
+    picks = load_picks()
     (OUT / "insert").mkdir(exist_ok=True)
     for s in SHOTS:
         if s["id"] not in INSERTS or insert_file(s).exists():
@@ -463,7 +539,7 @@ def sheet_clips():
 def amb():
     """有動作音效的鏡頭（amb: true）：用同一張首幀另拍一支「H3 原生音效」版，聽寫確認沒有人聲後，只取它的音軌當環境音。"""
     res = {}; todo = []
-    picks = json.loads((OUT / "voice_picks.json").read_text(encoding="utf-8")) if LINES else {}
+    picks = load_picks()
     for s in SHOTS:
         if not s.get("amb") or s["id"] in INSERTS:
             continue
@@ -506,7 +582,7 @@ def edl():
     """時間軸：依配音長度與 cut_in／cut_out／tail 算每鏡在成片中的位置，寫 output/post/edl.json（cut、review 都讀它）。
     cut_in＝裁掉鏡頭開頭幾秒（H3 常晚開口）；cut_out＝"full" 用到鏡尾，不寫＝最後一句台詞或旁白結束＋tail 秒（反應停頓）。
     後製插入鏡預設用到鏡尾（鏡長已經含旁白念完後的停留）。"""
-    picks = json.loads((OUT / "voice_picks.json").read_text(encoding="utf-8")) if LINES else {}
+    picks = load_picks()
     amb_files = json.loads((OUT / "post" / "amb.json").read_text(encoding="utf-8")) if (OUT / "post" / "amb.json").exists() else {}
     lead = MIX.get("say_lead", 0.2); t, rows = 0.0, []
     for s in SHOTS:
@@ -514,10 +590,12 @@ def edl():
         # 修剪點一律對齊 1/24 秒：cut 階段每段用 -frames:v 取整數格，沒對齊的話每鏡多／少零點幾格、累積起來畫面會落後聲音
         cd = dur(clip_of(s)); a = round(float(s.get("cut_in", 0.0)) * FPS) / FPS; b = s.get("cut_out", "full" if ins else None); lines = []; end = None
         for i, ln in shot_lines(s):
-            d = dur(picks[str(i)]["file"])
-            lines.append(dict(id=f"line{i}", who=ln["who"], kind=ln["kind"], text=ln["text"], file=picks[str(i)]["file"],
-                              film_start=round(t + ln["at"] - a - lead, 3), film_end=round(t + ln["at"] - a - lead + d, 3)))
-            end = max(end or 0, ln["at"] + d)
+            p = picks[str(i)]; d = dur(p["file"])
+            # H3 自己念的（source h3）：用聽寫抓到的實際開口時間、不提前（嘴型和聲音本來就一起生成）；VoxCPM2 的照 at 並提前 say_lead
+            at, ld = (float(p["at"]), 0.0) if p.get("source") == "h3" else (ln["at"], lead)
+            lines.append(dict(id=f"line{i}", who=ln["who"], kind=ln["kind"], text=ln["text"], file=p["file"],
+                              film_start=round(t + at - a - ld, 3), film_end=round(t + at - a - ld + d, 3)))
+            end = max(end or 0, at + d)
         if b is None and end is not None:
             b = end + s.get("tail", MIX.get("default_tail", 0.55))
         b = cd if b in (None, "full") else min(float(b), cd)

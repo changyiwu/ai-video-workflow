@@ -14,6 +14,7 @@
   - 配音長度＝字數 ÷ VOICE_CPS（3.5 字／秒；2026-10-24 量本機 4 支片 56 句 VoxCPM2：整體 3.4–3.95，最慢一句 2.3）。
     output/voice_picks.json 已有的句子改用實際音長。
   - H3 生成長度＝max(dur, 開口 at＋配音長度＋0.8 秒)，湊成 H3 格數（17n+5）；> 12 秒的鏡要拆。
+    voice_mode h3_ref（H3 自己念，預設）的句子改用 max(dur, 3, 字數 ÷ 3＋2 秒)：上游實測 H3 每秒 2.3–4.7 字、有時晚 1.5–2.1 秒開口。
   - 成片裡的鏡長＝cut_out（"full"＝整段；不寫＝最後一句結束＋tail）− cut_in，同 make_film.py 的 edl。
 試映畫面每鏡停留＝估計的成片鏡長；字幕照 make_film.py：角色台詞加「名字：」，旁白不加（narrator.sub_prefix 為 true 才加）。"""
 import json
@@ -40,6 +41,7 @@ FPS = 24
 W, H = 1280, 720
 PER_SHEET = 16
 VOICE_CPS = 3.5
+H3_CPS, H3_PAD, H3_MIN = 3.0, 2.0, 3.0      # voice_mode h3_ref：H3 生成長度＝max(3, 字數 ÷ 3＋2 秒)（上游實測，同 make_film.py）
 
 
 def nchars(t):
@@ -80,11 +82,16 @@ def estimate(cfg, here):
         for i, (sid, ln) in enumerate(lines):
             if sid != s["id"]:
                 continue
-            f = Path(picks.get(str(i), {}).get("file", ""))
+            p = picks.get(str(i), {}); f = Path(p.get("file", ""))
             f = f if f.is_absolute() else here / f
-            real = picks.get(str(i)) and f.is_file()
+            real = bool(p) and f.is_file()
             d = dur(f) if real else nchars(ln["text"]) / VOICE_CPS
-            n_chars += nchars(ln["text"]); end = max(end or 0, ln["at"] + d); need = max(need, ln["at"] + d + 0.8)
+            at = float(p["at"]) if real and p.get("source") == "h3" else ln["at"]
+            n_chars += nchars(ln["text"]); end = max(end or 0, at + d)
+            if ln["kind"] == "line" and ln.get("voice_mode", cfg.get("voice_mode", "h3_ref")) == "h3_ref":
+                need = max(need, H3_MIN, nchars(ln["text"]) / H3_CPS + H3_PAD)   # H3 自己念：同 make_film.py 的 shot_secs
+            else:
+                need = max(need, at + d + 0.8)
             v = voices.get(ln["who"], {})
             name = f"{v.get('name', ln['who'])}：" if v.get("sub_prefix", ln["who"] != "vo") else ""
             caps.append(name + ln["text"])

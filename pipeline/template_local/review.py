@@ -42,8 +42,9 @@ if "--asr" in sys.argv:                              # 第 2 遍：每句台詞�
     sys.path.insert(0, TOOLS)
     from stt import load_asr                          # faster-whisper；裝不了時（Windows on Arm）自動改 openai-whisper
     from opencc import OpenCC
+    from voice_pick import int_zh                     # 聽寫常把數字寫成阿拉伯數字（「1、2、3」），比對前轉回國字，不然會誤判念錯
     t2s = OpenCC("t2s"); asr = load_asr("large-v3")
-    norm = lambda s: re.sub(r"[\s，。？！、,.?!…—「」]", "", t2s.convert(s))
+    norm = lambda s: re.sub(r"[\s，。？！、,.?!…—「」]", "", t2s.convert(re.sub(r"\d+", lambda m: int_zh(int(m.group())), s)))
     res = []
     for r in SH:
         for l in r["lines"]:

@@ -21,7 +21,7 @@ description: 用 media-short-film repo（本機 MiniMax H3）做 16:9、1–3 �
 | 影片 | 本機 MiniMax H3，只給首幀；顯卡跑不動時 `make_film.py` 自動送 Colab |
 | 生圖 | OpenAI 生圖（`gen_image.py` 預設：Image 2.5 API 優先、Codex CLI 次之，失敗就停、不自動改用千問）；本機 Qwen 為備選（整支片 `IMAGE_BACKEND=local`） |
 | 定妝 | 轉面圖＋表情表兩張（Image 2.5）；千問備選用單張半身 |
-| 配音 | VoxCPM2（`make_voxcpm.cmd`，`make_film.py` 內建）；念錯的詞加進 repo 根目錄的 `tts-lexicon.md` |
+| 配音 | 畫面內台詞**預設 H3 拿角色參考音自己念**（`voice_mode: "h3_ref"`，念錯換 seed，抽不出來那句改 `fixed`）；角色參考音、旁白、`fixed` 的台詞用 VoxCPM2，念錯的詞加進 repo 根目錄的 `tts-lexicon.md`（只對 VoxCPM2 有效） |
 
 ## 全片流程
 
@@ -47,8 +47,9 @@ description: 用 media-short-film repo（本機 MiniMax H3）做 16:9、1–3 �
 | 使用者要什麼 | 讀 |
 |:---|:---|
 | 開新片 | 本檔〈開新片〉，接著做第 2 步 |
-| 完整一支短片（從點子開始） | 照全片流程，一步一步做，每個人工關卡停下來給使用者看 |
+| 完整一支短片（從點子開始） | 照全片流程，一步一步做，每個人工關卡停下來給使用者看；寫劇本時照 `references/script/workflow.md` 開頭的**階段關卡**，每階段列自我檢查、等使用者說「通過」 |
 | 單點創作（只要題材、結構、某一場、台詞、反轉） | `references/script/workflow.md` 的對應階段，**只交付指定的成果**，不重做整支 |
+| 想梗、加反轉、原創短劇的題材階段 | `references/script/drama-hooks.md`（四種差、20 個模式、節奏公式；**講史實的片不要套**） |
 | 寫劇本或要格式 | `references/script/format.md` |
 | 拆鏡頭（劇本已存在） | `references/script/segmentation.md` |
 | 審劇本、改劇本 | `references/script/checklists.md`；要判斷格式再讀 `format.md` |

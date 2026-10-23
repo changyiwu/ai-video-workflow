@@ -60,7 +60,8 @@ docs/
 tools/                      全域工具（各腳本直接用，不用複製）
   h3_shot.py ⭐             分鏡 JSON → 官方格式提示詞 → 格式檢查 → H3 生成
   table_read.py             生成前試映：照 film.json 估片長、做文字讀本試映影片（選用 16 宮格草圖）
-  make_voxcpm.cmd ⭐        台詞配音：VoxCPM2 每句 8 候選 → 聽寫＋腔調自動挑
+  make_voxcpm.cmd ⭐        配音（旁白、fixed 台詞）：VoxCPM2 每句 8 候選 → 聽寫＋腔調自動挑
+  h3_line_harvest.py        台詞預設由 H3 自己念：從成片抓出台詞、拼音比對原文
   tts_lexicon.py            讀音替換表：送進 TTS 前照根目錄 tts-lexicon.md 把念錯的詞改字
   gen_image.py              生圖入口：預設 OpenAI Image 2.5，備選本機 Qwen-Image 2.1／Edit（--backend local）
   start_comfy.cmd           啟動 ComfyUI
@@ -91,8 +92,8 @@ configs/profile.cmd         這個硬體版本的環境變數
 | 2 | 角色定妝：轉面圖＋表情表（備選千問：單張、灰底、半身） | `gen_image.py`（預設 Image 2.5；備選 Qwen-Image 2.1） | `docs/07` §0（備選 §1） | `chars/<角色>_turn.png`、`_expr.png`（備選 `chars/<角色>.png`） | ✅ 定案 |
 | 3 | 場景母版（空景，之後裁成各鏡景別） | `gen_image.py` | `docs/07` §4 | `masters/*.png` | |
 | 4 | 首幀（附定妝＋母版裁切，**每鏡照抄角色完整外觀描述**） | `gen_image.py --model qwen-edit --ref`（預設 OpenAI 生圖（Image 2.5 或 Codex）附轉面圖＋表情表，`--model` 這時不作用；`IMAGE_BACKEND=local` 時才用 Qwen-Image-Edit 附單張半身，不加會用到不適合附參考圖的 Qwen-Image 2.1） | `docs/07` §2–3 | `first/<鏡>.png` | ✅ 逐張看：臉、服裝、多手多腳、背景有沒有字 |
-| 5 | 角色聲音（一次）→ 台詞配音 | `voxcpm_batch.py`（設計參考音）→ `make_voxcpm.cmd`；念錯的詞加進 `tts-lexicon.md` | `docs/03` §5 | `bv/<句>.wav`（已去頭尾靜音） | `needs_review` 的句子聽一次 |
-| 6 | H3 每鏡（DMAD 4 步、只給首幀、台詞當固定音軌；看得到臉又沒台詞的鏡給靜音） | `h3_shot.py`（spec 加 `"draft": true`） | `docs/03` §4、`tools/examples/` | `h3/<鏡>/clip.mp4` | ✅ 抽格看：換臉、多人、鏡頭漂移 |
+| 5 | 角色參考音（一次）；旁白與 `fixed` 台詞的配音 | `voxcpm_batch.py`（設計參考音）→ `make_voxcpm.cmd`；念錯的詞加進 `tts-lexicon.md` | `docs/03` §5 | `voice/ref_<角色>.wav`、`bv/<句>.wav`（已去頭尾靜音） | `needs_review` 的句子聽一次 |
+| 6 | H3 每鏡（DMAD 4 步、只給首幀；台詞預設由 H3 拿角色參考音自己念（`voice_mode: "h3_ref"`），`fixed` 的句子當固定音軌；看得到臉又沒台詞的鏡給靜音） | `h3_shot.py`（spec 加 `"draft": true`） | `docs/03` §4、`tools/examples/` | `h3/<鏡>/clip.mp4` | ✅ 抽格看：換臉、多人、鏡頭漂移 |
 | 7 | 配樂（純器樂、多抽幾個 seed，挑人聲殘留最少的） | `gen_music3.py` → `audio-separator` | `docs/02` §8 | `music/*.flac` | |
 | 8 | 放大、剪接（台詞提前 0.2 秒）、配樂壓低（台詞期間 15–30%）、響度、字幕 | `upscale_vsr.py`、ffmpeg | `docs/02` §9、§10（**`alimiter` 要 `level=false`**） | `cut/<片名>_1080p.mp4` | |
 | 9 | （選用，預設不加）片尾（工具名單＋AI 生成標示；要加就把 `film.json` 的 `ending.enabled` 改成 true 或設 `ENDING=1`；沒片尾時在貼文標示） | `templates/ending/render_ending.py` | `templates/ending/README.md`、`docs/02` §12 | `ending.mp4` | |
